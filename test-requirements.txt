@@ -1,0 +1,9 @@
+bandit
+flake8
+ipython<6.0
+mock
+pdoc
+pytest
+pytest-logging
+requests-mock
+twine
