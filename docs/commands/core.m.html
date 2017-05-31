@@ -1357,7 +1357,7 @@ table {
 <span class="sd">        Zero of more arguments to pass in the &#39;params&#39; section of the RPC call.</span>
 
 <span class="sd">        ### Returns</span>
-<span class="sd">        A `dict` representation of the `chromefriend.rpc.reply.Reply` class.</span>
+<span class="sd">        A `dict` representation of the `webfriend.rpc.reply.Reply` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">rpc</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 
@@ -1370,13 +1370,13 @@ table {
 
 <span class="sd">        - **timeout** (`int`):</span>
 
-<span class="sd">            The timeout, in milliseconds, before raising a `chromefriend.exceptions.TimeoutError`.</span>
+<span class="sd">            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.</span>
 
 <span class="sd">        ### Returns</span>
-<span class="sd">        `chromefriend.rpc.event.Event`</span>
+<span class="sd">        `webfriend.rpc.event.Event`</span>
 
 <span class="sd">        ### Raises</span>
-<span class="sd">        `chromefriend.exceptions.TimeoutError`</span>
+<span class="sd">        `webfriend.exceptions.TimeoutError`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">idle_time</span><span class="p">:</span>
@@ -1442,13 +1442,13 @@ table {
 
     <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        See: `chromefriend.rpc.dom.DOM.select_nodes`</span>
+<span class="sd">        See: `webfriend.rpc.dom.DOM.select_nodes`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">select_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">xpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        See: `chromefriend.rpc.dom.DOM.xpath`</span>
+<span class="sd">        See: `webfriend.rpc.dom.DOM.xpath`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -1727,7 +1727,7 @@ table {
 <span class="sd">        Zero of more arguments to pass in the &#39;params&#39; section of the RPC call.</span>
 
 <span class="sd">        ### Returns</span>
-<span class="sd">        A `dict` representation of the `chromefriend.rpc.reply.Reply` class.</span>
+<span class="sd">        A `dict` representation of the `webfriend.rpc.reply.Reply` class.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">rpc</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 
@@ -1740,13 +1740,13 @@ table {
 
 <span class="sd">        - **timeout** (`int`):</span>
 
-<span class="sd">            The timeout, in milliseconds, before raising a `chromefriend.exceptions.TimeoutError`.</span>
+<span class="sd">            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.</span>
 
 <span class="sd">        ### Returns</span>
-<span class="sd">        `chromefriend.rpc.event.Event`</span>
+<span class="sd">        `webfriend.rpc.event.Event`</span>
 
 <span class="sd">        ### Raises</span>
-<span class="sd">        `chromefriend.exceptions.TimeoutError`</span>
+<span class="sd">        `webfriend.exceptions.TimeoutError`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">idle_time</span><span class="p">:</span>
@@ -1812,13 +1812,13 @@ table {
 
     <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        See: `chromefriend.rpc.dom.DOM.select_nodes`</span>
+<span class="sd">        See: `webfriend.rpc.dom.DOM.select_nodes`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">select_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">xpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        See: `chromefriend.rpc.dom.DOM.xpath`</span>
+<span class="sd">        See: `webfriend.rpc.dom.DOM.xpath`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -2474,7 +2474,7 @@ screencasts.</p>
 </ul>
 <p>Zero of more arguments to pass in the 'params' section of the RPC call.</p>
 <h3>Returns</h3>
-<p>A <code>dict</code> representation of the <code>chromefriend.rpc.reply.Reply</code> class.</p></div>
+<p>A <code>dict</code> representation of the <code>webfriend.rpc.reply.Reply</code> class.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.rpc', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.rpc" class="source">
@@ -2487,7 +2487,7 @@ screencasts.</p>
 <span class="sd">    - **kwargs**:</span>
 <span class="sd">    Zero of more arguments to pass in the &#39;params&#39; section of the RPC call.</span>
 <span class="sd">    ### Returns</span>
-<span class="sd">    A `dict` representation of the `chromefriend.rpc.reply.Reply` class.</span>
+<span class="sd">    A `dict` representation of the `webfriend.rpc.reply.Reply` class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">rpc</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">()</span>
 </pre></div>
@@ -2533,13 +2533,13 @@ screencasts.</p>
 
     
   
-    <div class="desc"><p>See: <code>chromefriend.rpc.dom.DOM.select_nodes</code></p></div>
+    <div class="desc"><p>See: <code>webfriend.rpc.dom.DOM.select_nodes</code></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.select', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.select" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    See: `chromefriend.rpc.dom.DOM.select_nodes`</span>
+<span class="sd">    See: `webfriend.rpc.dom.DOM.select_nodes`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">select_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -2602,13 +2602,13 @@ comes first).</p>
 <ul>
 <li>
 <p><strong>timeout</strong> (<code>int</code>):</p>
-<p>The timeout, in milliseconds, before raising a <code>chromefriend.exceptions.TimeoutError</code>.</p>
+<p>The timeout, in milliseconds, before raising a <code>webfriend.exceptions.TimeoutError</code>.</p>
 </li>
 </ul>
 <h3>Returns</h3>
-<p><code>chromefriend.rpc.event.Event</code></p>
+<p><code>webfriend.rpc.event.Event</code></p>
 <h3>Raises</h3>
-<p><code>chromefriend.exceptions.TimeoutError</code></p></div>
+<p><code>webfriend.exceptions.TimeoutError</code></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.wait_for_load', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.wait_for_load" class="source">
@@ -2618,11 +2618,11 @@ comes first).</p>
 <span class="sd">    comes first).</span>
 <span class="sd">    ### Arguments</span>
 <span class="sd">    - **timeout** (`int`):</span>
-<span class="sd">        The timeout, in milliseconds, before raising a `chromefriend.exceptions.TimeoutError`.</span>
+<span class="sd">        The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.</span>
 <span class="sd">    ### Returns</span>
-<span class="sd">    `chromefriend.rpc.event.Event`</span>
+<span class="sd">    `webfriend.rpc.event.Event`</span>
 <span class="sd">    ### Raises</span>
-<span class="sd">    `chromefriend.exceptions.TimeoutError`</span>
+<span class="sd">    `webfriend.exceptions.TimeoutError`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">idle_time</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for_idle</span><span class="p">(</span><span class="n">idle_time</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">[</span>
@@ -2646,13 +2646,13 @@ comes first).</p>
 
     
   
-    <div class="desc"><p>See: <code>chromefriend.rpc.dom.DOM.xpath</code></p></div>
+    <div class="desc"><p>See: <code>webfriend.rpc.dom.DOM.xpath</code></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.xpath', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.xpath" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">xpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    See: `chromefriend.rpc.dom.DOM.xpath`</span>
+<span class="sd">    See: `webfriend.rpc.dom.DOM.xpath`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>

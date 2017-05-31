@@ -16,13 +16,13 @@ class EventsProxy(CommandProxy):
 
         - **timeout** (`int`):
 
-            The timeout, in milliseconds, before raising a `chromefriend.exceptions.TimeoutError`.
+            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
         ### Returns
-        `chromefriend.rpc.event.Event`
+        `webfriend.rpc.event.Event`
 
         ### Raises
-        `chromefriend.exceptions.TimeoutError`
+        `webfriend.exceptions.TimeoutError`
         """
         return self.tab.wait_for(event_name, timeout=timeout)
 
@@ -54,7 +54,7 @@ class EventsProxy(CommandProxy):
         - **timeout** (`int`):
 
             The maximum amount of time to wait before raising a
-            `chromefriend.exceptions.TimeoutError`.
+            `webfriend.exceptions.TimeoutError`.
 
         - **poll_interval** (`int`):
 
@@ -64,7 +64,7 @@ class EventsProxy(CommandProxy):
         An `int` representing the number of milliseconds we waited for.
 
         ### Raises
-        `chromefriend.exceptions.TimeoutError`
+        `webfriend.exceptions.TimeoutError`
         """
         if hasattr(events, 'values'):
             events = events.values

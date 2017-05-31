@@ -4,9 +4,25 @@ Your friendly friend in modern web automation and testing.
 
 ## Overview
 
-## Documentation
+## Installation
 
-### Command Reference
+```
+git clone https://github.com/ghetzel/webfriend.git
+cd webfriend
+
+# Three Options:
+
+# 1. user-level package install
+python setup.py install --user
+
+# 2. system-level package install
+python setup.py install
+
+# 3. local environment, invoke with `./env/bin/webfriend`
+make
+```
+
+## Command Reference
 
 * [Index](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/index.html)
     - [Core Functions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/core.m.html)

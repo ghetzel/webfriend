@@ -58,7 +58,7 @@ class Chrome(object):
             script (str):
                 The full text of the script to execute.
 
-            scope (`chromefriend.scripting.Scope`, optional):
+            scope (`webfriend.scripting.Scope`, optional):
                 An optional initial scope to execute the script from.  This can be used to provide the
                 script with initial values for variables used in the script.
         """

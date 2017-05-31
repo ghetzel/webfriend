@@ -1,4 +1,4 @@
-.PHONY: test deps
+.PHONY: test deps docs
 
 all: env deps build test
 

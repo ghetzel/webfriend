@@ -83,7 +83,7 @@ class PageProxy(CommandProxy):
         ### Returns
         `dict`, with keys:
 
-        - _element_ (`chromefriend.rpc.dom.DOMElement`):
+        - _element_ (`webfriend.rpc.dom.DOMElement`):
             The element that was used as a measurement reference.
 
         - _width_ (`int`):

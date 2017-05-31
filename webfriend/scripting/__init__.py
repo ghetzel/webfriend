@@ -1,5 +1,5 @@
 """
-The `chromefriend.scripting` module implements a simplistic, straightforward scripting environment
+The `webfriend.scripting` module implements a simplistic, straightforward scripting environment
 for automating various tasks within the Chromium web browser.
 
 ## Overview

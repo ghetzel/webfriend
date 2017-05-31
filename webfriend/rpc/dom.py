@@ -453,10 +453,10 @@ class DOM(Base):
             The polling interval, in milliseconds, used for rechecking for the element.
 
         ### Returns
-        `chromefriend.rpc.dom.DOMElement`
+        `webfriend.rpc.dom.DOMElement`
 
         ### Raises
-        `chromefriend.exceptions.TimeoutError`
+        `webfriend.exceptions.TimeoutError`
         """
         started_at = time.time()
 

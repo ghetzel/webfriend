@@ -265,7 +265,7 @@ class CoreProxy(CommandProxy):
         Zero of more arguments to pass in the 'params' section of the RPC call.
 
         ### Returns
-        A `dict` representation of the `chromefriend.rpc.reply.Reply` class.
+        A `dict` representation of the `webfriend.rpc.reply.Reply` class.
         """
         return self.tab.rpc(method, **kwargs).as_dict()
 
@@ -278,13 +278,13 @@ class CoreProxy(CommandProxy):
 
         - **timeout** (`int`):
 
-            The timeout, in milliseconds, before raising a `chromefriend.exceptions.TimeoutError`.
+            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
         ### Returns
-        `chromefriend.rpc.event.Event`
+        `webfriend.rpc.event.Event`
 
         ### Raises
-        `chromefriend.exceptions.TimeoutError`
+        `webfriend.exceptions.TimeoutError`
         """
 
         if idle_time:
@@ -350,12 +350,12 @@ class CoreProxy(CommandProxy):
 
     def select(self, *args, **kwargs):
         """
-        See: `chromefriend.rpc.dom.DOM.select_nodes`
+        See: `webfriend.rpc.dom.DOM.select_nodes`
         """
         return self.tab.dom.select_nodes(*args, **kwargs)
 
     def xpath(self, *args, **kwargs):
         """
-        See: `chromefriend.rpc.dom.DOM.xpath`
+        See: `webfriend.rpc.dom.DOM.xpath`
         """
         return self.tab.dom.xpath(*args, **kwargs)
