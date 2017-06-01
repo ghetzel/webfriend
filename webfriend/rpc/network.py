@@ -6,8 +6,8 @@ from base64 import b64decode
 
 class Cookie(object):
     def __init__(self, rpc, definition):
-        self.rpc           = rpc
-        self.definition    = definition
+        self._rpc          = rpc
+        self._definition   = definition
         self.name          = definition['name']
         self.value         = definition['value']
         self.domain        = definition.get('domain')
@@ -20,7 +20,12 @@ class Cookie(object):
         self.same_site     = definition.get('sameSite')
 
         if self.expires_epoch is not None:
-            self.expires   = datetime.fromtimestamp(self.expires_epoch)
+            self.expires   = datetime.fromtimestamp(self.expires_epoch / 1e3)
+
+    def as_dict(self):
+        return dict([
+            (k, v) for k, v in self.__dict__.items() if not k.startswith('_')
+        ])
 
 
 class Network(Base):

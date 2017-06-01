@@ -4,6 +4,7 @@ from .events import EventsProxy
 from .page import PageProxy
 from .state import StateProxy
 from .file import FileProxy
+from .cookies import CookiesProxy
 
 ALL_PROXIES = [
     (CoreProxy.as_qualifier(), CoreProxy),
@@ -11,4 +12,5 @@ ALL_PROXIES = [
     (PageProxy.as_qualifier(), PageProxy),
     (StateProxy.as_qualifier(), StateProxy),
     (FileProxy.as_qualifier(), FileProxy),
+    (CookiesProxy.as_qualifier(), CookiesProxy),
 ]

@@ -50,6 +50,9 @@ class Input(Base):
         is_keypad=False,
         is_system=False
     ):
+        """
+        See https://chromedevtools.github.io/devtools-protocol/tot/Input/#method-dispatchKeyEvent
+        """
         params = {
             'type':      event_type,
             'modifiers': 0,
@@ -133,6 +136,9 @@ class Input(Base):
         timestamp=None,
         click_count=1,
     ):
+        """
+        See https://chromedevtools.github.io/devtools-protocol/tot/Input/#method-dispatchMouseEvent
+        """
         params = {
             'type':      event_type,
             'x':         int(x),
@@ -183,6 +189,65 @@ class Input(Base):
         move_finish_delay=50,
         click_duration=50
     ):
+        """
+        Dispatch low-level mouse events at the given coordinates to perform a variety of actions.
+
+        ### Arguments
+
+        - **x** (`int`):
+
+            The X-coordinate describing the click location.
+
+        - **y** (`int`):
+
+            The Y-coordinate describing the click location.
+
+        **button** (`str`):
+
+            Which mouse button the event will be for; one of: `left`, `middle`, or `right`.
+
+        **alt**, **control**, **meta**, **shift** (`bool`):
+
+            Declares that the Alt, Control, Meta/Command, and/or Shift keys (respectively) are
+            depressed at the time of the click action.
+
+        **move_to** (`bool`):
+
+            Simulates the mouse moving from the starting location to the destination **x**/**y**
+            coordinates.
+
+        **drag** (`bool`):
+
+            If specified, the click operation will be a "drag and drop" style movement, wherein
+            a set of initial coordinates receive a mouse press, then (with the button still
+            pressed) the mouse will move to the destination coordinates, and _then_ the button
+            release event will fire.
+
+        **start_x** (`int`):
+
+            For **drag** operations, the starting X-coordinate.
+
+        **start_y** (`int`):
+
+            For **drag** operations, the starting Y-coordinate.
+
+        **drag_start_delay** (`int`):
+
+            For **drag** operations, how long to wait (in milliseconds) after the initial mouse
+            button press before starting to move.
+
+        **move_finish_delay** (`int`):
+
+            If simulating mouse movement with **move_to**, how long to wait (in milliseconds)
+            _after_ the move is completed, but before clicking or releasing.
+
+        **click_duration** (`int`):
+
+            If non-zero and not dragging, how long (in milliseconds) the mouse button should be
+            held for when  performing the click; i.e.: how long between the mouse press and mouse
+            release events.
+        """
+
         is_dragging = False
 
         # dragging entails pressing the mouse, moving it, then releasing it

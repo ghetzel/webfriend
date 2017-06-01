@@ -95,7 +95,11 @@ CommandStanza:
 ;
 
 KeyValuePair:
-    name=ID ':' values += Type
+    name=KeyType ':' values += Type
+;
+
+KeyType:
+    ( ID | STRING )
 ;
 
 ScalarType:

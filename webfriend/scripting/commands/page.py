@@ -77,8 +77,8 @@ class PageProxy(CommandProxy):
 
         - **autoclose** (`bool`):
 
-            If a file handle is given as the **destination**, should it be automatically closed when
-            the screenshot is completed.
+            If a file handle is given as the **destination**, should it be automatically closed
+            when the screenshot is completed.
 
         ### Returns
         `dict`, with keys:

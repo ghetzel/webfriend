@@ -8,7 +8,13 @@ from uuid import uuid4
 
 
 class CoreProxy(CommandProxy):
-    def configure(self, events=None, demo=None):
+    def configure(
+        self,
+        events=None,
+        demo=None,
+        user_agent=None,
+        extra_headers=None
+    ):
         """
         Configures various features of the Remote Debugging protocol and provides environment
         setup.
@@ -19,6 +25,27 @@ class CoreProxy(CommandProxy):
 
             A list of strings specifying what kinds of events Chrome should send to this
             client.  Valid values are: `console`, `dom`, `network`, `page`.
+
+        - **demo** (`dict`, optional):
+
+            A section describing various runtime options useful for demonstrations and
+            walkthroughs.
+
+            - **delay** (`int`, optional):
+
+                If specified, scripts will sleep for this amount of time (in milliseconds) between
+                each command that is processed.  This is useful for slowing down the visual
+                effects of commands to a rate that is easier to see.
+
+        - **user_agent** (`str`, optional):
+
+            If specified, this will be the User-Agent header value that is sent with all HTTP(S)
+            requests initiated from here on.
+
+        - **extra_headers** (`dict`, optional):
+
+            If specified, these headers will be included in all HTTP(S) requests initiated from
+            here on.  An empty dict will clear previously set headers.
         """
         if events and hasattr(events, 'values') and isinstance(events.values, list):
             for domain in events.values:
@@ -37,6 +64,12 @@ class CoreProxy(CommandProxy):
                     'demo.post_command_delay',
                     float(demo['delay'])
                 )
+
+        if isinstance(user_agent, basestring):
+            self.tab.network.set_user_agent(user_agent)
+
+        if isinstance(extra_headers, dict):
+            self.tab.network.set_headers(extra_headers)
 
     def go(self, uri, referrer='random', wait_for_load=True, timeout=30000):
         """
@@ -185,6 +218,13 @@ class CoreProxy(CommandProxy):
         }
 
     def put(self, *args, **kwargs):
+        """
+        Store a value in the current scope.  Strings will be automatically converted into the
+        appropriate data types (float, int, bool) if possible.
+
+        ### Returns
+        The given value with automatic type detection applied.
+        """
         if len(args) == 1:
             return utils.autotype(args[0])
 
@@ -295,15 +335,77 @@ class CoreProxy(CommandProxy):
             return self.tab.wait_for('Page.loadEventFired', timeout=timeout)
 
     def input(self, text, **kwargs):
+        """
+        See: `webfriend.rpc.input.type_text`
+        """
         return self.tab.input.type_text(text, **kwargs)
 
     def focus(self, selector):
+        """
+        Focuses the given HTML element described by **selector**.  One and only one element may
+        match the selector.
+
+        ### Arguments
+
+        - **selector** (`str`):
+
+            The page element to focus, given as a CSS-style selector, an ID (e.g. "#myid"), or an
+            XPath query (e.g.: "xpath://body/p").
+
+        ### Returns
+        The matching `webfriend.rpc.dom.DOMElement` that was given focus.
+
+        ### Raises
+        - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
+        - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+        """
         elements = self.tab.dom.query_all(selector)
         self.tab.dom.ensure_unique_element(selector, elements)
+        element = elements['nodes'][0]
 
-        return self.tab.dom.focus(elements['nodes'][0].id)
+        self.tab.dom.focus(element.id)
+        return element
 
     def click(self, selector=None, x=None, y=None, unique_match=True, **kwargs):
+        """
+        Click on HTML element(s) or on a specific part of the page.  More complex click operations
+        are supported (e.g.: double clicking, drag and drop) by supplying **x**/**y** coordinates
+        directly.
+
+        ### Arguments
+
+        - **selector** (`str`, optional):
+
+            The page element to focus, given as a CSS-style selector, an ID (e.g. "#myid"), or an
+            XPath query (e.g.: "xpath://body/p").
+
+        - **x** (`int`, optional):
+
+            If **selector** is not specified, this is the X-coordinate component of the location
+            to click at.
+
+        - **y** (`int`, optional):
+
+            If **selector** is not specified, this is the Y-coordinate component of the location
+            to click at.
+
+        - **unique_match** (`bool`):
+
+            For **selector** matches, whether there can be one and only one match to click on. If
+            false, every matched element will be clicked on in the order they were matched in.
+
+        - **kwargs**:
+
+            Only applies to **x**/**y** click events, see: `webfriend.rpc.input.click_at`.
+
+        ### Returns
+        A `list` of elements that were clicked on.
+
+        ### Raises
+        For **selector**-based events:
+            - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
+            - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+        """
         if selector:
             elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
             results = []

@@ -305,18 +305,70 @@ class DOM(Base):
         self.tab.page.on(u'frameStartedLoading', self.reset)
 
     def reset(self, *args, **kwargs):
+        """
+        Clears out any existing local definitions in the DOM tree. This is used when navigating
+        between pages so that the new remote DOM can be stored.
+        """
         self._root_element = None
         self._elements = {}
 
     def has_element(self, id):
+        """
+        Return whether we know about the given element ID or not.
+
+        ### Arguments
+
+        - **id** (`str`):
+
+            The DOM element id.
+        """
         if id in self._elements:
             return True
         return False
 
     def element(self, id, fallback=None):
+        """
+        Return the given ID as a `webfriend.rpc.dom.DOMElement`, or `None` if we have not
+        received the element from Chrome.
+
+        ### Arguments
+
+        - **id** (`str`):
+
+            The DOM element id.
+
+        - **fallback** (any):
+
+            The value to return if the element is not known.
+
+        ### Returns
+        - `webfriend.rpc.dom.DOMElement` if the element is known, **fallback** if not.
+        """
         return self._elements.get(id, fallback)
 
     def element_at(self, x, y, shadow=False):
+        """
+        Return the topmost `webfriend.rpc.dom.DOMElement` at the given page coordinates, or `None`
+        if there is no element there.
+
+        ### Arguments
+
+        - **x** (`int`):
+
+            The X-coordinate to test at.
+
+        - **y** (`int`):
+
+            The Y-coordinate to test at.
+
+        - **shadow** (`bool`):
+
+            If specified, include "shadow DOMs" in the query; see
+            https://developers.google.com/web/fundamentals/getting-started/primers/shadowdom
+
+        ### Returns
+        - `webfriend.rpc.dom.DOMElement` if an element is at the coordinates, `None` if not.
+        """
         node_id = self.call(
             'getNodeForLocation',
             x=x,
@@ -330,6 +382,9 @@ class DOM(Base):
         return None
 
     def print_node(self, node_id=None, level=0, indent=4):
+        """
+        Print details about the given element to the debug log.
+        """
         if node_id is None:
             node_id = self.root.id
 
@@ -343,6 +398,12 @@ class DOM(Base):
 
     @property
     def root(self):
+        """
+        Returns the root DOM element for the current document.
+
+        ### Returns
+        The `webfriend.rpc.dom.DOMElement` representing the root element.
+        """
         if self._root_element is None:
             self.reset()
 
@@ -356,15 +417,57 @@ class DOM(Base):
         return self._root_element
 
     def remove_node(self, node_id):
+        """
+        Remove a specific node (and all children) from the DOM.
+
+        - **id** (`str`):
+
+            The DOM element id.
+        """
         self.call('removeNode', nodeId=node_id)
 
     def focus(self, node_id):
+        """
+        Set the focus on a specific element.
+
+        - **id** (`str`):
+
+            The DOM element id.
+        """
         self.call('focus', nodeId=node_id)
 
     def query(self, selector, node_id=None, reply_timeout=None):
+        """
+        Query for a single element.  Matched elements will be populated in the local DOM element
+        cache for rapid retrieval in subsequent calls.
+
+        - **selector** (`str`):
+
+            The page element to query for, given as a CSS-style selector, an ID (e.g. "#myid"), or
+            an XPath query (e.g.: "xpath://body/p").
+
+        - **node_id** (`str`):
+
+            If specified, the query will be performed relative to the element with the given
+            Node ID.  Otherwise, the root element will be used.
+
+        - **reply_timeout** (`int`):
+
+            The timeout (in milliseconds) before the query raises a
+            `webfriend.exceptions.TimeoutError`.
+
+        ### Returns
+        The matching `webfriend.rpc.dom.DOMElement`.
+
+        ### Raises
+        - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
+        - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+        - `webfriend.exceptions.TimeoutError` if the query times out.
+        """
         if node_id is None:
             node_id = self.root.id
 
+        # perform the call
         matched_node_id = self.call(
             'querySelector',
             reply_timeout=reply_timeout,
@@ -380,16 +483,47 @@ class DOM(Base):
                 )
             )
 
-        return DOMElement(self, {
+        # we try to retrieve the element from the local element cache because they typically
+        # come in as a series of events before the querySelector reply comes back, meaning that
+        # by the time we get to this point we _should_ have cached definitions
+        #
+        # if we don't have a cached copy, then return a skeleton instance so that we can still
+        # perform operations on the returned element
+        #
+        return self.element(matched_node_id, DOMElement(self, {
             'nodeId': matched_node_id,
-        })
+        }))
 
     def query_all(self, selector, node_id=None, reply_timeout=None):
+        """
+        Query for all matching elements. Matched elements will be populated in the local DOM element
+        cache for rapid retrieval in subsequent calls.
+
+        - **selector** (`str`):
+
+            The page element to query for, given as a CSS-style selector, an ID (e.g. "#myid"), or
+            an XPath query (e.g.: "xpath://body/p").
+
+        - **node_id** (`str`):
+
+            If specified, the query will be performed relative to the element with the given
+            Node ID.  Otherwise, the root element will be used.
+
+        - **reply_timeout** (`int`):
+
+            The timeout (in milliseconds) before the query raises a
+            `webfriend.exceptions.TimeoutError`.
+
+        ### Returns
+        A `list` of matching `webfriend.rpc.dom.DOMElement` (zero or more).
+
+        ### Raises
+        - `webfriend.exceptions.TimeoutError` if the query times out.
+        """
         if node_id is None:
             node_id = self.root.id
 
-        selector = selector.replace("'", '"')
-
+        # perform the call
         node_ids = self.call(
             'querySelectorAll',
             reply_timeout=reply_timeout,
@@ -397,13 +531,23 @@ class DOM(Base):
             nodeId=node_id
         ).get('nodeIds', [])
 
+        # we try to retrieve the element from the local element cache because they typically
+        # come in as a series of events before the querySelector reply comes back, meaning that
+        # by the time we get to this point we _should_ have cached definitions
+        #
+        # if we don't have a cached copy, then return a skeleton instance so that we can still
+        # perform operations on the returned element
+        #
         return [
-            DOMElement(self, {
+            self.element(i, DOMElement(self, {
                 'nodeId': i,
-            }) for i in node_ids
+            })) for i in node_ids
         ]
 
     def xpath(self, expression, node_id=None):
+        """
+        TBD
+        """
         if node_id is None:
             node_id = self.root.id
 
