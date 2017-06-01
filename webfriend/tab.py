@@ -54,6 +54,8 @@ class Tab(object):
         self.initial_w    = width
         self.initial_h    = height
 
+        self._trigger_worker = None
+
         # setup and enable all the RPC domains we support
         self.page         = Page(self)
         self.dom          = DOM(self)
@@ -73,6 +75,13 @@ class Tab(object):
                 width=self.initial_w,
                 height=self.initial_h,
             )
+
+    def stop(self):
+        if self.g_recv:
+            self.g_recv.kill()
+
+        if self._trigger_worker:
+            self._trigger_worker.kill()
 
     def send(self, data, expect_reply=True, reply_timeout=None):
         if not isinstance(data, dict):

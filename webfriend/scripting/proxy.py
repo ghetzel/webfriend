@@ -70,7 +70,7 @@ class CommandProxy(object):
 
 class CommandSet(object):
     default_qualifier = 'core'
-    DEFAULT_RESULT_KEY = 'result'
+    default_result_key = 'result'
 
     def __init__(self, scope=None, proxies=None):
         self._scope = (scope or Scope())
@@ -204,7 +204,7 @@ class CommandSet(object):
                 resultkey = self.interpolate(command.resultkey)
 
             else:
-                resultkey = self.DEFAULT_RESULT_KEY
+                resultkey = self.default_result_key
 
             # call function
             logging.debug(' ========= Execute: {} -> {}'.format(

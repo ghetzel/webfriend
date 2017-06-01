@@ -1,4 +1,4 @@
-.PHONY: test deps docs
+.PHONY: test deps docs build shell clean
 
 all: env deps build test
 

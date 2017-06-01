@@ -6,7 +6,6 @@ from json import JSONEncoder
 
 
 def _default(self, obj):
-    # print('obj={}'.format(obj.__class__))
     if hasattr(obj.__class__, 'to_json'):
         return obj.to_json()
     else:

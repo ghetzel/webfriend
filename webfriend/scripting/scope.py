@@ -32,6 +32,15 @@ class Scope(object):
         self.parent = parent
         self.data   = (data or {})
 
+    @property
+    def level(self):
+        lvl = 1
+
+        if self.parent:
+            lvl += self.parent.level
+
+        return lvl
+
     def ancestors(self):
         out = []
 
@@ -41,6 +50,12 @@ class Scope(object):
         out.append(self)
 
         return out
+
+    def owner_of(self, key):
+        if not self.is_local(key) and self.parent:
+            return self.parent.owner_of(key)
+
+        return self
 
     def as_dict(self):
         out = {}
@@ -66,8 +81,11 @@ class Scope(object):
         except KeyError:
             return fallback
 
-    def set(self, key, value):
-        self[key] = value
+    def set(self, key, value, force=False):
+        if force:
+            self.data[key] = value
+        else:
+            self[key] = value
 
     def __getitem__(self, key):
         try:
@@ -81,7 +99,8 @@ class Scope(object):
         if isinstance(value, str):
             value = value.decode('UTF-8')
 
-        self.data[key] = value
+        owner = self.owner_of(key)
+        owner.data[key] = value
 
     def __delitem__(self, key):
         del self.data[key]
@@ -95,3 +114,9 @@ class Scope(object):
                 return True
 
         return False
+
+    def __str__(self):
+        return 'Scope<level={},variables={}>'.format(
+            self.level,
+            len(self.data)
+        )

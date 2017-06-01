@@ -72,8 +72,8 @@ def execute_script(browser, script, scope=None):
     )
 
     # zero out the initial result if it's not there already
-    if commandset.DEFAULT_RESULT_KEY not in scope:
-        scope[commandset.DEFAULT_RESULT_KEY] = None
+    if commandset.default_result_key not in scope:
+        scope[commandset.default_result_key] = None
 
     # show the initial state
     for k, v in scope.items():
@@ -89,29 +89,9 @@ def execute_script(browser, script, scope=None):
         logging.debug('Add event handler {}'.format(callback_id))
         callbacks.add(callback_id)
 
-    # for each pipeline (or command, which is just a pipeline of length=1)...
+    # recursively evaluate all blocks and nested blocks starting from the top level
     for block in instructions.blocks:
-        if isinstance(block, CommandSequence):
-            commands = block.commands
-        elif isinstance(block, IfElseBlock):
-            sequence = block.get_command_sequence(commandset)
-
-            if sequence is None:
-                continue
-
-            commands = sequence.commands
-
-        # for each command in the pipeline...
-        for command in commands:
-            key, value = commandset.execute(command, scope)
-
-            if key != 'null':
-                scope[key] = value
-
-            # perform delay if we have one
-            if commandset.has_execution_option('demo.post_command_delay'):
-                delay = commandset.get_execution_option('demo.post_command_delay')
-                time.sleep(delay / 1e3)
+        evaluate_block(commandset, block, scope)
 
     # unregister the event handlers we created for this run
     for callback_id in callbacks:
@@ -120,6 +100,31 @@ def execute_script(browser, script, scope=None):
 
     # return the final state after script execution
     return scope
+
+
+def evaluate_block(commandset, block, scope):
+    # Commands
+    # ---------------------------------------------------------------------------------------------
+    if isinstance(block, CommandSequence):
+        # for each command in the pipeline...
+        for command in block.commands:
+            key, value = commandset.execute(command, scope)
+
+            if key != 'null':
+                scope.set(key, value, force=True)
+
+            # perform delay if we have one
+            if commandset.has_execution_option('demo.post_command_delay'):
+                delay = commandset.get_execution_option('demo.post_command_delay')
+                time.sleep(delay / 1e3)
+
+    # If / Else If / Else
+    # ---------------------------------------------------------------------------------------------
+    elif isinstance(block, IfElseBlock):
+        subscope = Scope(parent=scope)
+
+        for subblock in block.get_blocks(commandset, scope=subscope):
+            evaluate_block(commandset, subblock, subscope)
 
 
 def _handle_event(handler, commandset, scope):

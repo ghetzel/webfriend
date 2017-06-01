@@ -15,7 +15,7 @@ class PageProxy(CommandProxy):
         format='png',
         jpeg_quality=None,
         selector='html',
-        settle=1000,
+        settle=250,
         after_events=None,
         settle_timeout=None,
         autoclose=True

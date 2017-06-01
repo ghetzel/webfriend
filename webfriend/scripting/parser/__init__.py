@@ -4,7 +4,6 @@ import textx.exceptions
 from .grammar import generate_grammar
 from collections import OrderedDict
 import re
-from ..scope import Scope
 
 
 class SyntaxError(Exception):
@@ -93,21 +92,16 @@ class Expression(MetaModel):
         # the result
         if self.command:
             # execute the command
-            result = commandset.execute(self.command, scope)
+            resultkey, result = commandset.execute(self.command, scope)
+
+            # whatever the result of the expression command was, put it in the calling scope
+            scope.set(resultkey, result, force=True)
 
             # if the statement has a condition, then evaluate using it
             if self.condition:
-                # get custom resultkey, if specified
-                if self.command.resultkey:
-                    resultkey = self.command.resultkey
-                else:
-                    resultkey = commandset.DEFAULT_RESULT_KEY
-
-                # evaluate the given condition with a new scope that sets the
-                # resultkey to the command's result value
-                return self.condition.evaluate(commandset, Scope({
-                    resultkey: result,
-                }, parent=scope))
+                # evaluate the given condition with the command result set to a temporary scope
+                # variable that gets cleared once we return back to the containing block context
+                return self.condition.evaluate(commandset, scope)
             else:
                 # no condition, so just do the same thing as a unary if-statement
                 return self.compare(result)
@@ -172,16 +166,16 @@ class LinearExecutionBlock(MetaModel):
 
 
 class IfElseBlock(MetaModel):
-    def get_command_sequence(self, commandset):
-        if self.if_expr.expression.evaluate(commandset):
-            return self.if_expr.sequence
+    def get_blocks(self, commandset, scope=None):
+        if self.if_expr.expression.evaluate(commandset, scope=scope):
+            return self.if_expr.blocks
 
         for elseif in self.elseif_expr:
-            if elseif.statement.expression.evaluate(commandset):
-                return elseif.statement.sequence
+            if elseif.statement.expression.evaluate(commandset, scope=scope):
+                return elseif.statement.blocks
 
         if self.else_expr:
-            return self.else_expr.sequence
+            return self.else_expr.blocks
 
         return None
 

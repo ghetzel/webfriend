@@ -40,7 +40,7 @@ IfElseBlock:
 
 IfStanza:
     'if' expression=Expression '{'
-        sequence=CommandSequence
+        blocks += Block
     '}'
 ;
 
@@ -50,16 +50,12 @@ ElseIfStanza:
 
 ElseStanza:
     'else' '{'
-        sequence = CommandSequence
+        blocks += Block
     '}'
 ;
 
 Variable:
     '$'- name=ID
-;
-
-OutputVariable:
-    ( Variable | STRING )
 ;
 
 Operator:
@@ -80,7 +76,7 @@ Command:
     name=CommandName (
         id=CommandID options=CommandStanza? | options=CommandStanza
     )? (
-        '->' resultkey=OutputVariable
+        '->' resultkey=Variable
     )?
 ;
 

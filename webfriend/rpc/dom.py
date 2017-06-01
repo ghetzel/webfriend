@@ -66,8 +66,6 @@ class DOMElement(object):
         remote_object = self.dom.call('resolveNode', nodeId=self.id).result.get('object', {})
         object_id = remote_object['objectId']
 
-        print('GOT: {}'.format(object_id))
-
         # retrieve details via script injection
         try:
             # call the function to retrieve runtime position info
@@ -572,8 +570,6 @@ class DOM(Base):
             """.format(expression.replace("'", "\\'")),
             return_by_value=True
         )
-
-        print(out)
 
         return out
 
