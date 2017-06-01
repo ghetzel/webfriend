@@ -1100,7 +1100,13 @@ table {
 
 
 <span class="k">class</span> <span class="nc">CoreProxy</span><span class="p">(</span><span class="n">CommandProxy</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">user_agent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Configures various features of the Remote Debugging protocol and provides environment</span>
 <span class="sd">        setup.</span>
@@ -1111,6 +1117,27 @@ table {
 
 <span class="sd">            A list of strings specifying what kinds of events Chrome should send to this</span>
 <span class="sd">            client.  Valid values are: `console`, `dom`, `network`, `page`.</span>
+
+<span class="sd">        - **demo** (`dict`, optional):</span>
+
+<span class="sd">            A section describing various runtime options useful for demonstrations and</span>
+<span class="sd">            walkthroughs.</span>
+
+<span class="sd">            - **delay** (`int`, optional):</span>
+
+<span class="sd">                If specified, scripts will sleep for this amount of time (in milliseconds) between</span>
+<span class="sd">                each command that is processed.  This is useful for slowing down the visual</span>
+<span class="sd">                effects of commands to a rate that is easier to see.</span>
+
+<span class="sd">        - **user_agent** (`str`, optional):</span>
+
+<span class="sd">            If specified, this will be the User-Agent header value that is sent with all HTTP(S)</span>
+<span class="sd">            requests initiated from here on.</span>
+
+<span class="sd">        - **extra_headers** (`dict`, optional):</span>
+
+<span class="sd">            If specified, these headers will be included in all HTTP(S) requests initiated from</span>
+<span class="sd">            here on.  An empty dict will clear previously set headers.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">events</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">events</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
@@ -1129,6 +1156,12 @@ table {
                     <span class="s1">&#39;demo.post_command_delay&#39;</span><span class="p">,</span>
                     <span class="nb">float</span><span class="p">(</span><span class="n">demo</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span>
                 <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_agent</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_user_agent</span><span class="p">(</span><span class="n">user_agent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_headers</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">referrer</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">wait_for_load</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1277,6 +1310,13 @@ table {
         <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store a value in the current scope.  Strings will be automatically converted into the</span>
+<span class="sd">        appropriate data types (float, int, bool) if possible.</span>
+
+<span class="sd">        ### Returns</span>
+<span class="sd">        The given value with automatic type detection applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">autotype</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
@@ -1387,15 +1427,77 @@ table {
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="s1">&#39;Page.loadEventFired&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        See: `webfriend.rpc.input.type_text`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">type_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Focuses the given HTML element described by **selector**.  One and only one element may</span>
+<span class="sd">        match the selector.</span>
+
+<span class="sd">        ### Arguments</span>
+
+<span class="sd">        - **selector** (`str`):</span>
+
+<span class="sd">            The page element to focus, given as a CSS-style selector, an ID (e.g. &quot;#myid&quot;), or an</span>
+<span class="sd">            XPath query (e.g.: &quot;xpath://body/p&quot;).</span>
+
+<span class="sd">        ### Returns</span>
+<span class="sd">        The matching `webfriend.rpc.dom.DOMElement` that was given focus.</span>
+
+<span class="sd">        ### Raises</span>
+<span class="sd">        - `webfriend.exceptions.EmptyResult` if zero elements were matched, or</span>
+<span class="sd">        - `webfriend.exceptions.TooManyResults` if more than one elements were matched.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">query_all</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">ensure_unique_element</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">elements</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">element</span>
 
     <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unique_match</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Click on HTML element(s) or on a specific part of the page.  More complex click operations</span>
+<span class="sd">        are supported (e.g.: double clicking, drag and drop) by supplying **x**/**y** coordinates</span>
+<span class="sd">        directly.</span>
+
+<span class="sd">        ### Arguments</span>
+
+<span class="sd">        - **selector** (`str`, optional):</span>
+
+<span class="sd">            The page element to focus, given as a CSS-style selector, an ID (e.g. &quot;#myid&quot;), or an</span>
+<span class="sd">            XPath query (e.g.: &quot;xpath://body/p&quot;).</span>
+
+<span class="sd">        - **x** (`int`, optional):</span>
+
+<span class="sd">            If **selector** is not specified, this is the X-coordinate component of the location</span>
+<span class="sd">            to click at.</span>
+
+<span class="sd">        - **y** (`int`, optional):</span>
+
+<span class="sd">            If **selector** is not specified, this is the Y-coordinate component of the location</span>
+<span class="sd">            to click at.</span>
+
+<span class="sd">        - **unique_match** (`bool`):</span>
+
+<span class="sd">            For **selector** matches, whether there can be one and only one match to click on. If</span>
+<span class="sd">            false, every matched element will be clicked on in the order they were matched in.</span>
+
+<span class="sd">        - **kwargs**:</span>
+
+<span class="sd">            Only applies to **x**/**y** click events, see: `webfriend.rpc.input.click_at`.</span>
+
+<span class="sd">        ### Returns</span>
+<span class="sd">        A `list` of elements that were clicked on.</span>
+
+<span class="sd">        ### Raises</span>
+<span class="sd">        For **selector**-based events:</span>
+<span class="sd">            - `webfriend.exceptions.EmptyResult` if zero elements were matched, or</span>
+<span class="sd">            - `webfriend.exceptions.TooManyResults` if more than one elements were matched.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">selector</span><span class="p">:</span>
             <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">select_nodes</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">wait_for_match</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
             <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1470,7 +1572,13 @@ table {
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy" class="source">
     <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">CoreProxy</span><span class="p">(</span><span class="n">CommandProxy</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">user_agent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span>
+    <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Configures various features of the Remote Debugging protocol and provides environment</span>
 <span class="sd">        setup.</span>
@@ -1481,6 +1589,27 @@ table {
 
 <span class="sd">            A list of strings specifying what kinds of events Chrome should send to this</span>
 <span class="sd">            client.  Valid values are: `console`, `dom`, `network`, `page`.</span>
+
+<span class="sd">        - **demo** (`dict`, optional):</span>
+
+<span class="sd">            A section describing various runtime options useful for demonstrations and</span>
+<span class="sd">            walkthroughs.</span>
+
+<span class="sd">            - **delay** (`int`, optional):</span>
+
+<span class="sd">                If specified, scripts will sleep for this amount of time (in milliseconds) between</span>
+<span class="sd">                each command that is processed.  This is useful for slowing down the visual</span>
+<span class="sd">                effects of commands to a rate that is easier to see.</span>
+
+<span class="sd">        - **user_agent** (`str`, optional):</span>
+
+<span class="sd">            If specified, this will be the User-Agent header value that is sent with all HTTP(S)</span>
+<span class="sd">            requests initiated from here on.</span>
+
+<span class="sd">        - **extra_headers** (`dict`, optional):</span>
+
+<span class="sd">            If specified, these headers will be included in all HTTP(S) requests initiated from</span>
+<span class="sd">            here on.  An empty dict will clear previously set headers.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">events</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">events</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
@@ -1499,6 +1628,12 @@ table {
                     <span class="s1">&#39;demo.post_command_delay&#39;</span><span class="p">,</span>
                     <span class="nb">float</span><span class="p">(</span><span class="n">demo</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span>
                 <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_agent</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_user_agent</span><span class="p">(</span><span class="n">user_agent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_headers</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">referrer</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">wait_for_load</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1647,6 +1782,13 @@ table {
         <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Store a value in the current scope.  Strings will be automatically converted into the</span>
+<span class="sd">        appropriate data types (float, int, bool) if possible.</span>
+
+<span class="sd">        ### Returns</span>
+<span class="sd">        The given value with automatic type detection applied.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">autotype</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
@@ -1757,15 +1899,77 @@ table {
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="s1">&#39;Page.loadEventFired&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        See: `webfriend.rpc.input.type_text`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">type_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Focuses the given HTML element described by **selector**.  One and only one element may</span>
+<span class="sd">        match the selector.</span>
+
+<span class="sd">        ### Arguments</span>
+
+<span class="sd">        - **selector** (`str`):</span>
+
+<span class="sd">            The page element to focus, given as a CSS-style selector, an ID (e.g. &quot;#myid&quot;), or an</span>
+<span class="sd">            XPath query (e.g.: &quot;xpath://body/p&quot;).</span>
+
+<span class="sd">        ### Returns</span>
+<span class="sd">        The matching `webfriend.rpc.dom.DOMElement` that was given focus.</span>
+
+<span class="sd">        ### Raises</span>
+<span class="sd">        - `webfriend.exceptions.EmptyResult` if zero elements were matched, or</span>
+<span class="sd">        - `webfriend.exceptions.TooManyResults` if more than one elements were matched.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">query_all</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">ensure_unique_element</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
+        <span class="n">element</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">elements</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">element</span>
 
     <span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unique_match</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Click on HTML element(s) or on a specific part of the page.  More complex click operations</span>
+<span class="sd">        are supported (e.g.: double clicking, drag and drop) by supplying **x**/**y** coordinates</span>
+<span class="sd">        directly.</span>
+
+<span class="sd">        ### Arguments</span>
+
+<span class="sd">        - **selector** (`str`, optional):</span>
+
+<span class="sd">            The page element to focus, given as a CSS-style selector, an ID (e.g. &quot;#myid&quot;), or an</span>
+<span class="sd">            XPath query (e.g.: &quot;xpath://body/p&quot;).</span>
+
+<span class="sd">        - **x** (`int`, optional):</span>
+
+<span class="sd">            If **selector** is not specified, this is the X-coordinate component of the location</span>
+<span class="sd">            to click at.</span>
+
+<span class="sd">        - **y** (`int`, optional):</span>
+
+<span class="sd">            If **selector** is not specified, this is the Y-coordinate component of the location</span>
+<span class="sd">            to click at.</span>
+
+<span class="sd">        - **unique_match** (`bool`):</span>
+
+<span class="sd">            For **selector** matches, whether there can be one and only one match to click on. If</span>
+<span class="sd">            false, every matched element will be clicked on in the order they were matched in.</span>
+
+<span class="sd">        - **kwargs**:</span>
+
+<span class="sd">            Only applies to **x**/**y** click events, see: `webfriend.rpc.input.click_at`.</span>
+
+<span class="sd">        ### Returns</span>
+<span class="sd">        A `list` of elements that were clicked on.</span>
+
+<span class="sd">        ### Raises</span>
+<span class="sd">        For **selector**-based events:</span>
+<span class="sd">            - `webfriend.exceptions.EmptyResult` if zero elements were matched, or</span>
+<span class="sd">            - `webfriend.exceptions.TooManyResults` if more than one elements were matched.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">selector</span><span class="p">:</span>
             <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">select_nodes</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">wait_for_match</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
             <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1914,10 +2118,72 @@ table {
 
     
   
+    <div class="desc"><p>Click on HTML element(s) or on a specific part of the page.  More complex click operations
+are supported (e.g.: double clicking, drag and drop) by supplying <strong>x</strong>/<strong>y</strong> coordinates
+directly.</p>
+<h3>Arguments</h3>
+<ul>
+<li>
+<p><strong>selector</strong> (<code>str</code>, optional):</p>
+<p>The page element to focus, given as a CSS-style selector, an ID (e.g. "#myid"), or an
+XPath query (e.g.: "xpath://body/p").</p>
+</li>
+<li>
+<p><strong>x</strong> (<code>int</code>, optional):</p>
+<p>If <strong>selector</strong> is not specified, this is the X-coordinate component of the location
+to click at.</p>
+</li>
+<li>
+<p><strong>y</strong> (<code>int</code>, optional):</p>
+<p>If <strong>selector</strong> is not specified, this is the Y-coordinate component of the location
+to click at.</p>
+</li>
+<li>
+<p><strong>unique_match</strong> (<code>bool</code>):</p>
+<p>For <strong>selector</strong> matches, whether there can be one and only one match to click on. If
+false, every matched element will be clicked on in the order they were matched in.</p>
+</li>
+<li>
+<p><strong>kwargs</strong>:</p>
+<p>Only applies to <strong>x</strong>/<strong>y</strong> click events, see: <code>webfriend.rpc.input.click_at</code>.</p>
+</li>
+</ul>
+<h3>Returns</h3>
+<p>A <code>list</code> of elements that were clicked on.</p>
+<h3>Raises</h3>
+<p>For <strong>selector</strong>-based events:
+    - <code>webfriend.exceptions.EmptyResult</code> if zero elements were matched, or
+    - <code>webfriend.exceptions.TooManyResults</code> if more than one elements were matched.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.click', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.click" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">click</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">unique_match</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Click on HTML element(s) or on a specific part of the page.  More complex click operations</span>
+<span class="sd">    are supported (e.g.: double clicking, drag and drop) by supplying **x**/**y** coordinates</span>
+<span class="sd">    directly.</span>
+<span class="sd">    ### Arguments</span>
+<span class="sd">    - **selector** (`str`, optional):</span>
+<span class="sd">        The page element to focus, given as a CSS-style selector, an ID (e.g. &quot;#myid&quot;), or an</span>
+<span class="sd">        XPath query (e.g.: &quot;xpath://body/p&quot;).</span>
+<span class="sd">    - **x** (`int`, optional):</span>
+<span class="sd">        If **selector** is not specified, this is the X-coordinate component of the location</span>
+<span class="sd">        to click at.</span>
+<span class="sd">    - **y** (`int`, optional):</span>
+<span class="sd">        If **selector** is not specified, this is the Y-coordinate component of the location</span>
+<span class="sd">        to click at.</span>
+<span class="sd">    - **unique_match** (`bool`):</span>
+<span class="sd">        For **selector** matches, whether there can be one and only one match to click on. If</span>
+<span class="sd">        false, every matched element will be clicked on in the order they were matched in.</span>
+<span class="sd">    - **kwargs**:</span>
+<span class="sd">        Only applies to **x**/**y** click events, see: `webfriend.rpc.input.click_at`.</span>
+<span class="sd">    ### Returns</span>
+<span class="sd">    A `list` of elements that were clicked on.</span>
+<span class="sd">    ### Raises</span>
+<span class="sd">    For **selector**-based events:</span>
+<span class="sd">        - `webfriend.exceptions.EmptyResult` if zero elements were matched, or</span>
+<span class="sd">        - `webfriend.exceptions.TooManyResults` if more than one elements were matched.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">selector</span><span class="p">:</span>
         <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">select_nodes</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">wait_for_match</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1941,7 +2207,7 @@ table {
             
   <div class="item">
     <div class="name def" id="webfriend.scripting.commands.core.CoreProxy.configure">
-    <p>def <span class="ident">configure</span>(</p><p>self, events=None, demo=None)</p>
+    <p>def <span class="ident">configure</span>(</p><p>self, events=None, demo=None, user_agent=None, extra_headers=None)</p>
     </div>
     
 
@@ -1956,11 +2222,40 @@ setup.</p>
 <p>A list of strings specifying what kinds of events Chrome should send to this
 client.  Valid values are: <code>console</code>, <code>dom</code>, <code>network</code>, <code>page</code>.</p>
 </li>
+<li>
+<p><strong>demo</strong> (<code>dict</code>, optional):</p>
+<p>A section describing various runtime options useful for demonstrations and
+walkthroughs.</p>
+<ul>
+<li>
+<p><strong>delay</strong> (<code>int</code>, optional):</p>
+<p>If specified, scripts will sleep for this amount of time (in milliseconds) between
+each command that is processed.  This is useful for slowing down the visual
+effects of commands to a rate that is easier to see.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>user_agent</strong> (<code>str</code>, optional):</p>
+<p>If specified, this will be the User-Agent header value that is sent with all HTTP(S)
+requests initiated from here on.</p>
+</li>
+<li>
+<p><strong>extra_headers</strong> (<code>dict</code>, optional):</p>
+<p>If specified, these headers will be included in all HTTP(S) requests initiated from
+here on.  An empty dict will clear previously set headers.</p>
+</li>
 </ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.configure', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.configure" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">configure</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="n">user_agent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span>
+<span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configures various features of the Remote Debugging protocol and provides environment</span>
 <span class="sd">    setup.</span>
@@ -1968,6 +2263,19 @@ client.  Valid values are: <code>console</code>, <code>dom</code>, <code>network
 <span class="sd">    - **events** (`list`, optional):</span>
 <span class="sd">        A list of strings specifying what kinds of events Chrome should send to this</span>
 <span class="sd">        client.  Valid values are: `console`, `dom`, `network`, `page`.</span>
+<span class="sd">    - **demo** (`dict`, optional):</span>
+<span class="sd">        A section describing various runtime options useful for demonstrations and</span>
+<span class="sd">        walkthroughs.</span>
+<span class="sd">        - **delay** (`int`, optional):</span>
+<span class="sd">            If specified, scripts will sleep for this amount of time (in milliseconds) between</span>
+<span class="sd">            each command that is processed.  This is useful for slowing down the visual</span>
+<span class="sd">            effects of commands to a rate that is easier to see.</span>
+<span class="sd">    - **user_agent** (`str`, optional):</span>
+<span class="sd">        If specified, this will be the User-Agent header value that is sent with all HTTP(S)</span>
+<span class="sd">        requests initiated from here on.</span>
+<span class="sd">    - **extra_headers** (`dict`, optional):</span>
+<span class="sd">        If specified, these headers will be included in all HTTP(S) requests initiated from</span>
+<span class="sd">        here on.  An empty dict will clear previously set headers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">events</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">events</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
@@ -1983,6 +2291,10 @@ client.  Valid values are: <code>console</code>, <code>dom</code>, <code>network
                 <span class="s1">&#39;demo.post_command_delay&#39;</span><span class="p">,</span>
                 <span class="nb">float</span><span class="p">(</span><span class="n">demo</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span>
             <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_agent</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_user_agent</span><span class="p">(</span><span class="n">user_agent</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_headers</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -2028,13 +2340,45 @@ client.  Valid values are: <code>console</code>, <code>dom</code>, <code>network
 
     
   
+    <div class="desc"><p>Focuses the given HTML element described by <strong>selector</strong>.  One and only one element may
+match the selector.</p>
+<h3>Arguments</h3>
+<ul>
+<li>
+<p><strong>selector</strong> (<code>str</code>):</p>
+<p>The page element to focus, given as a CSS-style selector, an ID (e.g. "#myid"), or an
+XPath query (e.g.: "xpath://body/p").</p>
+</li>
+</ul>
+<h3>Returns</h3>
+<p>The matching <code>webfriend.rpc.dom.DOMElement</code> that was given focus.</p>
+<h3>Raises</h3>
+<ul>
+<li><code>webfriend.exceptions.EmptyResult</code> if zero elements were matched, or</li>
+<li><code>webfriend.exceptions.TooManyResults</code> if more than one elements were matched.</li>
+</ul></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.focus', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.focus" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">focus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Focuses the given HTML element described by **selector**.  One and only one element may</span>
+<span class="sd">    match the selector.</span>
+<span class="sd">    ### Arguments</span>
+<span class="sd">    - **selector** (`str`):</span>
+<span class="sd">        The page element to focus, given as a CSS-style selector, an ID (e.g. &quot;#myid&quot;), or an</span>
+<span class="sd">        XPath query (e.g.: &quot;xpath://body/p&quot;).</span>
+<span class="sd">    ### Returns</span>
+<span class="sd">    The matching `webfriend.rpc.dom.DOMElement` that was given focus.</span>
+<span class="sd">    ### Raises</span>
+<span class="sd">    - `webfriend.exceptions.EmptyResult` if zero elements were matched, or</span>
+<span class="sd">    - `webfriend.exceptions.TooManyResults` if more than one elements were matched.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">query_all</span><span class="p">(</span><span class="n">selector</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">ensure_unique_element</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">elements</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">element</span> <span class="o">=</span> <span class="n">elements</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">focus</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">element</span>
 </pre></div>
 
   </div>
@@ -2153,10 +2497,14 @@ from the current page. Specifying None will omit the field from the request.</p>
 
     
   
+    <div class="desc"><p>See: <code>webfriend.rpc.input.type_text</code></p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.input', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.input" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    See: `webfriend.rpc.input.type_text`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">type_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -2261,10 +2609,20 @@ from the current page. Specifying None will omit the field from the request.</p>
 
     
   
+    <div class="desc"><p>Store a value in the current scope.  Strings will be automatically converted into the
+appropriate data types (float, int, bool) if possible.</p>
+<h3>Returns</h3>
+<p>The given value with automatic type detection applied.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.put', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.put" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Store a value in the current scope.  Strings will be automatically converted into the</span>
+<span class="sd">    appropriate data types (float, int, bool) if possible.</span>
+<span class="sd">    ### Returns</span>
+<span class="sd">    The given value with automatic type detection applied.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">autotype</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
