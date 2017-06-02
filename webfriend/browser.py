@@ -39,13 +39,11 @@ class Chrome(object):
             self.debug_url = 'http://{}:{}'.format(LOCALHOST, port)
 
         browser_arguments = list(
-            set(
-                self.browser_arguments + [
-                    '--remote-debugging-port={}'.format(
-                        urlparse(self.debug_url).port
-                    ),
-                ]
-            )
+            self.browser_arguments + [
+                '--remote-debugging-port={}'.format(
+                    urlparse(self.debug_url).port
+                ),
+            ]
         )
 
         self.launch_browser(browser_arguments)
@@ -87,12 +85,29 @@ class Chrome(object):
         except requests.exceptions.ConnectionError:
             return False
 
-    def sync(self):
+    def sync(self, wait_for_tab=10000, interval=250):
         tabs_seen = set()
         default_tab = None
         self.tabs = {}
+        started_at = time.time()
+        tabs = []
 
-        for tab in requests.get('{}/json'.format(self.debug_url)).json():
+        while time.time() < (started_at + (wait_for_tab / 1e3)):
+            tabs = [
+                t for t in requests.get('{}/json'.format(
+                    self.debug_url)
+                ).json() if t['type'] == 'page'
+            ]
+
+            if len(tabs):
+                break
+
+            time.sleep(interval / 1e3)
+
+        if not len(tabs):
+            raise Exception("Browser creation failed")
+
+        for tab in tabs:
             if tab['type'] == 'page':
                 frame_id = tab.get('id')
 

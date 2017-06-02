@@ -5,7 +5,7 @@ import math
 
 class Emulation(Base):
     domain = 'Emulation'
-    enable_events = False
+    supports_events = False
 
     valid_orientations = [
         'portraitPrimary',

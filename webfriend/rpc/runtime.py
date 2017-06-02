@@ -12,7 +12,7 @@ class ScriptError(Exception):
 
 class Runtime(Base):
     domain = 'Runtime'
-    enable_events = False
+    supports_events = False
 
     def evaluate(self, expression, return_by_value=True, wrapper_fn=True):
         if wrapper_fn:

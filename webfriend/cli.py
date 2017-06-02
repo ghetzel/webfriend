@@ -23,9 +23,9 @@ from .scripting import execute_script, Scope
 @click_log.init()
 @click.pass_context
 def main(ctx, script, debug, debugger_url):
-    # if debug:
-    #     Chrome.browser_arguments.remove('--headless')
-    #     Chrome.browser_arguments.append('--temp-profile')
+    if debug:
+        Chrome.browser_arguments.remove('--headless')
+        Chrome.browser_arguments = ['--temp-profile'] + Chrome.browser_arguments
 
     with Chrome(debug_url=debugger_url) as chrome:
         scope = Scope()

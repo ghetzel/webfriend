@@ -22,7 +22,7 @@ used to make decisions.
 """
 
 from __future__ import absolute_import
-from .parser import AutomationScript, CommandSequence, IfElseBlock, LoopBlock
+from .parser import Friendscript, CommandSequence, IfElseBlock, LoopBlock
 from .proxy import CommandProxy, CommandSet
 from .scope import Scope
 import logging
@@ -66,10 +66,13 @@ def execute_script(browser, script, scope=None):
         commandset[name] = proxy_cls(browser, commandset=commandset)
 
     # load and parse the script
-    instructions = AutomationScript(
+    instructions = Friendscript(
         data=script,
         commands=commandset.get_command_names()
     )
+
+    # tell the commandset about the calling script
+    commandset.script = instructions
 
     # zero out the initial result if it's not there already
     if commandset.default_result_key not in scope:
@@ -89,14 +92,24 @@ def execute_script(browser, script, scope=None):
         logging.debug('Add event handler {}'.format(callback_id))
         callbacks.add(callback_id)
 
-    # recursively evaluate all blocks and nested blocks starting from the top level
-    for block in instructions.blocks:
-        evaluate_block(commandset, block, scope)
+    # enable event reporting now
+    browser.default.enable_events()
 
-    # unregister the event handlers we created for this run
-    for callback_id in callbacks:
-        logging.debug('Remove event handler {}'.format(callback_id))
-        browser.default.remove_handler(callback_id)
+    # Script Execution starts NOW
+    # ---------------------------------------------------------------------------------------------
+    try:
+        # recursively evaluate all blocks and nested blocks starting from the top level
+        for block in instructions.blocks:
+            evaluate_block(commandset, block, scope)
+
+    finally:
+        # unregister the event handlers we created for this run
+        for callback_id in callbacks:
+            logging.debug('Remove event handler {}'.format(callback_id))
+            browser.default.remove_handler(callback_id)
+
+    # ...and done.
+    # ---------------------------------------------------------------------------------------------
 
     # return the final state after script execution
     return scope
@@ -108,6 +121,7 @@ def evaluate_block(commandset, block, scope):
     if isinstance(block, CommandSequence):
         # for each command in the pipeline...
         for command in block.commands:
+            print(command.__dict__)
             key, value = commandset.execute(command, scope)
 
             if key != 'null':

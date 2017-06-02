@@ -1,6 +1,6 @@
 def generate_grammar(commands):
     return """
-AutomationScript:
+Friendscript:
     Shebang?
     blocks *= Block
 ;

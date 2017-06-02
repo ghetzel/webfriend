@@ -75,6 +75,7 @@ class CommandSet(object):
     def __init__(self, scope=None, proxies=None):
         self._scope = (scope or Scope())
         self.proxies = (proxies or {})
+        self.script = None
         self._exec_options = {}
         self.sync_scopes()
 

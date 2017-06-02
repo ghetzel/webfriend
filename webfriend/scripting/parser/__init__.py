@@ -297,7 +297,7 @@ class EventHandlerBlock(MetaModel):
     pass
 
 
-class AutomationScript(object):
+class Friendscript(object):
     def __init__(self, filename=None, data=None, commands=None):
         self.model = None
 

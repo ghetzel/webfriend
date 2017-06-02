@@ -76,6 +76,13 @@ class Tab(object):
                 height=self.initial_h,
             )
 
+    def enable_events(self):
+        for k in dir(self):
+            attr = getattr(self, k)
+
+            if isinstance(attr, Base):
+                attr.enable()
+
     def stop(self):
         if self.g_recv:
             self.g_recv.kill()
@@ -83,7 +90,7 @@ class Tab(object):
         if self._trigger_worker:
             self._trigger_worker.kill()
 
-    def send(self, data, expect_reply=True, reply_timeout=None):
+    def send(self, data, expect_reply=True, reply_timeout=None, context=None):
         if not isinstance(data, dict):
             raise AttributeError("Data must be a dict")
 
@@ -354,7 +361,7 @@ class Tab(object):
     def evaluate(self, *args, **kwargs):
         return self.runtime.evaluate(*args, **kwargs)
 
-    def rpc(self, method, expect_reply=True, reply_timeout=None, **params):
+    def rpc(self, method, expect_reply=True, reply_timeout=None, context=None, **params):
         payload = {
             'method': method,
         }
@@ -362,7 +369,12 @@ class Tab(object):
         if len(params):
             payload['params'] = params
 
-        return self.send(payload, expect_reply=expect_reply, reply_timeout=reply_timeout)
+        return self.send(
+            payload,
+            expect_reply=expect_reply,
+            reply_timeout=reply_timeout,
+            context=context
+        )
 
     def get_domain_instance(self, domain):
         for attr in dir(self):

@@ -6,7 +6,7 @@ import logging
 
 
 class Base(object):
-    enable_events = True
+    supports_events = True
     domain = None
 
     def __init__(self, tab):
@@ -15,9 +15,6 @@ class Base(object):
 
         self.tab       = tab
         self.callbacks = {}
-
-        if self.enable_events:
-            self.enable()
 
         self.initialize()
 
@@ -33,10 +30,12 @@ class Base(object):
         )
 
     def enable(self):
-        self.call('enable')
+        if self.supports_events:
+            self.call('enable')
 
     def disable(self):
-        self.call('disable')
+        if self.supports_events:
+            self.call('disable')
 
     def call_boolean_response(self, method, field='result'):
         if self.call(method).get(field) is True:

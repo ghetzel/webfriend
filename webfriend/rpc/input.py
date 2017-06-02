@@ -6,7 +6,7 @@ from random import random
 
 class Input(Base):
     domain = 'Input'
-    enable_events = False
+    supports_events = False
     key_event_types = ['keyDown', 'keyUp', 'rawKeyDown', 'char']
     key_events_with_text = ['keyDown', 'char']
     key_args = [

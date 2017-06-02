@@ -4,7 +4,7 @@ from . import Base
 
 class Browser(Base):
     domain = 'Browser'
-    enable_events = False
+    supports_events = False
 
     def get_window_size(self):
         # response = self.call('getWindowBounds')
