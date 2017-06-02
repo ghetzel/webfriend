@@ -22,7 +22,7 @@ used to make decisions.
 """
 
 from __future__ import absolute_import
-from .parser import AutomationScript, CommandSequence, IfElseBlock
+from .parser import AutomationScript, CommandSequence, IfElseBlock, LoopBlock
 from .proxy import CommandProxy, CommandSet
 from .scope import Scope
 import logging
@@ -126,6 +126,14 @@ def evaluate_block(commandset, block, scope):
         for subblock in block.get_blocks(commandset, scope=subscope):
             evaluate_block(commandset, subblock, subscope)
 
+    # Loops
+    # ---------------------------------------------------------------------------------------------
+    elif isinstance(block, LoopBlock):
+        loopscope = Scope(parent=scope)
+
+        for i, _, subblock, scope in block.execute_loop(commandset, scope=loopscope):
+            evaluate_block(commandset, subblock, scope=scope)
+
 
 def _handle_event(handler, commandset, scope):
     def handle(e):
@@ -144,6 +152,7 @@ def _handle_event(handler, commandset, scope):
                 for command in sequence.commands:
                     key, value = commandset.execute(command, local_scope)
 
+                    # setting the resultkey to "null" explicitly discards the result
                     if key != 'null':
                         local_scope[key] = value
 

@@ -238,7 +238,7 @@ class CoreProxy(CommandProxy):
 
         return None
 
-    def log(self, line, level='info', indent=4, **kwargs):
+    def log(self, line=None, level='info', indent=4, **kwargs):
         """
         Outputs a line to the log.
 
@@ -266,15 +266,16 @@ class CoreProxy(CommandProxy):
         ### Raises
         `AttributeError` if the specified log level is not known.
         """
+        # handle the case where we want to log a data structure without options or a format string
         if line is None:
-            return None
+            line = kwargs
 
         if hasattr(logging, level):
             if isinstance(line, basestring):
                 if not isinstance(line, unicode):
                     line = line.decode('UTF-8')
 
-                line = line.format(**Scope(kwargs, self.scope).as_dict()).strip()
+                line = line.format(**Scope(kwargs, self.scope).as_dict())
             elif isinstance(line, (dict, list, tuple)) and indent >= 0:
                 try:
                     line = json.dumps(line, indent=4)

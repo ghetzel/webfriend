@@ -2,7 +2,7 @@ def generate_grammar(commands):
     return """
 AutomationScript:
     Shebang?
-    blocks += Block
+    blocks *= Block
 ;
 
 Shebang:
@@ -17,8 +17,12 @@ Block:
     (LinearExecutionBlock | EventHandlerBlock)
 ;
 
+FlowControlBlock:
+    ( block=Block | 'break' levels=INT? | 'continue' )
+;
+
 LinearExecutionBlock:
-    (IfElseBlock | CommandSequence)
+    (IfElseBlock | LoopBlock | CommandSequence)
 ;
 
 Expression:
@@ -40,7 +44,7 @@ IfElseBlock:
 
 IfStanza:
     'if' expression=Expression '{'
-        blocks += Block
+        blocks *= Block
     '}'
 ;
 
@@ -50,12 +54,26 @@ ElseIfStanza:
 
 ElseStanza:
     'else' '{'
-        blocks += Block
+        blocks *= Block
+    '}'
+;
+
+LoopBlock:
+    'for' (
+        variables+=Variable[','] 'in' ( iterator=Variable | iterator=Command ) |
+        initial=Command ';' termination=Expression ';' next=Command |
+        termination=Expression
+    )? '{'
+        blocks *= FlowControlBlock
     '}'
 ;
 
 Variable:
-    '$'- name=ID
+    ( '$'- name=VariableName | skip?='_' )
+;
+
+VariableName[noskipws]:
+    /[^\\d\\W][\\w\\.]*\\b/
 ;
 
 Operator:
@@ -76,8 +94,12 @@ Command:
     name=CommandName (
         id=CommandID options=CommandStanza? | options=CommandStanza
     )? (
-        '->' resultkey=Variable
+        '->' resultkey=ResultKeyType
     )?
+;
+
+ResultKeyType:
+    (Variable | 'null')
 ;
 
 CommandID:

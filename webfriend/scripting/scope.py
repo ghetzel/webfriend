@@ -41,6 +41,11 @@ class Scope(object):
 
         return lvl
 
+    @classmethod
+    def split_key(cls, key):
+        parts = key.split('.')
+        return parts[0], parts
+
     def ancestors(self):
         out = []
 
@@ -52,8 +57,14 @@ class Scope(object):
         return out
 
     def owner_of(self, key):
-        if not self.is_local(key) and self.parent:
-            return self.parent.owner_of(key)
+        top_key, _ = self.split_key(key)
+
+        # if the key exists, but is not ours...
+        if top_key in self and not self.is_local(top_key):
+            # and if we have a parent...
+            if self.parent:
+                # then let the parent deal with it
+                return self.parent.owner_of(key)
 
         return self
 
@@ -70,7 +81,9 @@ class Scope(object):
         return self.as_dict().items()
 
     def is_local(self, key):
-        if key in self.data:
+        top_key, _ = self.split_key(key)
+
+        if top_key in self.data:
             return True
 
         return False
@@ -82,33 +95,81 @@ class Scope(object):
             return fallback
 
     def set(self, key, value, force=False):
+        top_key, parts = self.split_key(key)
+
+        if isinstance(value, str):
+            value = value.decode('UTF-8')
+
+        # force means that we always make ourself the owner
         if force:
-            self.data[key] = value
+            owner = self
         else:
-            self[key] = value
+            owner = self.owner_of(key)
+
+        base = owner.data
+
+        for k in parts[:-1]:
+            if k not in base:
+                base[k] = {}
+            elif not isinstance(base[k], dict):
+                raise ValueError(
+                    "Cannot set intermediate key '{}': key exists, but not a dict".format(k)
+                )
+
+            base = base[k]
+
+        base[parts[-1]] = value
 
     def __getitem__(self, key):
+        top_key, parts = self.split_key(key)
+
         try:
-            return self.data[key]
+            base = self.data
+
+            # try to traverse our local data and retrieve the value
+            # if that fails at any point, make our parent do the same, on and on
+            # until there are no parents left and we just raise the KeyError
+            for k in parts:
+                if isinstance(base, dict):
+                    base = base[k]
+                else:
+                    raise KeyError("Cannot retrieve key '{}' from non-dict".format(k))
+
+            return base
         except KeyError:
             if self.parent:
                 return self.parent[key]
             raise
 
     def __setitem__(self, key, value):
-        if isinstance(value, str):
-            value = value.decode('UTF-8')
-
-        owner = self.owner_of(key)
-        owner.data[key] = value
+        self.set(key, value)
 
     def __delitem__(self, key):
-        del self.data[key]
+        top_key, parts = self.split_key(key)
+        base = self.data
+
+        for k in parts[:-1]:
+            base = base[k]
+
+        del base[parts[-1]]
 
     def __contains__(self, key):
-        if key in self.data:
-            return True
+        _, parts = self.split_key(key)
 
+        # traverse our local data and make sure we have the given key
+        try:
+            base = self.data
+
+            for k in parts[:-1]:
+                base = base[k]
+
+            if parts[-1] in base:
+                return True
+
+        except KeyError:
+            pass
+
+        # if we got to this point, try our parent
         if self.parent:
             if key in self.parent:
                 return True

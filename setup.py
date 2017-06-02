@@ -16,6 +16,7 @@ setup(
         'textx',
         'websocket-client',
         'ephemeral_port_reserve',
+        'redlock',
     ],
     packages=find_packages(exclude=['*.tests']),
     entry_points={

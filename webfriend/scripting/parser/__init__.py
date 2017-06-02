@@ -4,6 +4,7 @@ import textx.exceptions
 from .grammar import generate_grammar
 from collections import OrderedDict
 import re
+import logging
 
 
 class SyntaxError(Exception):
@@ -180,14 +181,108 @@ class IfElseBlock(MetaModel):
         return None
 
 
+class LoopBlock(MetaModel):
+    @property
+    def loop_type(self):
+        if self.variables and self.iterator:
+            return 'iterable'
+        elif self.initial and self.termination and self.next:
+            return 'bounded'
+        elif self.termination:
+            return 'while'
+        else:
+            return 'forever'
+
+    def execute_loop(self, commandset, scope=None):
+        if scope is None:
+            scope = commandset.scope
+
+        i = 0
+
+        if self.loop_type == 'iterable':
+            if isinstance(self.iterator, Variable):
+                iter_value = self.iterator.resolve(scope)
+            else:
+                _, iter_value = commandset.execute(self.iterator, scope=scope)
+
+            try:
+                if isinstance(iter_value, dict):
+                    iter_value = iter_value.items()
+
+                for item in iter(iter_value):
+                    if len(self.variables) > 1 and isinstance(item, tuple):
+                        # unpack iter items into the variables we were given
+                        for var_i, var in enumerate(self.variables[0:len(item)]):
+                            if not var.skip:
+                                if var_i < len(item):
+                                    scope.set(var.name, item[var_i], force=True)
+
+                        # null out any remaining variables
+                        if len(self.variables) > len(item):
+                            for var in self.variables[len(item):]:
+                                scope.set(var.name, None, force=True)
+
+                    else:
+                        scope.set(self.variables[0].name, item, force=True)
+
+                    scope.set('index', i, force=True)
+
+                    for result in self.execute_blocks(i, commandset, scope):
+                        yield result
+
+                    i += 1
+
+            except TypeError:
+                logging.exception('TE')
+                raise TypeError("Cannot loop on result of {}".format(self.iterator))
+
+        elif self.loop_type == 'bounded':
+            commandset.execute(self.initial, scope=scope)
+
+            while self.termination.evaluate(commandset, scope=scope):
+                scope.set('index', i, force=True)
+
+                for result in self.execute_blocks(i, commandset, scope):
+                    yield result
+
+                commandset.execute(self.next, scope=scope)
+                i += 1
+
+        elif self.loop_type == 'while':
+            while self.termination.evaluate(commandset, scope=scope):
+                scope.set('index', i, force=True)
+
+                for result in self.execute_blocks(i, commandset, scope):
+                    yield result
+
+                i += 1
+
+        else:
+            while True:
+                scope.set('index', i, force=True)
+
+                for result in self.execute_blocks(i, commandset, scope):
+                    yield result
+
+                i += 1
+
+    def execute_blocks(self, i, commandset, scope):
+        for subblock in self.blocks:
+            if subblock == 'break':
+                break
+            elif subblock == 'continue':
+                continue
+            else:
+                yield i, commandset, subblock.block, scope
+
+
 class CommandSequence(MetaModel):
     pass
 
 
 class Variable(MetaModel):
     def resolve(self, scope, fallback=None):
-        if self.name:
-            return scope.get(self.name, fallback)
+        return scope.get(self.name, fallback)
 
 
 class CommandID(MetaModel):
@@ -218,6 +313,7 @@ class AutomationScript(object):
                     Expression,
                     IfElseBlock,
                     LinearExecutionBlock,
+                    LoopBlock,
                     Object,
                     Variable,
                 ]
