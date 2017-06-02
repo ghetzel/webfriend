@@ -64,7 +64,7 @@ In HTML, text input fields are traditionally (but not always) defined by the `<i
 
 The highlighted line is the HTML tag we're targeting, and from that we need to determine a selector that will always return that tag on this page.  There are many options to choose from.  For example, you could select the tag based on the `class` attribute "gsfi", but you'll note that that is not unique to this tag, with a few other examples appearing right below it.  There is also the `id` attribute, whose value is "lst-ib".  This is a great option because IDs are unique to a page, so no other tags can have the attribute `id="lst-ib"`.
 
-In our case, to illustrate a little bit more of the selector syntax, we're going to use `name="q"`.  Putting it all together, the selector for choosing this text field is "input[name='q']" (use single quotes in Friendscript for selector values like this).  The square brackets used here denote that we wish to select only `<input>` tags that have
+In our case, to illustrate a little bit more of the selector syntax, we're going to use `name="q"`.  Putting it all together, the selector for choosing this text field is `input[name='q']` (use single quotes in Friendscript for selector values like this).  The square brackets used here denote that we wish to select only `<input>` tags that have
 the _attribute_ "name", whose value is "q".
 
 
