@@ -182,48 +182,39 @@ class IfElseBlock(MetaModel):
 
 
 class LoopBlock(MetaModel):
-    @property
-    def loop_type(self):
-        if self.variables and self.iterator:
-            return 'iterable'
-        elif self.initial and self.termination and self.next:
-            return 'bounded'
-        elif self.termination:
-            return 'while'
-        else:
-            return 'forever'
-
     def execute_loop(self, commandset, scope=None):
         if scope is None:
             scope = commandset.scope
 
         i = 0
 
-        if self.loop_type == 'iterable':
-            if isinstance(self.iterator, Variable):
-                iter_value = self.iterator.resolve(scope)
+        if self.iterable:
+            loop = self.iterable
+
+            if isinstance(loop.iterator, Variable):
+                iter_value = loop.iterator.resolve(scope)
             else:
-                _, iter_value = commandset.execute(self.iterator, scope=scope)
+                _, iter_value = commandset.execute(loop.iterator, scope=scope)
 
             try:
                 if isinstance(iter_value, dict):
                     iter_value = iter_value.items()
 
                 for item in iter(iter_value):
-                    if len(self.variables) > 1 and isinstance(item, tuple):
+                    if len(loop.variables) > 1 and isinstance(item, tuple):
                         # unpack iter items into the variables we were given
-                        for var_i, var in enumerate(self.variables[0:len(item)]):
+                        for var_i, var in enumerate(loop.variables[0:len(item)]):
                             if not var.skip:
                                 if var_i < len(item):
                                     scope.set(var.name, item[var_i], force=True)
 
                         # null out any remaining variables
-                        if len(self.variables) > len(item):
-                            for var in self.variables[len(item):]:
+                        if len(loop.variables) > len(item):
+                            for var in loop.variables[len(item):]:
                                 scope.set(var.name, None, force=True)
 
                     else:
-                        scope.set(self.variables[0].name, item, force=True)
+                        scope.set(loop.variables[0].name, item, force=True)
 
                     scope.set('index', i, force=True)
 
@@ -234,22 +225,41 @@ class LoopBlock(MetaModel):
 
             except TypeError:
                 logging.exception('TE')
-                raise TypeError("Cannot loop on result of {}".format(self.iterator))
+                raise TypeError("Cannot loop on result of {}".format(loop.iterator))
 
-        elif self.loop_type == 'bounded':
-            commandset.execute(self.initial, scope=scope)
+        elif self.bounded:
+            loop = self.bounded
+            commandset.execute(loop.initial, scope=scope)
 
-            while self.termination.evaluate(commandset, scope=scope):
+            while loop.termination.evaluate(commandset, scope=scope):
                 scope.set('index', i, force=True)
 
                 for result in self.execute_blocks(i, commandset, scope):
                     yield result
 
-                commandset.execute(self.next, scope=scope)
+                commandset.execute(loop.next, scope=scope)
                 i += 1
 
-        elif self.loop_type == 'while':
-            while self.termination.evaluate(commandset, scope=scope):
+        elif self.whiletrue:
+            loop = self.whiletrue
+
+            while loop.termination.evaluate(commandset, scope=scope):
+                scope.set('index', i, force=True)
+
+                for result in self.execute_blocks(i, commandset, scope):
+                    yield result
+
+                i += 1
+
+        elif self.fixedlen:
+            loop = self.fixedlen
+
+            if isinstance(loop.count, Variable):
+                count = int(loop.count.resolve(scope))
+            else:
+                count = loop.count
+
+            for _ in range(count):
                 scope.set('index', i, force=True)
 
                 for result in self.execute_blocks(i, commandset, scope):
@@ -298,12 +308,12 @@ class EventHandlerBlock(MetaModel):
 
 
 class Friendscript(object):
-    def __init__(self, filename=None, data=None, commands=None):
+    def __init__(self, filename=None, data=None):
         self.model = None
 
         try:
             self.metamodel = metamodel_from_str(
-                generate_grammar(commands or []),
+                generate_grammar(),
                 classes=[
                     Array,
                     CommandID,

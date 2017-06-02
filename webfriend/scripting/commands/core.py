@@ -13,7 +13,8 @@ class CoreProxy(CommandProxy):
         events=None,
         demo=None,
         user_agent=None,
-        extra_headers=None
+        extra_headers=None,
+        plugins=None
     ):
         """
         Configures various features of the Remote Debugging protocol and provides environment
@@ -70,6 +71,24 @@ class CoreProxy(CommandProxy):
 
         if isinstance(extra_headers, dict):
             self.tab.network.set_headers(extra_headers)
+
+        if isinstance(plugins, dict):
+            from .. import load_and_register_proxy
+
+            for command_plugin in plugins.get('commands', []):
+                if isinstance(command_plugin, basestring):
+                    load_and_register_proxy(command_plugin)
+
+                elif isinstance(command_plugin, dict):
+                    if 'module' not in command_plugin:
+                        raise ValueError("Command plugin must specify a 'module' attribute")
+
+                    load_and_register_proxy(
+                        command_plugin['module'],
+                        name=command_plugin.get('name'),
+                        browser=self.browser,
+                        commandset=self.commandset
+                    )
 
     def go(self, uri, referrer='random', wait_for_load=True, timeout=30000):
         """

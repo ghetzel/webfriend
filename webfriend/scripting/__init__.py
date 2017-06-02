@@ -22,12 +22,16 @@ used to make decisions.
 """
 
 from __future__ import absolute_import
+from pkgutil import extend_path
+__path__ = extend_path(__path__, __name__)  # noqa
+
 from .parser import Friendscript, CommandSequence, IfElseBlock, LoopBlock
 from .proxy import CommandProxy, CommandSet
 from .scope import Scope
 import logging
 import gevent
 import time
+import inspect
 from .commands import *  # noqa
 
 PROXIES = dict([(p.as_qualifier(), p) for _, p in ALL_PROXIES])  # noqa
@@ -38,12 +42,29 @@ class SyntaxError(Exception):
     pass
 
 
+def load_and_register_proxy(module, name=None, browser=None, commandset=None):
+    mod = __import__(module, fromlist=['*'])
+
+    classes = [
+        m[0] for m in inspect.getmembers(mod, inspect.isclass) if m[1].__module__ == module
+    ]
+
+    for c in classes:
+        if issubclass(c, CommandProxy):
+            register_proxy(c.as_qualifier(), c)
+
+            if browser and commandset:
+                commandset[c.as_qualifier()] = c(browser, commandset=commandset)
+
+
 def register_proxy(name, proxy_cls):
     if name in PROXIES:
         raise AttributeError("Proxy '{}' is already registered".format(name))
 
     if not issubclass(proxy_cls, CommandProxy):
         raise ValueError("Proxy class must be a subclass of CommandProxy")
+
+    PROXIES[name] = proxy_cls
 
     return PROXIES[name]
 
@@ -66,10 +87,7 @@ def execute_script(browser, script, scope=None):
         commandset[name] = proxy_cls(browser, commandset=commandset)
 
     # load and parse the script
-    instructions = Friendscript(
-        data=script,
-        commands=commandset.get_command_names()
-    )
+    instructions = Friendscript(data=script)
 
     # tell the commandset about the calling script
     commandset.script = instructions
@@ -121,7 +139,6 @@ def evaluate_block(commandset, block, scope):
     if isinstance(block, CommandSequence):
         # for each command in the pipeline...
         for command in block.commands:
-            print(command.__dict__)
             key, value = commandset.execute(command, scope)
 
             if key != 'null':

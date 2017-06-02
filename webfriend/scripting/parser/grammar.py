@@ -1,4 +1,4 @@
-def generate_grammar(commands):
+def generate_grammar():
     return """
 Friendscript:
     Shebang?
@@ -11,6 +11,23 @@ Shebang:
 
 Comment:
     ( /#.*$/ )
+;
+
+ReservedWord:
+    (
+        'as' |
+        'break' |
+        'case' |
+        'continue' |
+        'else' |
+        'for' |
+        'if' |
+        'in' |
+        'is' |
+        'not' |
+        'on' |
+        'when'
+    )
 ;
 
 Block:
@@ -27,7 +44,7 @@ LinearExecutionBlock:
 
 Expression:
     negate?='not'? (
-        command=Command ( ';' condition=Expression )? |
+        command=Command ( ';'? condition=Expression )? |
         lhs=ExpressionSegment ( operator=Operator rhs=ExpressionSegment )?
     )
 ;
@@ -60,12 +77,34 @@ ElseStanza:
 
 LoopBlock:
     'for' (
-        variables+=Variable[','] 'in' ( iterator=Variable | iterator=Command ) |
-        initial=Command ';' termination=Expression ';' next=Command |
-        termination=Expression
-    )? '{'
+        fixedlen=LoopConditionFixedLength |
+        iterable=LoopConditionIterable |
+        bounded=LoopConditionBounded |
+        whiletrue=LoopConditionWhile
+    )?
+    '{'
         blocks *= FlowControlBlock
     '}'
+;
+
+LoopConditionIterable:
+    variables+=Variable[','] 'in' ( iterator=Command | iterator=Variable )
+;
+
+LoopConditionBounded:
+    initial=Command ';' termination=Expression ';' next=Command
+;
+
+LoopConditionWhile:
+    termination=Expression
+;
+
+LoopConditionFixedLength:
+    count=IntOrVariable 'times'
+;
+
+IntOrVariable:
+    (Variable | INT)
 ;
 
 Variable:
@@ -92,10 +131,11 @@ CommandSequence:
 
 Command:
     name=CommandName (
-        id=CommandID options=CommandStanza? | options=CommandStanza
+        id=CommandID options=CommandStanza? |
+        options=CommandStanza
     )? (
         '->' resultkey=ResultKeyType
-    )?
+    )? ';'?
 ;
 
 ResultKeyType:
@@ -117,7 +157,7 @@ KeyValuePair:
 ;
 
 KeyType:
-    ( ID | STRING )
+    ( !ReservedWord | ID | STRING )
 ;
 
 ScalarType:
@@ -141,6 +181,6 @@ Array:
 ;
 
 CommandName:
-    (\n        """ + ' | \n        '.join(["'{}'".format(c) for c in commands]) + """\n    )
+    !ReservedWord ID+['::']
 ;
 """
