@@ -112,7 +112,7 @@ Variable retrieval can be achieved simply by using the variable in-line (e.g.: `
 
 All variables are set within a _scope_.  A scope defines a common area where variable data is stored.  Certain constructs, such as `if` and `loop` statements will create their own scope that is local to the statements defined between the braces (`{}`).
 
-These scopes _inherit_ the scope of the block where it was defined, so these statements have access to all of the variables that came before them, but statements outside of these statements won't be able to see variables created inside of them.  If you need to set a variable from within a scoped statement, you must first declare it outside of that statement.  For example:
+These scopes _inherit_ the scope of the block where it was defined, so these statements have access to all of the variables that came before them, but statements outside of these constructs won't be able to see variables created inside of them.  If you need to set a variable from within a scoped statement, you must first declare it outside of that statement.  For example:
 
 ```
 $everyone_can_see_me      = true
