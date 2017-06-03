@@ -150,7 +150,7 @@ For more information on the supported formatting options, see the documentation 
 
 ## Conditional Statements
 
-Friendscript supports conditional statements like _if-else_ and _case-when_ (i.e: switches).  The basic form of the if-else syntax is:
+Friendscript supports conditional statements in the form of _if-else if-else_ constructs.  The basic form of conditional statements is:
 
 ```
 if $somevariable {
