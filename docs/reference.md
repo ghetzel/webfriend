@@ -8,7 +8,7 @@ This is the generic structure of all commands:
 command [ARGUMENT] [{
     OPTION: VALUE,
     ...
-}]
+}] [ -> RESULT]
 ```
 
 Commands have a variable syntax depending on the required arguments and options for a command.  Some commands are standalone (arity 0) and don't take arguments at all.  Some require an argument but do not accept options, where others take options but not an argument.  Consult the command's documentation to determine the proper usage for a command.  Command names map to the corresponding plugin's instance methods.  The command argument is the first positional argument to the method, and options map directly to the method's _keyword arguments_.
@@ -67,6 +67,37 @@ Commands have a variable syntax depending on the required arguments and options 
       },
   }
   ```
+
+### Command Output
+
+By default, every command that runs will save a resulting value (which is command-specific) to a variable in the current scope called `$result`.  So, without doing anything else, the following code will do something useful:
+
+```
+go "https://google.com"
+log "Got HTTP {result[status]} for {result[url]}"
+```
+
+The only caveat is that `$result` is updated for _every_ command, which means that if you run this:
+
+```
+go "https://google.com"
+select "style"
+
+log "Got HTTP {result[status]} for {result[url]}"
+```
+
+...it might not do what you expect it to.  The value of `$result` from the `go` command is replaced by the the return value of the `select` command, and so the subsequent `log` command will be expecting fields and data that aren't there.
+
+To mitigate this, you can explicitly save the results of commands into named variables with the command assignment operator (`->`).  This is a working version of the above snippet:
+
+```
+go "https://google.com" -> $google
+select "style"
+
+log "Got HTTP {google[status]} for {google[url]}"
+```
+
+We've saved the output of the `go` command to a new variable `$google`, but the following `select` command will still put its results in `$result`.  Therefore, the `log` command (reading from the `$google` value) will print the expected information.
 
 ## Whitespace Handling
 
