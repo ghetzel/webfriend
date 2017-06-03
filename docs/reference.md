@@ -78,7 +78,7 @@ example "argument" {whitespace:"is",very:"flexible"}
 
 ## Variable Assignment and Retrieval
 
-Variables can be stored and retrieved throughout your script using the `=` assignment operator:
+Variables can be stored and retrieved throughout your script using the assignment operator (`=`):
 
 ```
 # integers
@@ -105,7 +105,7 @@ $my = {
 }
 ```
 
-Variable retrieval can be achieved simply by using the variable in-line (e.g.: `if $a == $b {}`), or through string interpolation (`$x = "The value of $a is {a}"`).  For variables containing objects, keys and nested subkeys of those objects can be accessed using a dot-separated notation (e.g.: `$my.cool.value` from above would return `"yay!"`).
+Variable retrieval can be achieved simply by using the variable in-line (e.g.: `if $a == $b {}`), or through string interpolation (`$x = "The value of $a is {a}"`).  For variables containing objects, keys and nested subkeys of those objects can be accessed using a dot-separated notation (e.g.: `$my.cool.value` from above would return `"yay!"`).  If the named key (or any intermediate keys) do not exist, the variable will return `null`.
 
 
 ## Variable Scope
