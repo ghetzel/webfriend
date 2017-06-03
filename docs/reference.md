@@ -76,6 +76,11 @@ The handling of whitespace in scripts is very flexible.  Spaces or tabs, indenta
 example "argument" {whitespace:"is",very:"flexible"}
 ```
 
+## Variable Scope and Assignment
+
+TODO
+
+
 ## Conditional Statements
 
 Friendscript supports conditional statments like _if-else_ and _case-when_ (i.e: switches).  The basic form of the if-else syntax is:
@@ -138,26 +143,26 @@ TODO: Loops: WE GOT EM'
 
 ```
 # forever
-for { }
+loop { }
 
 # while truthy
-for $truthy { }
+loop $truthy { }
 
 # while $a < 10
-for $a < 10 { }
+loop $a < 10 { }
 
 # for x in y
-for $x in $y { }
+loop $x in $y { }
 
 # unpacking
-for $k, $v in $object { }
+loop $k, $v in $object { }
 
 # bounded iteration (classic for-loop)
-for command_that_returns_iterator -> $i; $i; next $i { }
+loop command_that_returns_iterator -> $i; $i; next $i { }
 
 # fixed-length constant
-for 2 times { }
+loop count 2 { }
 
 # fixed-length via variable
-for $n times { }
+loop count $n { }
 ```

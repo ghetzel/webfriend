@@ -115,7 +115,7 @@ class CommandSet(object):
         try:
             return self[proxy_name], command_name
         except KeyError:
-            raise SyntaxError("Unregistered qualifier '{}'".format(proxy_name))
+            raise parser.ScriptError("Unregistered qualifier '{}'".format(proxy_name))
 
     def has_execution_option(self, key):
         return key in self._exec_options
@@ -135,32 +135,19 @@ class CommandSet(object):
     def interpolate(self, value, **kwargs):
         scope = Scope(kwargs, self._scope)
         variables = scope.as_dict()
+        value = parser.to_value(value, scope)
 
-        if isinstance(value, (list, parser.Array)):
-            # convert parser.Array -> list
-            if isinstance(value, parser.Array):
-                value = value.values
-
+        if isinstance(value, list):
             # recurse into lists
             return [self.interpolate(v, **variables) for v in value]
 
-        elif isinstance(value, parser.Variable):
-            return value.resolve(scope)
-
-        elif isinstance(value, (dict, parser.Object)):
-            # convert parser.Object -> dict
-            if isinstance(value, parser.Object):
-                value = value.__dict__()
-
+        elif isinstance(value, dict):
             # recurse into dicts
             return dict([
                 (k, self.interpolate(v, **variables)) for k, v in value.items()
             ])
 
         elif isinstance(value, basestring):
-            if not isinstance(value, unicode):
-                value = value.decode('UTF-8')
-
             # do the interpolation
             value = value.format(**variables)
 
@@ -222,7 +209,7 @@ class CommandSet(object):
                 )
 
         else:
-            raise SyntaxError("No such command '{}'".format(command_name))
+            raise parser.ScriptError("No such command '{}'".format(command_name), model=command)
 
     def __contains__(self, proxy_name):
         if proxy_name in self.proxies:

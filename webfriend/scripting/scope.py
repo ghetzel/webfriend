@@ -94,7 +94,11 @@ class Scope(object):
         except KeyError:
             return fallback
 
-    def set(self, key, value, force=False):
+    def set(self, key, value, force=False, unset=False):
+        # only unset if the key exists
+        if unset and key not in self:
+            return
+
         top_key, parts = self.split_key(key)
 
         if isinstance(value, str):
@@ -118,7 +122,14 @@ class Scope(object):
 
             base = base[k]
 
-        base[parts[-1]] = value
+        if unset:
+            if parts[-1] in base:
+                del base[parts[-1]]
+        else:
+            base[parts[-1]] = value
+
+    def unset(self, key, force=False):
+        self.set(key, None, force=force, unset=True)
 
     def __getitem__(self, key):
         top_key, parts = self.split_key(key)
@@ -145,13 +156,7 @@ class Scope(object):
         self.set(key, value)
 
     def __delitem__(self, key):
-        top_key, parts = self.split_key(key)
-        base = self.data
-
-        for k in parts[:-1]:
-            base = base[k]
-
-        del base[parts[-1]]
+        self.unset(key)
 
     def __contains__(self, key):
         _, parts = self.split_key(key)

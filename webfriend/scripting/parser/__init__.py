@@ -1,14 +1,163 @@
 from __future__ import absolute_import
 from textx.metamodel import metamodel_from_str
 import textx.exceptions
+from textx.model import model_root
 from .grammar import generate_grammar
 from collections import OrderedDict
 import re
-import logging
+import copy
+from termcolor import colored
 
 
-class SyntaxError(Exception):
+class FlowControlMultiLevel(Exception):
+    def __init__(self, message, levels=1, **kwargs):
+        self.levels = levels
+        super(FlowControlMultiLevel, self).__init__(message, **kwargs)
+
+
+class FlowControlBreak(FlowControlMultiLevel):
     pass
+
+
+class FlowControlContinue(FlowControlMultiLevel):
+    pass
+
+
+def to_value(value, scope):
+    if str(value) == 'null':
+        return None
+
+    elif isinstance(value, Variable):
+        value = value.resolve(scope)
+
+    if isinstance(value, Array):
+        value = [to_value(v, scope) for v in value.values]
+    elif isinstance(value, Object):
+        value = dict([
+            (k, to_value(v, scope)) for k, v in value.as_dict().items()
+        ])
+    elif isinstance(value, float):
+        if int(value) == value:
+            value = int(value)
+    elif isinstance(value, str):
+        value = value.decode('UTF-8')
+
+    return value
+
+
+class ScriptError(Exception):
+    context_lines_before = 3
+    context_lines_after = 3
+
+    def __init__(
+        self,
+        message,
+        model=None,
+        line=None,
+        col=None,
+        filename=None,
+        data=None,
+        **kwargs
+    ):
+        self.model = model
+        self.line = line
+        self.col = col
+        self.filename = None
+
+        if isinstance(filename, basestring):
+            self.filename = filename
+            self.lines = open(filename).read().split('\n')
+
+        elif isinstance(data, basestring):
+            self.lines = data.split('\n')
+
+        elif isinstance(model, object) and hasattr(model, '_tx_position'):
+            root = model_root(model)
+
+            if root and root._tx_metamodel:
+                # determine line number and line position from absolute offsets
+                line, col = root._tx_metamodel.parser.pos_to_linecol(
+                    model._tx_position
+                )
+
+                self.line = line
+                self.col = col
+
+                # get the local Friendscript manager class from the root model,
+                # then get the raw script data from there
+                if root.manager and root.manager.data:
+                    self.lines = root.manager.data.split('\n')
+        else:
+            self.lines = None
+
+        message = self.prepare_message(message)
+        self.message = message
+
+        super(ScriptError, self).__init__(message)
+
+    def prepare_message(self, message):
+        offending_char = None
+
+        try:
+            if self.lines and self.line and self.col:
+                if self.line < len(self.lines):
+                    offending_char = self.lines[self.line - 1][self.col - 1]
+        except:
+            pass
+
+        if message.startswith('Expected ') and offending_char:
+            message = "Unexpected character '{}'".format(offending_char)
+
+        return message
+
+    def __str__(self):
+        if self.lines and self.line and self.col:
+            out = "Syntax error on line {}, char {}\n".format(self.line, self.col)
+
+            if self.filename:
+                out += "  in file: {}\n".format(self.filename)
+
+            if self.line <= len(self.lines):
+                out += "Source:\n"
+                start_line = (self.line - self.context_lines_before)
+                end_line = (self.line + self.context_lines_after)
+
+                if start_line < 1:
+                    start_line = 1
+
+                if len(self.lines) > 1:
+                    if end_line >= len(self.lines):
+                        end_line = len(self.lines) - 1
+                else:
+                    end_line = self.line
+
+                for i in range(start_line, end_line + 1):
+                    prefix = '   '
+                    color = 'blue'
+                    attrs = ['bold']
+
+                    if i == self.line:
+                        prefix = '>> '
+                        color = 'yellow'
+                        attrs = ['bold']
+
+                    out += colored("{}{:4d}: {}\n".format(
+                        prefix,
+                        i,
+                        self.lines[i - 1]
+                    ), color, attrs=attrs)
+
+                    if i == self.line:
+                        out += colored("{}      {}{} {}\n".format(
+                            prefix,
+                            ' ' * (self.col - 1),
+                            '^',
+                            re.sub(r' at position.*', '', self.message)
+                        ), 'red', attrs=attrs)
+        else:
+            out = "Syntax Error: {}".format(self.message)
+
+        return out
 
 
 class MetaModel(object):
@@ -39,9 +188,9 @@ class Object(object):
                 self._data[kv.name] = kv.values
 
     def to_json(self):
-        return self.__dict__()
+        return self.as_dict()
 
-    def __dict__(self):
+    def as_dict(self):
         return self._data
 
     def __getitem__(self, key):
@@ -52,6 +201,40 @@ class Object(object):
 
     def __delitem__(self, key):
         del self._data[key]
+
+
+class Assignment(MetaModel):
+    def assign(self, scope, force=False):
+        sources_consumed = 0
+        sources = self.sources
+
+        # provide support for unpacking lists and tuples into multiple variables
+        if len(self.destinations) > 1:
+            if len(self.sources) == 1:
+                first_source = to_value(self.sources[0], scope)
+
+                if isinstance(first_source, (list, tuple)):
+                    sources = first_source
+
+        # for each source value
+        for i, source in enumerate(sources):
+            # if there is a destination for it
+            if i < len(self.destinations):
+                destination = self.destinations[i]
+
+                if not destination.skip:
+                    source = to_value(source, scope)
+
+                    # assignments are BY VALUE (e.g.: always incur a copy)
+                    scope.set(destination.name, copy.copy(source), force=force)
+
+                sources_consumed += 1
+
+        # null out the remaining destinations
+        if len(self.destinations) > sources_consumed:
+            for unset_destination in self.destinations[sources_consumed:]:
+                if not unset_destination.skip:
+                    scope.set(unset_destination.name, None, force=force)
 
 
 class CommandStanza(object):
@@ -89,9 +272,17 @@ class Expression(MetaModel):
         if scope is None:
             scope = commandset.scope
 
-        # if this expression is a command, then we need to execute it and evaluate
-        # the result
-        if self.command:
+        # Inline Assignment and test condition
+        # ------------------------------------------------------------------------------------------
+        if self.assignment:
+            self.assignment.assign(scope, force=True)
+
+            # recursively evaluate the condition portion of the statement
+            return self.condition.evaluate(commandset, scope)
+
+        # Command Evaluation (with optional test condition)
+        # ------------------------------------------------------------------------------------------
+        elif self.command:
             # execute the command
             resultkey, result = commandset.execute(self.command, scope)
 
@@ -100,12 +291,14 @@ class Expression(MetaModel):
 
             # if the statement has a condition, then evaluate using it
             if self.condition:
-                # evaluate the given condition with the command result set to a temporary scope
-                # variable that gets cleared once we return back to the containing block context
+                # recursively evaluate the condition portion of the statement
                 return self.condition.evaluate(commandset, scope)
             else:
-                # no condition, so just do the same thing as a unary if-statement
+                # no condition, so just do the same thing as a unary comparison
                 return self.compare(result)
+
+        # Comparison
+        # ------------------------------------------------------------------------------------------
         else:
             result = self.compare(
                 self.resolve_segment_to_value(self.lhs, scope),
@@ -154,7 +347,7 @@ class Expression(MetaModel):
                 return (lhs not in rhs)
 
             else:
-                raise SyntaxError("Unsupported operator '{}'".format(operator))
+                raise ScriptError("Unsupported operator '{}'".format(operator))
 
         elif lhs:
             return True
@@ -178,7 +371,7 @@ class IfElseBlock(MetaModel):
         if self.else_expr:
             return self.else_expr.blocks
 
-        return None
+        return []
 
 
 class LoopBlock(MetaModel):
@@ -192,13 +385,16 @@ class LoopBlock(MetaModel):
             loop = self.iterable
 
             if isinstance(loop.iterator, Variable):
-                iter_value = loop.iterator.resolve(scope)
+                iter_value = to_value(loop.iterator, scope)
             else:
                 _, iter_value = commandset.execute(loop.iterator, scope=scope)
 
             try:
                 if isinstance(iter_value, dict):
                     iter_value = iter_value.items()
+
+                if not iter_value:
+                    return
 
                 for item in iter(iter_value):
                     if len(loop.variables) > 1 and isinstance(item, tuple):
@@ -218,13 +414,12 @@ class LoopBlock(MetaModel):
 
                     scope.set('index', i, force=True)
 
-                    for result in self.execute_blocks(i, commandset, scope):
+                    for result in self.iterate_blocks(i, commandset, scope):
                         yield result
 
                     i += 1
 
             except TypeError:
-                logging.exception('TE')
                 raise TypeError("Cannot loop on result of {}".format(loop.iterator))
 
         elif self.bounded:
@@ -234,19 +429,19 @@ class LoopBlock(MetaModel):
             while loop.termination.evaluate(commandset, scope=scope):
                 scope.set('index', i, force=True)
 
-                for result in self.execute_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, commandset, scope):
                     yield result
 
                 commandset.execute(loop.next, scope=scope)
                 i += 1
 
-        elif self.whiletrue:
-            loop = self.whiletrue
+        elif self.truthy:
+            loop = self.truthy
 
             while loop.termination.evaluate(commandset, scope=scope):
                 scope.set('index', i, force=True)
 
-                for result in self.execute_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, commandset, scope):
                     yield result
 
                 i += 1
@@ -262,7 +457,7 @@ class LoopBlock(MetaModel):
             for _ in range(count):
                 scope.set('index', i, force=True)
 
-                for result in self.execute_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, commandset, scope):
                     yield result
 
                 i += 1
@@ -271,28 +466,36 @@ class LoopBlock(MetaModel):
             while True:
                 scope.set('index', i, force=True)
 
-                for result in self.execute_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, commandset, scope):
                     yield result
 
                 i += 1
 
-    def execute_blocks(self, i, commandset, scope):
+    def iterate_blocks(self, i, commandset, scope):
         for subblock in self.blocks:
-            if subblock == 'break':
-                break
-            elif subblock == 'continue':
-                continue
-            else:
-                yield i, commandset, subblock.block, scope
+            yield i, commandset, subblock, scope
 
 
 class CommandSequence(MetaModel):
     pass
 
 
+class FlowControlWord(MetaModel):
+    pass
+
+
+class Directive(MetaModel):
+    pass
+
+
 class Variable(MetaModel):
     def resolve(self, scope, fallback=None):
-        return scope.get(self.name, fallback)
+        if self.skip:
+            return fallback
+
+        value = scope.get(self.name, fallback)
+
+        return to_value(value, scope)
 
 
 class CommandID(MetaModel):
@@ -300,7 +503,7 @@ class CommandID(MetaModel):
         if self.variable:
             return self.variable.resolve(scope)
 
-        return self.value
+        return to_value(self.value, scope)
 
 
 class EventHandlerBlock(MetaModel):
@@ -308,19 +511,24 @@ class EventHandlerBlock(MetaModel):
 
 
 class Friendscript(object):
-    def __init__(self, filename=None, data=None):
+    def __init__(self, filename=None, data=None, commandset=None):
         self.model = None
+        self.data = None
+        self.commandset = commandset
 
         try:
             self.metamodel = metamodel_from_str(
                 generate_grammar(),
                 classes=[
                     Array,
+                    Assignment,
                     CommandID,
                     CommandSequence,
                     CommandStanza,
+                    Directive,
                     EventHandlerBlock,
                     Expression,
+                    FlowControlWord,
                     IfElseBlock,
                     LinearExecutionBlock,
                     LoopBlock,
@@ -328,26 +536,46 @@ class Friendscript(object):
                     Variable,
                 ]
             )
+
+            if isinstance(data, basestring):
+                self.loads(data)
+
+            elif isinstance(filename, basestring):
+                self.load_file(filename)
+
         except textx.exceptions.TextXSyntaxError as e:
-            raise SyntaxError(str(e))
+            raise ScriptError(
+                str(e),
+                filename=filename,
+                data=data,
+                line=e.line,
+                col=e.col
+            )
 
-        if isinstance(data, basestring):
-            self.loads(data)
-
-        elif isinstance(filename, basestring):
-            self.load_file(filename)
+        # and tell the model who we are
+        self.model.manager = self
 
     def load_file(self, filename):
         self.model = self.metamodel.model_from_file(filename)
+        self.data = open(filename).read()
 
     def loads(self, data):
         self.model = self.metamodel.model_from_str(data)
+        self.data = data
 
     def blocks_by_type(self, metatypes):
-        if self.model is None:
+        if isinstance(self.model, basestring):
             return []
 
-        return [b for b in self.model.blocks if isinstance(b, metatypes)]
+        return [
+            b for b in self.model.blocks if isinstance(b, metatypes)
+        ]
+
+    def get_item_position(self, item):
+        if not hasattr(item, '_tx_position'):
+            raise ValueError("Must specify a textx model object")
+
+        return self.metamodel.parser.pos_to_linecol(item._tx_position)
 
     @property
     def blocks(self):

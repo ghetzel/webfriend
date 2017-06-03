@@ -26,25 +26,37 @@ ReservedWord:
         'is' |
         'not' |
         'on' |
+        'unset' |
         'when'
     )
 ;
 
-Block:
-    (LinearExecutionBlock | EventHandlerBlock)
+FlowControlWord:
+    ( is_break?='break' levels=INT? | is_continue?='continue' levels=INT? )
 ;
 
-FlowControlBlock:
-    ( block=Block | 'break' levels=INT? | 'continue' )
+Block:
+    (FlowControlWord | EventHandlerBlock | LinearExecutionBlock ) ';'?
 ;
 
 LinearExecutionBlock:
-    (IfElseBlock | LoopBlock | CommandSequence)
+    ( Assignment | Directive | IfElseBlock | LoopBlock | CommandSequence )
+;
+
+Assignment:
+    destinations+=Variable[','] '=' sources+=Type[',']
+;
+
+Directive:
+    (
+        is_unset?='unset' variables+=Variable[',']
+    )
 ;
 
 Expression:
     negate?='not'? (
-        command=Command ( ';'? condition=Expression )? |
+        assignment=Assignment ';' condition=Expression |
+        command=Command ( ';' condition=Expression )? |
         lhs=ExpressionSegment ( operator=Operator rhs=ExpressionSegment )?
     )
 ;
@@ -76,14 +88,14 @@ ElseStanza:
 ;
 
 LoopBlock:
-    'for' (
+    'loop' (
         fixedlen=LoopConditionFixedLength |
         iterable=LoopConditionIterable |
         bounded=LoopConditionBounded |
-        whiletrue=LoopConditionWhile
+        truthy=LoopConditionTruthy
     )?
     '{'
-        blocks *= FlowControlBlock
+        blocks *= Block
     '}'
 ;
 
@@ -95,12 +107,12 @@ LoopConditionBounded:
     initial=Command ';' termination=Expression ';' next=Command
 ;
 
-LoopConditionWhile:
+LoopConditionTruthy:
     termination=Expression
 ;
 
 LoopConditionFixedLength:
-    count=IntOrVariable 'times'
+    'count' count=IntOrVariable
 ;
 
 IntOrVariable:
@@ -126,7 +138,7 @@ EventHandlerBlock:
 ;
 
 CommandSequence:
-    commands += Command
+    commands += Command[/;|$/]
 ;
 
 Command:
@@ -135,7 +147,7 @@ Command:
         options=CommandStanza
     )? (
         '->' resultkey=ResultKeyType
-    )? ';'?
+    )?
 ;
 
 ResultKeyType:
@@ -161,7 +173,7 @@ KeyType:
 ;
 
 ScalarType:
-    ( STRING | INT | FLOAT | BOOL )
+    ( NUMBER | BOOL | STRING )
 ;
 
 Type:

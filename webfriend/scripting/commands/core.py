@@ -301,7 +301,6 @@ class CoreProxy(CommandProxy):
                 except:
                     pass
 
-            if len(line) and line != 'None':
                 getattr(logging, level)(line)
                 return line
             else:

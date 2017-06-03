@@ -183,3 +183,8 @@ class ScopeTest(TestCase):
         self.assertFalse('nested.values.nonexistent' in scope)
         self.assertFalse('nested.nonexistent.are' in scope)
         self.assertFalse('nested.double.nonexistent' in scope)
+
+        scope.unset('nested.values')
+        self.assertFalse('nested.values.are' in scope)
+        self.assertFalse('nested.values' in scope)
+        self.assertTrue('nested' in scope)

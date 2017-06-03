@@ -25,7 +25,7 @@ from __future__ import absolute_import
 from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)  # noqa
 
-from .parser import Friendscript, CommandSequence, IfElseBlock, LoopBlock
+from . import parser
 from .proxy import CommandProxy, CommandSet
 from .scope import Scope
 import logging
@@ -36,10 +36,6 @@ from .commands import *  # noqa
 
 PROXIES = dict([(p.as_qualifier(), p) for _, p in ALL_PROXIES])  # noqa
 EXEC_OPTIONS = {}
-
-
-class SyntaxError(Exception):
-    pass
 
 
 def load_and_register_proxy(module, name=None, browser=None, commandset=None):
@@ -87,38 +83,35 @@ def execute_script(browser, script, scope=None):
         commandset[name] = proxy_cls(browser, commandset=commandset)
 
     # load and parse the script
-    instructions = Friendscript(data=script)
+    friendscript = parser.Friendscript(data=script, commandset=commandset)
 
     # tell the commandset about the calling script
-    commandset.script = instructions
-
-    # zero out the initial result if it's not there already
-    if commandset.default_result_key not in scope:
-        scope[commandset.default_result_key] = None
+    commandset.script = friendscript
 
     # show the initial state
     for k, v in scope.items():
         logging.debug('VAR: {}={}'.format(k, v))
 
-    # setup event handlers for this execution
-    for handler in instructions.handlers:
-        callback_id = browser.default.on(
-            handler.pattern,
-            _handle_event(handler, commandset, scope)
-        )
+    if browser:
+        # setup event handlers for this execution
+        for handler in friendscript.handlers:
+            callback_id = browser.default.on(
+                handler.pattern,
+                _handle_event(handler, commandset, scope)
+            )
 
-        logging.debug('Add event handler {}'.format(callback_id))
-        callbacks.add(callback_id)
+            logging.debug('Add event handler {}'.format(callback_id))
+            callbacks.add(callback_id)
 
-    # enable event reporting now
-    browser.default.enable_events()
+        # enable event reporting now
+        browser.default.enable_events()
 
     # Script Execution starts NOW
     # ---------------------------------------------------------------------------------------------
     try:
         # recursively evaluate all blocks and nested blocks starting from the top level
-        for block in instructions.blocks:
-            evaluate_block(commandset, block, scope)
+        for block in friendscript.blocks:
+            evaluate_block(friendscript, block, scope)
 
     finally:
         # unregister the event handlers we created for this run
@@ -133,15 +126,32 @@ def execute_script(browser, script, scope=None):
     return scope
 
 
-def evaluate_block(commandset, block, scope):
+def evaluate_block(scriptmgr, block, scope):
+    commandset = scriptmgr.commandset
+    # line, column = scriptmgr.get_item_position(block)
+    # print('{} = line {}, column: {}'.format(block.__class__, line, column))
+
+    # Assignment
+    # ---------------------------------------------------------------------------------------------
+    if isinstance(block, parser.Assignment):
+        block.assign(scope)
+
+    # Directives
+    # ---------------------------------------------------------------------------------------------
+    elif isinstance(block, parser.Directive):
+        if block.is_unset:
+            for var in block.variables:
+                scope.unset(var.name)
+
     # Commands
     # ---------------------------------------------------------------------------------------------
-    if isinstance(block, CommandSequence):
+    elif isinstance(block, parser.CommandSequence):
         # for each command in the pipeline...
         for command in block.commands:
             key, value = commandset.execute(command, scope)
+            value = parser.to_value(value, scope)
 
-            if key != 'null':
+            if key is not None:
                 scope.set(key, value, force=True)
 
             # perform delay if we have one
@@ -151,19 +161,41 @@ def evaluate_block(commandset, block, scope):
 
     # If / Else If / Else
     # ---------------------------------------------------------------------------------------------
-    elif isinstance(block, IfElseBlock):
+    elif isinstance(block, parser.IfElseBlock):
         subscope = Scope(parent=scope)
 
         for subblock in block.get_blocks(commandset, scope=subscope):
-            evaluate_block(commandset, subblock, subscope)
+            evaluate_block(scriptmgr, subblock, subscope)
 
     # Loops
     # ---------------------------------------------------------------------------------------------
-    elif isinstance(block, LoopBlock):
+    elif isinstance(block, parser.LoopBlock):
         loopscope = Scope(parent=scope)
 
         for i, _, subblock, scope in block.execute_loop(commandset, scope=loopscope):
-            evaluate_block(commandset, subblock, scope=scope)
+            try:
+                evaluate_block(scriptmgr, subblock, scope=scope)
+
+            except parser.FlowControlMultiLevel as e:
+                if e.levels > 1:
+                    e.levels -= 1
+                    raise
+                elif isinstance(e, parser.FlowControlBreak):
+                    break
+                elif isinstance(e, parser.FlowControlContinue):
+                    continue
+
+    # Flow Control
+    # ---------------------------------------------------------------------------------------------
+    elif isinstance(block, parser.FlowControlWord):
+        if block.is_break:
+            raise parser.FlowControlBreak('break', levels=block.levels)
+
+        elif block.is_continue:
+            raise parser.FlowControlContinue('continue', levels=block.levels)
+
+        else:
+            raise parser.ScriptError('Unrecognized statement')
 
 
 def _handle_event(handler, commandset, scope):
