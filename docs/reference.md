@@ -145,7 +145,8 @@ When strings are encountered, they are automatically scanned for Python-style in
 | `"Test {my[cool][value]}"`        | `"Test yay!"`               |
 ```
 
-For more information on the supported formatting options, see the documentation on Python's [Format Specification Mini-Language](https://docs.python.org/2/library/string.html#formatspec)
+For more information on the supported formatting options, see the documentation on Python's [Format Specification Mini-Language](https://docs.python.org/2/library/string.html#formatspec).
+
 
 ## Conditional Statements
 
