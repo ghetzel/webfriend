@@ -145,6 +145,8 @@ When strings are encountered, they are automatically scanned for Python-style in
 | `"Test {my[cool][value]}"`        | `"Test yay!"`               |
 ```
 
+For more information on the supported formatting options, see the documentation on Python's [Format Specification Mini-Language](https://docs.python.org/2/library/string.html#formatspec)
+
 ## Conditional Statements
 
 Friendscript supports conditional statements like _if-else_ and _case-when_ (i.e: switches).  The basic form of the if-else syntax is:

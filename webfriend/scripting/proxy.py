@@ -172,27 +172,36 @@ class CommandSet(object):
             else:
                 opts = {}
 
-            # recursively interpolate all values in the stanza options list
-            opts = self.interpolate(opts)
+            try:
+                # recursively interpolate all values in the stanza options list
+                opts = self.interpolate(opts)
 
-            command_id = command.id
+                command_id = command.id
 
-            if command_id is not None:
-                if command_id.variable:
-                    command_id = command_id.resolve(scope)
+                if command_id is not None:
+                    if command_id.variable:
+                        command_id = command_id.resolve(scope)
+                    else:
+                        # interpolate command ID
+                        command_id = self.interpolate(command_id.value)
+
+                # figure out where we want to store results
+                if isinstance(command.resultkey, parser.variables.Variable):
+                    resultkey = command.resultkey.name
+
+                elif isinstance(command.resultkey, basestring) and len(command.resultkey):
+                    resultkey = self.interpolate(command.resultkey)
+
                 else:
-                    # interpolate command ID
-                    command_id = self.interpolate(command_id.value)
+                    resultkey = self.default_result_key
 
-            # figure out where we want to store results
-            if isinstance(command.resultkey, parser.variables.Variable):
-                resultkey = command.resultkey.name
-
-            elif isinstance(command.resultkey, basestring) and len(command.resultkey):
-                resultkey = self.interpolate(command.resultkey)
-
-            else:
-                resultkey = self.default_result_key
+            except KeyError as e:
+                raise parser.exceptions.ScriptError(
+                    "Use of undefined variable '{}' in string pattern".format(
+                        str(e).lstrip("u'").rstrip("'")
+                    ),
+                    model=command
+                )
 
             # call function
             logging.debug(' ========= Execute: {} -> {}'.format(
@@ -200,12 +209,18 @@ class CommandSet(object):
                 resultkey
             ))
 
-            if command_id is None:
-                return resultkey, fn(**opts)
-            else:
-                return resultkey, fn(
-                    command_id,
-                    **opts
+            try:
+                if command_id is None:
+                    return resultkey, fn(**opts)
+                else:
+                    return resultkey, fn(
+                        command_id,
+                        **opts
+                    )
+            except Exception as e:
+                raise parser.exceptions.CommandExecutionError(
+                    "Error running command '{}': {}".format(command_name, e),
+                    model=command
                 )
 
         else:

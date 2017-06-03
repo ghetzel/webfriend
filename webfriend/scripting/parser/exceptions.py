@@ -117,3 +117,7 @@ class ScriptError(Exception):
             out = "Syntax Error: {}".format(self.message)
 
         return out
+
+
+class CommandExecutionError(ScriptError):
+    pass

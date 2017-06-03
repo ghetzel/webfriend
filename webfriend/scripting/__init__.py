@@ -111,7 +111,12 @@ def execute_script(browser, script, scope=None):
     try:
         # recursively evaluate all blocks and nested blocks starting from the top level
         for block in friendscript.blocks:
-            evaluate_block(friendscript, block, scope)
+            try:
+                evaluate_block(friendscript, block, scope)
+            except parser.exceptions.ScriptError:
+                raise
+            except Exception as e:
+                raise parser.exceptions.ScriptError(str(e), model=block)
 
     finally:
         # unregister the event handlers we created for this run
