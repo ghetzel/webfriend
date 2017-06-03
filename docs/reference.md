@@ -280,6 +280,7 @@ loop count 2 {
 ```
 
 ### Loop a fixed number of times as defined by `$n`
+```
 loop count $n {
     # do something n times
 }
