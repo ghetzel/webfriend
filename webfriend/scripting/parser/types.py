@@ -7,6 +7,10 @@ class Array(MetaModel):
     pass
 
 
+class String(MetaModel):
+    pass
+
+
 class Object(MetaModel):
     def __init__(self, parent, **kwargs):
         self.items = []

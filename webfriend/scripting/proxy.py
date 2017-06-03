@@ -132,29 +132,63 @@ class CommandSet(object):
         except KeyError:
             pass
 
-    def interpolate(self, value, **kwargs):
-        scope = Scope(kwargs, self._scope)
-        variables = scope.as_dict()
-        value = parser.to_value(value, scope)
+    def prepare_output_values(self, values):
+        if isinstance(values, list):
+            return [self.prepare_output_values(v) for v in values]
 
-        if isinstance(value, list):
-            # recurse into lists
-            return [self.interpolate(v, **variables) for v in value]
-
-        elif isinstance(value, dict):
-            # recurse into dicts
+        elif isinstance(values, dict):
             return dict([
-                (k, self.interpolate(v, **variables)) for k, v in value.items()
+                (k, self.prepare_output_values(v)) for k, v in values.items()
             ])
 
-        elif isinstance(value, basestring):
-            # do the interpolation
-            value = value.format(**variables)
+        elif values is True:
+            return 'true'
 
-        return value
+        elif values is False:
+            return 'false'
+
+        elif values is None:
+            return ''
+
+        return values
+
+    def interpolate(self, value, scope=None, **kwargs):
+        if scope is None:
+            scope = self._scope
+
+        scope = Scope(kwargs, parent=scope)
+        scopevars = scope.as_dict()
+        actual = parser.to_value(value, scope)
+
+        # if this is an exact-match string, then interpolate is a no-op
+        if isinstance(value, parser.types.String) and value.exact:
+            return actual
+
+        # lists get recursed into
+        elif isinstance(actual, list):
+            # recurse into lists
+            return [self.interpolate(v, **scopevars) for v in actual]
+
+        # dicts also get recursed into
+        elif isinstance(actual, dict):
+            # recurse into dicts
+            return dict([
+                (k, self.interpolate(v, **scopevars)) for k, v in actual.items()
+            ])
+
+        # strings (as returned from to_value) get interpolated
+        elif isinstance(actual, basestring):
+            # do the interpolation
+            return actual.format(**self.prepare_output_values(scopevars))
+
+        # everything else passes through
+        else:
+            return actual
 
     def execute(self, command, scope=None):
         if scope:
+            # NOTE: Future Sadness May Await
+            #
             # this here is why commands should not execute in parallel, because we're changing the scope
             # of the _entire_ commandset to the given scope for the duration of this call
             self.set_scope(scope)
@@ -173,7 +207,7 @@ class CommandSet(object):
                 opts = {}
 
             try:
-                # recursively interpolate all values in the stanza options list
+                # recursively interpolate all options
                 opts = self.interpolate(opts)
 
                 command_id = command.id

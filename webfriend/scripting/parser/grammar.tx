@@ -1,5 +1,3 @@
-def generate_grammar():
-    return """
 Friendscript:
     Shebang?
     blocks *= Block
@@ -158,7 +156,7 @@ Variable:
 ;
 
 VariableName[noskipws]:
-    /[^\\d\\W][\\w\\.]*\\b/
+    /[^\d\W][\w\.]*\b/
 ;
 
 Operator:
@@ -166,7 +164,7 @@ Operator:
 ;
 
 EventHandlerBlock:
-    'on' pattern=STRING? isolated?='isolated'? '{'
+    'on' pattern=String? isolated?='isolated'? '{'
         blocks += LinearExecutionBlock
     '}'
 ;
@@ -203,7 +201,7 @@ KeyValuePair:
 ;
 
 KeyType:
-    ( !ReservedWord | ID | STRING )
+    ( !ReservedWord | ID | String )
 ;
 
 VariableOrType:
@@ -211,11 +209,15 @@ VariableOrType:
 ;
 
 ScalarType:
-    ( NUMBER | BOOL | STRING )
+    ( NUMBER | BOOL | String )
 ;
 
 Type:
     (ScalarType | Object | Array | 'null')
+;
+
+String:
+    ( exact="'" value=/[^']*/ "'" | '"' value=/[^"]*/ '"' )
 ;
 
 Object:
@@ -233,4 +235,3 @@ Array:
 CommandName:
     !ReservedWord ID+['::']
 ;
-"""

@@ -139,7 +139,7 @@ def evaluate_block(scriptmgr, block, scope):
     # Assignment
     # ---------------------------------------------------------------------------------------------
     if isinstance(block, parser.variables.Assignment):
-        block.assign(scope)
+        block.assign(commandset, scope)
 
     # Directives
     # ---------------------------------------------------------------------------------------------

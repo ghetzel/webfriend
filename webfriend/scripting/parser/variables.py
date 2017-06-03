@@ -22,14 +22,14 @@ class CommandID(MetaModel):
 
 
 class Assignment(MetaModel):
-    def assign(self, scope, force=False):
+    def assign(self, commandset, scope, force=False):
         sources_consumed = 0
         sources = self.sources
 
         # provide support for unpacking lists and tuples into multiple variables
         if len(self.destinations) > 1:
             if len(self.sources) == 1:
-                first_source = to_value(self.sources[0], scope)
+                first_source = commandset.interpolate(self.sources[0], scope=scope)
 
                 if isinstance(first_source, (list, tuple)):
                     sources = first_source
@@ -41,7 +41,12 @@ class Assignment(MetaModel):
                 destination = self.destinations[i]
 
                 if not destination.skip:
-                    source = to_value(source, scope)
+                    try:
+                        print('assigning {} {} to {}'.format(source.exact, source.value, destination.name))
+                    except:
+                        pass
+
+                    source = commandset.interpolate(source, scope=scope)
 
                     # assignments are BY VALUE (e.g.: always incur a copy)
                     scope.set(destination.name, copy.copy(source), force=force)

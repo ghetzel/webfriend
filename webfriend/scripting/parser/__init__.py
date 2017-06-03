@@ -1,28 +1,37 @@
 from __future__ import absolute_import
-from textx.metamodel import metamodel_from_str
+from textx.metamodel import metamodel_from_file
 import textx.exceptions
-from .grammar import generate_grammar
 import textx
+import os
 
 
 def to_value(value, scope):
-    if str(value) == 'null':
-        return None
-
-    elif isinstance(value, variables.Variable):
+    # expand variables into values first
+    if isinstance(value, variables.Variable):
         value = value.resolve(scope)
 
-    if isinstance(value, types.Array):
+    # do type detection and extraction
+    if isinstance(value, types.String):
+        value = value.value.decode('UTF-8')
+
+    elif isinstance(value, types.Array):
         value = [to_value(v, scope) for v in value.values]
+
     elif isinstance(value, types.Object):
         value = dict([
             (k, to_value(v, scope)) for k, v in value.as_dict().items()
         ])
+
     elif isinstance(value, float):
         if int(value) == value:
             value = int(value)
+
     elif isinstance(value, str):
         value = value.decode('UTF-8')
+
+    # null become None
+    if value == 'null':
+        return None
 
     return value
 
@@ -38,8 +47,11 @@ class Friendscript(object):
         self.commandset = commandset
 
         try:
-            self.metamodel = metamodel_from_str(
-                generate_grammar(),
+            self.metamodel = metamodel_from_file(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    'grammar.tx'
+                ),
                 classes=[
                     commands.CommandSequence,
                     commands.CommandStanza,
@@ -53,6 +65,7 @@ class Friendscript(object):
                     loops.LoopBlock,
                     types.Array,
                     types.Object,
+                    types.String,
                     variables.Assignment,
                     variables.CommandID,
                     variables.Variable,
@@ -66,6 +79,7 @@ class Friendscript(object):
                 self.load_file(filename)
 
         except textx.exceptions.TextXSyntaxError as e:
+            raise
             raise exceptions.ScriptError(
                 str(e),
                 filename=filename,

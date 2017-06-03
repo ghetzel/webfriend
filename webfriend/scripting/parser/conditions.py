@@ -11,7 +11,7 @@ class ConditionalExpression(MetaModel):
         # Inline Assignment and test condition
         # ------------------------------------------------------------------------------------------
         if self.assignment:
-            self.assignment.assign(scope, force=True)
+            self.assignment.assign(commandset, scope, force=True)
 
             # recursively evaluate the condition portion of the statement
             return self.condition.evaluate(commandset, scope)

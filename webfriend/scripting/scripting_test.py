@@ -17,6 +17,8 @@ class ScriptingTest(TestCase):
             'a': 1,
             'b': True,
             'c': u"Test",
+            'c1': u"Test Test",
+            'c2': u"Test {c}",
             'd': 3.14159,
             'e': [
                 1,
@@ -82,6 +84,8 @@ class ScriptingTest(TestCase):
             $a = 1
             $b = true
             $c = "Test"
+            $c1 = "Test {c}"
+            $c2 = 'Test {c}'
             $d = 3.14159
             $e = [1, true, "Test", 3.14159, [1, true, "Test", 3.14159], {ok:true}]
             $f = {
