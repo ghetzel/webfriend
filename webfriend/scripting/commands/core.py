@@ -300,12 +300,12 @@ class CoreProxy(CommandProxy):
                     line = json.dumps(line, indent=4)
                 except:
                     pass
-
-                getattr(logging, level)(line)
-                return line
             else:
                 return None
 
+            # actually log the line
+            getattr(logging, level)(line)
+            return line
         else:
             raise AttributeError("Unknown log level '{}'".format(level))
 

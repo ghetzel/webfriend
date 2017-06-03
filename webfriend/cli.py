@@ -38,6 +38,7 @@ def main(ctx, script, debug, debugger_url):
 
         click.echo(json.dumps(exit_state, indent=4))
 
+
 try:
     main()
 except Exception as e:

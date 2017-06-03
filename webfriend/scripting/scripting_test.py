@@ -174,7 +174,7 @@ class ScriptingTest(TestCase):
         """))
 
     def test_syntax_errors(self):
-        with self.assertRaises(parser.ScriptError):
+        with self.assertRaises(parser.exceptions.ScriptError):
             self._eval("nonexistent")
 
     def test_loops_all_sorts_of_loops(self):

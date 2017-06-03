@@ -76,14 +76,76 @@ The handling of whitespace in scripts is very flexible.  Spaces or tabs, indenta
 example "argument" {whitespace:"is",very:"flexible"}
 ```
 
-## Variable Scope and Assignment
+## Variable Assignment and Retrieval
 
-TODO
+Variables can be stored and retrieved throughout your script using the `=` assignment operator:
 
+```
+# integers
+$a = 1
+
+# booleans
+$b = true
+
+# floats
+$c = 3.1415
+
+# strings
+$d = "four"
+
+# arrays
+$e = [5, 6, 7]
+
+# objects
+$my = {
+    g: "gee",
+    cool: {
+        value: "yay!",
+    },
+}
+```
+
+Variable retrieval can be achieved simply by using the variable in-line (e.g.: `if $a == $b {}`), or through string interpolation (`$x = "The value of $a is {a}"`).  For variables containing objects, keys and nested subkeys of those objects can be accessed using a dot-separated notation (e.g.: `$my.cool.value` from above would return `"yay!"`).
+
+
+## Variable Scope
+
+All variables are set within a _scope_.  A scope defines a common area where variable data is stored.  Certain constructs, such as `if` and `loop` statements will create their own scope that is local to the statements defined between the braces (`{}`).  These scopes _inherit_ the scope of the block where it was defined, so these statements have access to all of the variables that came before them, but statements outside of these statements won't be able to see variables created inside of them.  If you need to set a variable from within a scoped statement, you must first declare it outside of that statement.  For example:
+
+```
+$everyone_can_see_me      = true
+$im_gonna_be_set_in_an_if = null
+
+if 2 == 2 {
+    $but_only_things_in_here_can_see_me = "yay!"
+    $im_gonna_be_set_in_an_if = "I'm making a break for it."
+
+    log "{everyone_can_see_me}"                 # this will work
+    log "{but_only_things_in_here_can_see_me}"  # as will this
+}
+
+log "{everyone_can_see_me}"                 # this will work
+log "{im_gonna_be_set_in_an_if}"            # as will this, but...
+log "{but_only_things_in_here_can_see_me}"  # ERROR!!
+```
+
+
+## String Interpolation
+
+When strings are encountered, they are automatically scanned for Python-style interpolation sequences wrapped in curly braces (`{}`).  All variables in the current scope and any parent scopes (recursively up to the global level) are made available for interpolation within any string, whether it is used as the value of a variable, command argument, command option, or condition expression.  Using the variables from above, here are some string patterns and their value:
+
+```
+| Pattern                           | Value                       |
+| --------------------------------- | --------------------------- |
+| `"Test {a}"`                      | `"Test 1"`                  |
+| `"Test {b}"`                      | `"Test True"`               |
+| `"Test {c}, {d}, {e[0]}, {e[2]}"` | `"Test 3.1415, four, 5, 7"` |
+| `"Test {my[cool][value]}"`        | `"Test yay!"`               |
+```
 
 ## Conditional Statements
 
-Friendscript supports conditional statments like _if-else_ and _case-when_ (i.e: switches).  The basic form of the if-else syntax is:
+Friendscript supports conditional statements like _if-else_ and _case-when_ (i.e: switches).  The basic form of the if-else syntax is:
 
 ```
 if $somevariable {
@@ -139,30 +201,81 @@ if $value > 50 {
 
 ## Looping and Iteration
 
-TODO: Loops: WE GOT EM'
+Friendscript supports several useful looping constructs for repeatedly running blocks of code, either for a fixed number of loops, or until a specific condition is met.  All loops, regardless of their bounds or termination conditions, have a variable implicitly defined within the scope of the loop's block: `$index`.  The `$index` variable stores the current iteration count (i.e.: number of times the loop has run).  This can be used by statements inside the loop for various purposes.  Below are some examples of this syntax and short descriptions of their usage
 
+### Infinite Loop
+
+Iterates forever, unless a condition in the loop definition exits the loop with a `break` statement.
 ```
-# forever
-loop { }
+loop {
+    log "Round {index}"
 
-# while truthy
-loop $truthy { }
+    if $index > 500 {
+        break
+    }
+}
+```
 
-# while $a < 10
-loop $a < 10 { }
+### Loop while a variable evalutates to a "truthy" (non-null, non-zero) value.
+```
+loop $something {
+    # do things
+}
+```
 
-# for x in y
-loop $x in $y { }
+### Loop while the given condition is true
+```
+loop $a < 10 {
+    command::output -> $out
 
-# unpacking
-loop $k, $v in $object { }
+    if $out == 5 {
+        continue
+    } else {
+        $a = $out
+    }
+}
+```
 
-# bounded iteration (classic for-loop)
-loop command_that_returns_iterator -> $i; $i; next $i { }
+### Loop through all values in `$y`
+```
+loop $x in $y {
+    log "Y #{index}: {x}"
+}
+```
 
-# fixed-length constant
-loop count 2 { }
+### Loop through each key (`$k`) and value (`$v`) pair in object `$object`
+```
+loop $k, $v in $object {
+    log "KEY {k} = {v}"
+}
+```
 
-# fixed-length via variable
-loop count $n { }
+### Bounded Iteration (classic "for loop")
+```
+loop command_that_returns_iterator -> $i; $i; next $i {
+    # do something with $i
+}
+```
+
+### Loop a fixed number of times
+```
+loop count 2 {
+    # define $word here so that the assignments inside the if-statements know
+    # which scope to put the value in
+    $word = null
+
+    if $index == 0 {
+        $word = "once"
+    } else {
+        $word = "twice"
+    }
+
+    log "Do it {word}"
+}
+```
+
+### Loop a fixed number of times as defined by `$n`
+loop count $n {
+    # do something n times
+}
 ```

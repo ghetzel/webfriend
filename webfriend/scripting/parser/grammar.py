@@ -40,11 +40,11 @@ Block:
 ;
 
 LinearExecutionBlock:
-    ( Assignment | Directive | IfElseBlock | LoopBlock | CommandSequence )
+    ( Assignment | Directive | Expression | IfElseBlock | LoopBlock | CommandSequence )
 ;
 
 Assignment:
-    destinations+=Variable[','] '=' sources+=Type[',']
+    destinations+=Variable[','] '=' sources+=VariableOrType[',']
 ;
 
 Directive:
@@ -53,16 +53,50 @@ Directive:
     )
 ;
 
-Expression:
-    negate?='not'? (
-        assignment=Assignment ';' condition=Expression |
-        command=Command ( ';' condition=Expression )? |
-        lhs=ExpressionSegment ( operator=Operator rhs=ExpressionSegment )?
+NumericOperator:
+    (
+        add='+' |
+        subtract='-' |
+        multiply='*' |
+        divide='/' |
+        modulus='%' |
+        power='**'
     )
 ;
 
-ExpressionSegment:
-    (variable=Variable | value=ScalarType)
+LogicOperator:
+    (
+        bitwise_and='&' |
+        bitwise_or='|' |
+        bitwise_not='^'
+    )
+;
+
+AssignmentOperator:
+    (
+        plus_eq='+=' |
+        minus_eq='-=' |
+        multi_eq='*=' |
+        div_eq='/=' |
+        and_eq='&=' |
+        or_eq='|='
+    )
+;
+
+Operator:
+    ( NumericOperator | LogicOperator | AssignmentOperator )
+;
+
+Expression:
+    lhs=Variable operator=Operator rhs=VariableOrType
+;
+
+ConditionalExpression:
+    negate?='not'? (
+        assignment=Assignment ';' condition=ConditionalExpression |
+        command=Command ( ';' condition=ConditionalExpression )? |
+        lhs=VariableOrType ( operator=Operator rhs=VariableOrType )?
+    )
 ;
 
 IfElseBlock:
@@ -72,7 +106,7 @@ IfElseBlock:
 ;
 
 IfStanza:
-    'if' expression=Expression '{'
+    'if' expression=ConditionalExpression '{'
         blocks *= Block
     '}'
 ;
@@ -104,11 +138,11 @@ LoopConditionIterable:
 ;
 
 LoopConditionBounded:
-    initial=Command ';' termination=Expression ';' next=Command
+    initial=Command ';' termination=ConditionalExpression ';' next=Command
 ;
 
 LoopConditionTruthy:
-    termination=Expression
+    termination=ConditionalExpression
 ;
 
 LoopConditionFixedLength:
@@ -116,7 +150,7 @@ LoopConditionFixedLength:
 ;
 
 IntOrVariable:
-    (Variable | INT)
+    (Variable | NUMBER)
 ;
 
 Variable:
@@ -165,11 +199,15 @@ CommandStanza:
 ;
 
 KeyValuePair:
-    name=KeyType ':' values += Type
+    name=KeyType ':' values+=VariableOrType
 ;
 
 KeyType:
     ( !ReservedWord | ID | STRING )
+;
+
+VariableOrType:
+    (Variable | Type)
 ;
 
 ScalarType:
@@ -177,7 +215,7 @@ ScalarType:
 ;
 
 Type:
-    (Variable | ScalarType | Object | Array | 'null')
+    (ScalarType | Object | Array | 'null')
 ;
 
 Object:
@@ -188,7 +226,7 @@ Object:
 
 Array:
     '['
-        values *= Type[','] ','?
+        values *= VariableOrType[','] ','?
     ']'
 ;
 

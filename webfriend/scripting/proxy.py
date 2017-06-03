@@ -115,7 +115,7 @@ class CommandSet(object):
         try:
             return self[proxy_name], command_name
         except KeyError:
-            raise parser.ScriptError("Unregistered qualifier '{}'".format(proxy_name))
+            raise parser.exceptions.ScriptError("Unregistered qualifier '{}'".format(proxy_name))
 
     def has_execution_option(self, key):
         return key in self._exec_options
@@ -185,7 +185,7 @@ class CommandSet(object):
                     command_id = self.interpolate(command_id.value)
 
             # figure out where we want to store results
-            if isinstance(command.resultkey, parser.Variable):
+            if isinstance(command.resultkey, parser.variables.Variable):
                 resultkey = command.resultkey.name
 
             elif isinstance(command.resultkey, basestring) and len(command.resultkey):
@@ -209,7 +209,7 @@ class CommandSet(object):
                 )
 
         else:
-            raise parser.ScriptError("No such command '{}'".format(command_name), model=command)
+            raise parser.exceptions.ScriptError("No such command '{}'".format(command_name), model=command)
 
     def __contains__(self, proxy_name):
         if proxy_name in self.proxies:

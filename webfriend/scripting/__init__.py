@@ -133,19 +133,19 @@ def evaluate_block(scriptmgr, block, scope):
 
     # Assignment
     # ---------------------------------------------------------------------------------------------
-    if isinstance(block, parser.Assignment):
+    if isinstance(block, parser.variables.Assignment):
         block.assign(scope)
 
     # Directives
     # ---------------------------------------------------------------------------------------------
-    elif isinstance(block, parser.Directive):
+    elif isinstance(block, parser.lang.Directive):
         if block.is_unset:
             for var in block.variables:
                 scope.unset(var.name)
 
     # Commands
     # ---------------------------------------------------------------------------------------------
-    elif isinstance(block, parser.CommandSequence):
+    elif isinstance(block, parser.commands.CommandSequence):
         # for each command in the pipeline...
         for command in block.commands:
             key, value = commandset.execute(command, scope)
@@ -161,7 +161,7 @@ def evaluate_block(scriptmgr, block, scope):
 
     # If / Else If / Else
     # ---------------------------------------------------------------------------------------------
-    elif isinstance(block, parser.IfElseBlock):
+    elif isinstance(block, parser.conditions.IfElseBlock):
         subscope = Scope(parent=scope)
 
         for subblock in block.get_blocks(commandset, scope=subscope):
@@ -169,33 +169,33 @@ def evaluate_block(scriptmgr, block, scope):
 
     # Loops
     # ---------------------------------------------------------------------------------------------
-    elif isinstance(block, parser.LoopBlock):
+    elif isinstance(block, parser.loops.LoopBlock):
         loopscope = Scope(parent=scope)
 
         for i, _, subblock, scope in block.execute_loop(commandset, scope=loopscope):
             try:
                 evaluate_block(scriptmgr, subblock, scope=scope)
 
-            except parser.FlowControlMultiLevel as e:
+            except parser.loops.FlowControlMultiLevel as e:
                 if e.levels > 1:
                     e.levels -= 1
                     raise
-                elif isinstance(e, parser.FlowControlBreak):
+                elif isinstance(e, parser.loops.FlowControlBreak):
                     break
-                elif isinstance(e, parser.FlowControlContinue):
+                elif isinstance(e, parser.loops.FlowControlContinue):
                     continue
 
     # Flow Control
     # ---------------------------------------------------------------------------------------------
-    elif isinstance(block, parser.FlowControlWord):
+    elif isinstance(block, parser.loops.FlowControlWord):
         if block.is_break:
-            raise parser.FlowControlBreak('break', levels=block.levels)
+            raise parser.loops.FlowControlBreak('break', levels=block.levels)
 
         elif block.is_continue:
-            raise parser.FlowControlContinue('continue', levels=block.levels)
+            raise parser.loops.FlowControlContinue('continue', levels=block.levels)
 
         else:
-            raise parser.ScriptError('Unrecognized statement')
+            raise parser.exceptions.ScriptError('Unrecognized statement')
 
 
 def _handle_event(handler, commandset, scope):
