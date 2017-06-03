@@ -167,14 +167,14 @@ log "{but_only_things_in_here_can_see_me}"  # ERROR!!
 
 When strings are encountered, they are automatically scanned for Python-style interpolation sequences wrapped in curly braces (`{}`).  All variables in the current scope and any parent scopes (recursively up to the global level) are made available for interpolation within any string, whether it is used as the value of a variable, command argument, command option, or condition expression.  Using the variables from above, here are some string patterns and their value:
 
-```
+
 | Pattern                           | Value                       |
 | --------------------------------- | --------------------------- |
 | `"Test {a}"`                      | `"Test 1"`                  |
 | `"Test {b}"`                      | `"Test True"`               |
 | `"Test {c}, {d}, {e[0]}, {e[2]}"` | `"Test 3.1415, four, 5, 7"` |
 | `"Test {my[cool][value]}"`        | `"Test yay!"`               |
-```
+
 
 For more information on the supported formatting options, see the documentation on Python's [Format Specification Mini-Language](https://docs.python.org/2/library/string.html#formatspec).
 
