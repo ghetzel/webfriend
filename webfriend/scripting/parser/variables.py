@@ -41,11 +41,6 @@ class Assignment(MetaModel):
                 destination = self.destinations[i]
 
                 if not destination.skip:
-                    try:
-                        print('assigning {} {} to {}'.format(source.exact, source.value, destination.name))
-                    except:
-                        pass
-
                     source = commandset.interpolate(source, scope=scope)
 
                     # assignments are BY VALUE (e.g.: always incur a copy)

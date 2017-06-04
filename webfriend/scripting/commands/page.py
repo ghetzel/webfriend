@@ -197,6 +197,11 @@ class PageProxy(CommandProxy):
         else:
             return self.tab.dom.root.outer_html
 
+    # def highlight(self, selector, **kwargs):
+    #     elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
+    #     self.tab.dom.ensure_unique_element(selector, elements)
+    #     self.tab.overlay.highlight_node(node_id=elements['nodes'][0].id, **kwargs)
+
     def remove(self, selector):
         removed = []
 

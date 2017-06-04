@@ -10,5 +10,6 @@ from .emulation import Emulation
 from .event import Event
 from .input import Input
 from .network import Network
+from .overlay import Overlay
 from .page import Page
 from .runtime import Runtime

@@ -7,6 +7,7 @@ from .rpc import (
     Emulation,
     Input,
     Network,
+    Overlay,
     Page,
     Reply,
     Runtime,
@@ -65,6 +66,7 @@ class Tab(object):
         self.network      = Network(self)
         self.runtime      = Runtime(self)
         self.window       = Browser(self)
+        self.overlay      = Overlay(self)
 
         # setup internal callbacks
         self.setup_callbacks()

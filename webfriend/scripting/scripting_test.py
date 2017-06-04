@@ -78,6 +78,8 @@ class ScriptingTest(TestCase):
             },
             'ee3': u'sentences',
             'ee4': None,
+            'log_1': u'test 1',
+            'log_2': u'test {a}',
         }, self._eval("""
             # set variables of with values of every type
             $null = null
@@ -113,6 +115,9 @@ class ScriptingTest(TestCase):
 
             $ee1, $ee2 = $ee.always, $ee.always.finishing
             $ee3, $ee4 = [$ee.always.finishing.each_others, $ee.always.finishing.each_others.sandwiches]
+
+            log "test {a}" -> $log_1
+            log 'test {a}' -> $log_2
         """))
 
     def test_if_scopes(self):

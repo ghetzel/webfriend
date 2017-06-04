@@ -7,6 +7,7 @@ import re
 class ScriptError(Exception):
     context_lines_before = 3
     context_lines_after = 3
+    error_type = 'Error'
 
     def __init__(
         self,
@@ -71,7 +72,7 @@ class ScriptError(Exception):
 
     def __str__(self):
         if self.lines and self.line and self.col:
-            out = "Syntax error on line {}, char {}\n".format(self.line, self.col)
+            out = "{} on line {}, char {}\n".format(self.error_type, self.line, self.col)
 
             if self.filename:
                 out += "  in file: {}\n".format(self.filename)
@@ -119,5 +120,9 @@ class ScriptError(Exception):
         return out
 
 
+class SyntaxError(ScriptError):
+    error_type = 'Syntax error'
+
+
 class CommandExecutionError(ScriptError):
-    pass
+    error_type = 'Runtime error'

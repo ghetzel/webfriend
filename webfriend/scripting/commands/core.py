@@ -290,18 +290,11 @@ class CoreProxy(CommandProxy):
             line = kwargs
 
         if hasattr(logging, level):
-            if isinstance(line, basestring):
-                if not isinstance(line, unicode):
-                    line = line.decode('UTF-8')
-
-                line = line.format(**Scope(kwargs, self.scope).as_dict())
-            elif isinstance(line, (dict, list, tuple)) and indent >= 0:
+            if isinstance(line, (dict, list, tuple)) and indent >= 0:
                 try:
                     line = json.dumps(line, indent=4)
                 except:
                     pass
-            else:
-                return None
 
             # actually log the line
             getattr(logging, level)(line)

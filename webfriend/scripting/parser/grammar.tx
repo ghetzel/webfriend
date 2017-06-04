@@ -8,7 +8,7 @@ Shebang:
 ;
 
 Comment:
-    ( /#.*$/ )
+    ( /(^|\s+)#.*$/ )
 ;
 
 ReservedWord:
@@ -216,7 +216,8 @@ Type:
     (ScalarType | Object | Array | 'null')
 ;
 
-String:
+
+String[noskipws]:
     ( exact="'" value=/[^']*/ "'" | '"' value=/[^"]*/ '"' )
 ;
 

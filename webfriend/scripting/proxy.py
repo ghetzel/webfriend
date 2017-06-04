@@ -252,6 +252,8 @@ class CommandSet(object):
                         **opts
                     )
             except Exception as e:
+                logging.exception('Runtime error')
+
                 raise parser.exceptions.CommandExecutionError(
                     "Error running command '{}': {}".format(command_name, e),
                     model=command

@@ -79,8 +79,7 @@ class Friendscript(object):
                 self.load_file(filename)
 
         except textx.exceptions.TextXSyntaxError as e:
-            raise
-            raise exceptions.ScriptError(
+            raise exceptions.SyntaxError(
                 str(e),
                 filename=filename,
                 data=data,
