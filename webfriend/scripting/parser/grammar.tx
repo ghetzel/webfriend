@@ -8,7 +8,7 @@ Shebang:
 ;
 
 Comment:
-    ( /(^|\s+)#.*$/ )
+    ( /#.*$/ )
 ;
 
 ReservedWord:
@@ -93,8 +93,17 @@ ConditionalExpression:
     negate?='not'? (
         assignment=Assignment ';' condition=ConditionalExpression |
         command=Command ( ';' condition=ConditionalExpression )? |
-        lhs=VariableOrType ( operator=Operator rhs=VariableOrType )?
+        lhs=VariableOrType operator=MatchOperator rhs=RegularExpression |
+        lhs=VariableOrType ( operator=ComparisonOperator rhs=VariableOrType )?
     )
+;
+
+ComparisonOperator:
+    ( '==' | '!=' | '>=' | '<=' | '<' | '>' | 'in' | 'not' 'in' )
+;
+
+MatchOperator:
+    ( '!~' | '~' )
 ;
 
 IfElseBlock:
@@ -159,10 +168,6 @@ VariableName[noskipws]:
     /[^\d\W][\w\.]*\b/
 ;
 
-Operator:
-    ( '==' | '!=' | '<' | '>=' | '<=' | '>' | '=~' | 'in' | 'not' 'in' )
-;
-
 EventHandlerBlock:
     'on' pattern=String? isolated?='isolated'? '{'
         blocks += LinearExecutionBlock
@@ -208,17 +213,20 @@ VariableOrType:
     (Variable | Type)
 ;
 
+Type:
+    (Object | Array | RegularExpression | ScalarType | 'null')
+;
+
 ScalarType:
     ( NUMBER | BOOL | String )
 ;
 
-Type:
-    (ScalarType | Object | Array | 'null')
-;
-
-
 String[noskipws]:
     ( exact="'" value=/[^']*/ "'" | '"' value=/[^"]*/ '"' )
+;
+
+RegularExpression:
+    '/'- pattern=/[^\/]+/ '/' options*=/[ilmsu]/
 ;
 
 Object:

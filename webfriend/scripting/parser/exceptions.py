@@ -24,6 +24,7 @@ class ScriptError(Exception):
         self.col = col
         self.filename = None
 
+        # populate the lines list
         if isinstance(filename, basestring):
             self.filename = filename
             self.lines = open(filename).read().split('\n')
@@ -50,10 +51,9 @@ class ScriptError(Exception):
         else:
             self.lines = None
 
-        message = self.prepare_message(message)
-        self.message = message
+        self.message = self.prepare_message(message)
 
-        super(ScriptError, self).__init__(message)
+        super(ScriptError, self).__init__(self.message)
 
     def prepare_message(self, message):
         offending_char = None
@@ -68,9 +68,6 @@ class ScriptError(Exception):
         if message.startswith('Expected ') and offending_char:
             message = "Unexpected character '{}'".format(offending_char)
 
-        return message
-
-    def __str__(self):
         if self.lines and self.line and self.col:
             out = "{} on line {}, char {}\n".format(self.error_type, self.line, self.col)
 
@@ -112,12 +109,15 @@ class ScriptError(Exception):
                             prefix,
                             ' ' * (self.col - 1),
                             '^',
-                            re.sub(r' at position.*', '', self.message)
+                            re.sub(r' at position.*', '', message)
                         ), 'red', attrs=attrs)
         else:
-            out = "Syntax Error: {}".format(self.message)
+            out = "Syntax Error: {}".format(message)
 
         return out
+
+    def __str__(self):
+        return self.message
 
 
 class SyntaxError(ScriptError):

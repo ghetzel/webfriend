@@ -1,6 +1,5 @@
 from __future__ import absolute_import
-from . import MetaModel, to_value, exceptions
-import re
+from . import MetaModel, to_value, exceptions, types
 
 
 class ConditionalExpression(MetaModel):
@@ -73,13 +72,26 @@ class ConditionalExpression(MetaModel):
             elif operator == '>=':
                 return (lhs >= rhs)
 
-            elif operator == '=~':
-                return not (re.match('{}'.format(rhs), '{}'.format(lhs)) is None)
+            elif operator == '~':
+                if not isinstance(rhs, types.RegularExpression):
+                    raise ValueError(
+                        "Match operator must specify a regular expression on the right-hand side"
+                    )
+
+                return rhs.is_match('{}'.format(lhs))
+
+            elif operator == '!~':
+                if not isinstance(rhs, types.RegularExpression):
+                    raise ValueError(
+                        "Unmatch operator must specify a regular expression on the right-hand side"
+                    )
+
+                return not rhs.is_match('{}'.format(lhs))
 
             elif operator == 'in':
                 return (lhs in rhs)
 
-            elif operator == 'not in':
+            elif operator == 'notin':
                 return (lhs not in rhs)
 
             else:

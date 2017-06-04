@@ -203,17 +203,18 @@ if $a == $b { ... }
 
 ### Supported Operators
 
-| Operator | Tests                            | Example             |
-| -------- | -------------------------------- | ------------------- |
-| `==`     | value equality                   | `$a == $b`          |
-| `!=`     | value inequality                 | `$a != $b`          |
-| `>`      | left greater than right          | `$a > $b`           |
-| `>=`     | left greater than/equal to right | `$a >= $b`          |
-| `<`      | left less than right             | `$a < $b`           |
-| `<=`     | left less than/equal to right    | `$a <= $b`          |
-| `=~`     | left matches pattern on right    | `$a =~ "^[aeiou]$"` |
-| `in`     | left is contained in right       | `$a in $b`          |
-| `not in` | left is not contained in right   | `$a not in $b`      |
+| Operator | Tests                                | Example             |
+| -------- | ------------------------------------ | ------------------- |
+| `==`     | value equality                       | `$a == $b`          |
+| `!=`     | value inequality                     | `$a != $b`          |
+| `>`      | left greater than right              | `$a > $b`           |
+| `>=`     | left greater than/equal to right     | `$a >= $b`          |
+| `<`      | left less than right                 | `$a < $b`           |
+| `<=`     | left less than/equal to right        | `$a <= $b`          |
+| `~`      | left matches pattern on right        | `$a ~ "^[aeiou]$"`  |
+| `!~`     | left does not match pattern on right | `$a !~ "^[aeiou]$"` |
+| `in`     | left is contained in right           | `$a in $b`          |
+| `not in` | left is not contained in right       | `$a not in $b`      |
 
 
 Additionally, there is an abbreviated inline syntax for cases in which a variable must be set by a command, then tested for a value:
@@ -227,7 +228,7 @@ if command "thing" -> $value; $value > 50 {
     log "You also have access to $value in the else-case: {value}"
 }
 
-# this ^ is an alternative to:
+# the above is an alternative to:
 command "thing" -> $value
 
 if $value > 50 {
@@ -318,3 +319,19 @@ loop count $n {
     # do something n times
 }
 ```
+
+
+## Event Handlers
+
+As your script interacts with the browser, various events are generated for a multitude of actions involved in the process of loading and displaying a web page.  Friendscript is able to receive these events and perform actions when they occur.  Actions can include any valid sequence of commands or statements.
+
+```
+on "Network.responseReceived" {
+    log "{event[name]}:"
+    log $event.data
+}
+```
+
+This event handler will fire whenever a "Network.responseReceived" event is received (which can be quite often), and log the event's data object.  Uses for event handlers can range from simple debugging and inspection of a web request or page change events, to data collection and reporting (e.g.: which URLs/domains is this page talking to?)
+
+

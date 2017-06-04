@@ -65,6 +65,7 @@ class Friendscript(object):
                     loops.LoopBlock,
                     types.Array,
                     types.Object,
+                    types.RegularExpression,
                     types.String,
                     variables.Assignment,
                     variables.CommandID,

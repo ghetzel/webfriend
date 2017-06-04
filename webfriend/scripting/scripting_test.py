@@ -186,6 +186,91 @@ class ScriptingTest(TestCase):
         with self.assertRaises(parser.exceptions.ScriptError):
             self._eval("nonexistent")
 
+    def test_conditionals(self):
+        self.assertEqual({
+            'ten':            10,
+            'unset':          None,
+            'true':           True,
+            'false':          False,
+            'string':         u"string",
+            'names':          [u"Bob", u"Steve", u"Fred"],
+            'if_eq':          True,
+            'if_ne':          True,
+            'if_eq_null':     True,
+            'if_true':        True,
+            'if_gt':          True,
+            'if_gte':         True,
+            'if_lt':          True,
+            'if_lte':         True,
+            'if_in':          True,
+            'if_not_in':      True,
+            'if_match_1':     True,
+            'if_match_2':     True,
+            'if_match_3':     True,
+            'if_not_match_1': True,
+            'if_not_match_2': True,
+            'if_not_match_3': True,
+            'if_match_4':     True,
+            'if_match_5':     True,
+            'if_match_6':     True,
+            'if_not_match_4': True,
+            'if_not_match_5': True,
+            'if_not_match_6': True,
+        }, self._eval("""
+            $ten = 10
+            $unset = null
+            $true = true
+            $false = false
+            $string = "string"
+            $names = ["Bob", "Steve", "Fred"]
+            $if_eq = null
+            $if_ne = null
+            $if_eq_null = null
+            $if_true = null
+            $if_gt = null
+            $if_gte = null
+            $if_lt = null
+            $if_lte = null
+            $if_in = null
+            $if_not_in = null
+            $if_match_1 = null
+            $if_match_2 = null
+            $if_match_3 = null
+            $if_match_4 = null
+            $if_match_5 = null
+            $if_match_6 = null
+            $if_not_match_1 = null
+            $if_not_match_2 = null
+            $if_not_match_3 = null
+            $if_not_match_4 = null
+            $if_not_match_5 = null
+            $if_not_match_6 = null
+
+            if $ten == 10                    { $if_eq          = true }
+            if $unset == null                { $if_eq_null     = true }
+            if $ten != 5                     { $if_ne          = true }
+            if $ten > 5                      { $if_gt          = true }
+            if $ten >= 10                    { $if_gte         = true }
+            if $ten < 20                     { $if_lt          = true }
+            if $ten <= 10                    { $if_lte         = true }
+            if $true                         { $if_true        = true }
+            if not $false                    { $if_false       = true }
+            if "Steve" in $names             { $if_in          = true }
+            if "Bill" not in $names          { $if_not_in      = true }
+            if $string ~ /str[aeiou]ng/      { $if_match_1     = true }
+            if $string ~ /String/i           { $if_match_2     = true }
+            if $string ~ /.*/                { $if_match_3     = true }
+            if $string !~ /strong/i          { $if_not_match_1 = true }
+            if $string !~ /String/           { $if_not_match_2 = true }
+            if $string !~ /^ring$/           { $if_not_match_3 = true }
+            if not $string !~ /str[aeiou]ng/ { $if_match_4     = true }
+            if not $string !~ /String/i      { $if_match_5     = true }
+            if not $string !~ /.*/           { $if_match_6     = true }
+            if not $string ~ /strong/i       { $if_not_match_4 = true }
+            if not $string ~ /String/        { $if_not_match_5 = true }
+            if not $string ~ /^ring$/        { $if_not_match_6 = true }
+        """))
+
     def test_loops_all_sorts_of_loops(self):
         self.assertEqual({
             'forevers':        9,

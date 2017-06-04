@@ -96,8 +96,8 @@ def execute_script(browser, script, scope=None):
         # setup event handlers for this execution
         for handler in friendscript.handlers:
             callback_id = browser.default.on(
-                handler.pattern,
-                _handle_event(handler, commandset, scope)
+                parser.to_value(handler.pattern, scope),
+                _handle_event(friendscript, handler, scope)
             )
 
             logging.debug('Add event handler {}'.format(callback_id))
@@ -203,26 +203,30 @@ def evaluate_block(scriptmgr, block, scope):
             raise parser.exceptions.ScriptError('Unrecognized statement')
 
 
-def _handle_event(handler, commandset, scope):
+def _handle_event(scriptmgr, handler, scope):
     def handle(e):
         def actual(event):
             local_scope_data = {
-                'event': event,
+                'event': {
+                    'name':     event.event,
+                    'instance': event,
+                    'data':     event.payload,
+                },
             }
 
             if handler.isolated:
-                local_scope = Scope(local_scope_data)
+                local_scope = Scope(data=local_scope_data)
             else:
-                local_scope = Scope(local_scope_data, scope)
+                local_scope = Scope(data=local_scope_data, parent=scope)
 
             # execute all commands, accumulating output into the local state
-            for sequence in handler.sequences:
-                for command in sequence.commands:
-                    key, value = commandset.execute(command, local_scope)
-
-                    # setting the resultkey to "null" explicitly discards the result
-                    if key != 'null':
-                        local_scope[key] = value
+            for block in handler.blocks:
+                try:
+                    evaluate_block(scriptmgr, block, local_scope)
+                except parser.exceptions.ScriptError:
+                    raise
+                except Exception as e:
+                    raise parser.exceptions.ScriptError(str(e), model=block)
 
             return local_scope
 

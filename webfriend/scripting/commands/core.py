@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import logging
 import time
 import json
-from .. import CommandProxy, Scope
+from .. import CommandProxy
 from ... import rpc, utils
 from uuid import uuid4
 
