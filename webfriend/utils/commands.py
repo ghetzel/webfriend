@@ -6,14 +6,25 @@ from sys import platform
 def locate_browser_process():
     names = []
 
+    if os.getenv('WEBFRIEND_BROWSER'):
+        names.append(os.getenv('WEBFRIEND_BROWSER').split(':'))
+
     if platform.startswith('linux'):
-        names = ['chromium-browser', 'google-chrome']
+        names = [
+            'chromium-browser',
+            'google-chrome',
+        ]
 
     elif platform == 'darwin':
-        names = ['chromium-browser', 'google-chrome']
+        names = [
+            '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
+            '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+            '/Applications/Chromium.app/Contents/MacOS/Chromium',
+        ]
 
-    elif platform == 'win32':
-        names = []
+    # We'll get there...
+    # elif platform == 'win32':
+    #     names = []
 
     if not len(names):
         raise Exception("Unsupported platform '{}'".format(platform))
