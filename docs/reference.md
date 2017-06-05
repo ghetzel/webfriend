@@ -2,7 +2,7 @@
 
 ## tl;dr
 
-Friendscript is a domain-specific imperative scripting language used for performing automatic tasks within a web browser; such as loading URLs, searching the DOM for elements and content, and performing page rendering tasks like screenshots and video captures.  Scripts are plain text files that contains a series of commands that are executing linearly in a blocking manner, with a bias towards exiting upon encountering errors.  Logical operations, branching, and looping are supported as native language-level constructs for the purpose of building flexible and robust automation scripts.
+Friendscript is a domain-specific imperative scripting language used for performing automatic tasks within a web browser; such as loading URLs, searching the DOM for elements and content, and performing page rendering tasks like screenshots and video captures.  Scripts are plain text files that contain a series of commands that are executed linearly in a blocking manner, with a bias towards exiting upon encountering errors.  Logical operations, branching, and looping are supported as native language-level constructs for the purpose of building flexible and robust automation scripts.
 
 ## Commands
 
