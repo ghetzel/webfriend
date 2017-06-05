@@ -75,12 +75,12 @@ def execute_script(browser, script, scope=None):
         scope = Scope()
 
     # setup the commandset
-    commandset = CommandSet(scope)
+    commandset = CommandSet(scope, browser=browser)
     callbacks = set()
 
     # initalize proxy instances with a common scope
     for name, proxy_cls in PROXIES.items():
-        commandset[name] = proxy_cls(browser, commandset=commandset)
+        commandset.register(proxy_cls, qualifier=name)
 
     # load and parse the script
     friendscript = parser.Friendscript(data=script, commandset=commandset)
@@ -103,8 +103,8 @@ def execute_script(browser, script, scope=None):
             logging.debug('Add event handler {}'.format(callback_id))
             callbacks.add(callback_id)
 
-        # enable event reporting now
-        browser.default.enable_events()
+    # okay, tell the commandset to get ready to rock
+    commandset.ready()
 
     # Script Execution starts NOW
     # ---------------------------------------------------------------------------------------------

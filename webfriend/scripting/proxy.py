@@ -4,6 +4,10 @@ from . import parser
 import logging
 
 
+class CommandSetNotReady(Exception):
+    pass
+
+
 class CommandProxy(object):
     qualifier = None
 
@@ -72,16 +76,28 @@ class CommandSet(object):
     default_qualifier = 'core'
     default_result_key = 'result'
 
-    def __init__(self, scope=None, proxies=None):
+    def __init__(self, scope=None, proxies=None, browser=None):
         self._scope = (scope or Scope())
         self.proxies = (proxies or {})
         self.script = None
+        self.browser = browser
+        self._is_ready = False
         self._exec_options = {}
         self.sync_scopes()
 
     @property
     def scope(self):
         return self._scope
+
+    def ready(self):
+        if self._is_ready:
+            return True
+
+        if self.browser:
+            self.browser.default.enable_events()
+
+        self._is_ready = True
+        return True
 
     def sync_scopes(self):
         for _, proxy in self.proxies.items():
@@ -101,6 +117,15 @@ class CommandSet(object):
         names.sort(key=len, reverse=True)
 
         return names
+
+    def register(self, proxy_cls, qualifier=None):
+        if not issubclass(proxy_cls, CommandProxy):
+            raise ValueError("Proxy class must be a subclass of CommandProxy")
+
+        if qualifier is None:
+            qualifier = proxy_cls.as_qualifier()
+
+        self[qualifier] = proxy_cls(self.browser, commandset=self)
 
     def get_proxy_for_command(self, command):
         q_command = command.name.split('::', 1)
@@ -268,7 +293,13 @@ class CommandSet(object):
 
         return False
 
+    def __getattr__(self, proxy_name):
+        return self.proxies[proxy_name]
+
     def __getitem__(self, proxy_name):
+        if not self._is_ready:
+            raise CommandSetNotReady("Cannot work with CommandSet until ready() is called.")
+
         return self.proxies[proxy_name]
 
     def __setitem__(self, proxy_name, proxy):

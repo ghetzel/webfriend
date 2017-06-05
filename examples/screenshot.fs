@@ -1,10 +1,12 @@
 #!/usr/bin/env webfriend
 
 # navigate to Hacker News
-go "https://news.ycombinator.com"
+go "https://news.ycombinator.com" -> $www
+
+log "Page loaded in {www[timing][requestTime]}ns"
 
 # log the result of loading the page
-log "URL {result[url]}: Loaded with HTTP {result[status]}"
+log "URL {www[url]}: Loaded with HTTP {www[status]}"
 
 # take a screenshot of the current page
 page::screenshot "hackernews.png"
