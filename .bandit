@@ -1,0 +1,2 @@
+[bandit]
+exclude: .cache,.eggs,.git,env,.tox
