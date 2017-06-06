@@ -3,7 +3,7 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 
-    <title>webfriend.scripting.commands.events API documentation</title>
+    <title>webfriend.scripting.commands.base API documentation</title>
     <meta name="description" content="" />
 
   <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300' rel='stylesheet' type='text/css'>
@@ -1045,16 +1045,14 @@ table {
     <li class="set"><h3><a href="#header-classes">Classes</a></h3>
       <ul>
         <li class="mono">
-        <span class="class_name"><a href="#webfriend.scripting.commands.events.EventsProxy">EventsProxy</a></span>
+        <span class="class_name"><a href="#webfriend.scripting.commands.base.CommandProxy">CommandProxy</a></span>
         
           
   <ul>
-    <li class="mono"><a href="#webfriend.scripting.commands.events.EventsProxy.__init__">__init__</a></li>
-    <li class="mono"><a href="#webfriend.scripting.commands.events.EventsProxy.as_qualifier">as_qualifier</a></li>
-    <li class="mono"><a href="#webfriend.scripting.commands.events.EventsProxy.get_command_names">get_command_names</a></li>
-    <li class="mono"><a href="#webfriend.scripting.commands.events.EventsProxy.qualify">qualify</a></li>
-    <li class="mono"><a href="#webfriend.scripting.commands.events.EventsProxy.wait_for">wait_for</a></li>
-    <li class="mono"><a href="#webfriend.scripting.commands.events.EventsProxy.wait_for_idle">wait_for_idle</a></li>
+    <li class="mono"><a href="#webfriend.scripting.commands.base.CommandProxy.__init__">__init__</a></li>
+    <li class="mono"><a href="#webfriend.scripting.commands.base.CommandProxy.as_qualifier">as_qualifier</a></li>
+    <li class="mono"><a href="#webfriend.scripting.commands.base.CommandProxy.get_command_names">get_command_names</a></li>
+    <li class="mono"><a href="#webfriend.scripting.commands.base.CommandProxy.qualify">qualify</a></li>
   </ul>
 
         </li>
@@ -1072,88 +1070,77 @@ table {
 
 
   <header id="section-intro">
-  <h1 class="title"><span class="name">webfriend.scripting.commands.events</span> module</h1>
+  <h1 class="title"><span class="name">webfriend.scripting.commands.base</span> module</h1>
   
   
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events" class="source">
-    <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">CommandProxy</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.base', this);">Show source &equiv;</a></p>
+  <div id="source-webfriend.scripting.commands.base" class="source">
+    <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">..scope</span> <span class="kn">import</span> <span class="n">Scope</span>
 
 
-<span class="k">class</span> <span class="nc">EventsProxy</span><span class="p">(</span><span class="n">CommandProxy</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Block until a specific event is received, or until **timeout** elapses (whichever comes</span>
-<span class="sd">        first).</span>
+<span class="k">class</span> <span class="nc">CommandProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">qualifier</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">default_qualifier</span> <span class="o">=</span> <span class="s1">&#39;core&#39;</span>
 
-<span class="sd">        ### Arguments</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">browser</span> <span class="o">=</span> <span class="n">browser</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scope</span>   <span class="o">=</span> <span class="p">(</span><span class="n">scope</span> <span class="ow">or</span> <span class="n">Scope</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span>    <span class="o">=</span> <span class="bp">None</span>
 
-<span class="sd">        - **event_name** (`str`):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tab</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">default</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_tab</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Could not retrieve unknown tab &#39;{}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tab</span><span class="p">))</span>
 
-<span class="sd">            The name of the event to wait for.</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
 
-<span class="sd">        - **timeout** (`int`):</span>
+        <span class="k">return</span> <span class="bp">False</span>
 
-<span class="sd">            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">)</span>
 
-<span class="sd">        ### Returns</span>
-<span class="sd">        `webfriend.rpc.event.Event`</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_command_names</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-<span class="sd">        ### Raises</span>
-<span class="sd">        `webfriend.exceptions.TimeoutError`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">event_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="c1"># underscored items are not commands</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="k">continue</span>
 
-    <span class="k">def</span> <span class="nf">wait_for_idle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idle</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">[],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">,</span> <span class="n">poll_interval</span><span class="o">=</span><span class="mi">250</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Blocks for a specified amount of time _after_ an event has been received, or until</span>
-<span class="sd">        **timeout** elapses (whichever comes first).</span>
+            <span class="c1"># methods inherited from CommandProxy are not commands</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">CommandProxy</span><span class="p">):</span>
+                <span class="k">continue</span>
 
-<span class="sd">        This is useful for waiting for events to occur after performing an action, then giving some</span>
-<span class="sd">        amount of time for those events to &quot;settle&quot; (e.g.: allowing the page time to react to those</span>
-<span class="sd">        events without knowing ahead of time what, if any, listeners will be responding.)  A common</span>
-<span class="sd">        use case for this would be to wait a few seconds _after_ a resize has occurred for anything</span>
-<span class="sd">        that just loaded to finish doing so.</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()):</span>
+                    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
+                        <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">qualify</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
+        <span class="k">return</span> <span class="n">names</span>
 
-<span class="sd">        ### Arguments</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">qualify</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;{}::{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
 
-<span class="sd">        - **idle** (`int`):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">as_qualifier</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">qualifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">qualifier</span>
 
-<span class="sd">            The amount of time, in milliseconds, that the event stream should be idle before</span>
-<span class="sd">            returning.</span>
-
-<span class="sd">        - **events** (`list`, optional):</span>
-
-<span class="sd">            If not empty, the **idle** time will be interpreted as the amount of time since _any</span>
-<span class="sd">            of these specific events_ have occurred.  The default is to wait for the browser to be</span>
-<span class="sd">            idle with respect to _any_ events.</span>
-
-<span class="sd">        - **timeout** (`int`):</span>
-
-<span class="sd">            The maximum amount of time to wait before raising a</span>
-<span class="sd">            `webfriend.exceptions.TimeoutError`.</span>
-
-<span class="sd">        - **poll_interval** (`int`):</span>
-
-<span class="sd">            How often to check the event timings to see if the idle time has elapsed.</span>
-
-<span class="sd">        ### Returns</span>
-<span class="sd">        An `int` representing the number of milliseconds we waited for.</span>
-
-<span class="sd">        ### Raises</span>
-<span class="sd">        `webfriend.exceptions.TimeoutError`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">):</span>
-            <span class="n">events</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">values</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for_idle</span><span class="p">(</span>
-            <span class="n">idle</span><span class="p">,</span>
-            <span class="n">events</span><span class="o">=</span><span class="n">events</span><span class="p">,</span>
-            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-            <span class="n">poll_interval</span><span class="o">=</span><span class="n">poll_interval</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 </pre></div>
 
   </div>
@@ -1166,85 +1153,75 @@ table {
     <h2 class="section-title" id="header-classes">Classes</h2>
       
       <div class="item">
-      <p id="webfriend.scripting.commands.events.EventsProxy" class="name">class <span class="ident">EventsProxy</span></p>
+      <p id="webfriend.scripting.commands.base.CommandProxy" class="name">class <span class="ident">CommandProxy</span></p>
       
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events.EventsProxy', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events.EventsProxy" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">EventsProxy</span><span class="p">(</span><span class="n">CommandProxy</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Block until a specific event is received, or until **timeout** elapses (whichever comes</span>
-<span class="sd">        first).</span>
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.base.CommandProxy', this);">Show source &equiv;</a></p>
+  <div id="source-webfriend.scripting.commands.base.CommandProxy" class="source">
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">CommandProxy</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">qualifier</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">default_qualifier</span> <span class="o">=</span> <span class="s1">&#39;core&#39;</span>
 
-<span class="sd">        ### Arguments</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">browser</span> <span class="o">=</span> <span class="n">browser</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scope</span>   <span class="o">=</span> <span class="p">(</span><span class="n">scope</span> <span class="ow">or</span> <span class="n">Scope</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span>    <span class="o">=</span> <span class="bp">None</span>
 
-<span class="sd">        - **event_name** (`str`):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tab</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">default</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">browser</span><span class="o">.</span><span class="n">tabs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_tab</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Could not retrieve unknown tab &#39;{}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tab</span><span class="p">))</span>
 
-<span class="sd">            The name of the event to wait for.</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
 
-<span class="sd">        - **timeout** (`int`):</span>
+        <span class="k">return</span> <span class="bp">False</span>
 
-<span class="sd">            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_command_name</span><span class="p">)</span>
 
-<span class="sd">        ### Returns</span>
-<span class="sd">        `webfriend.rpc.event.Event`</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_command_names</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-<span class="sd">        ### Raises</span>
-<span class="sd">        `webfriend.exceptions.TimeoutError`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">event_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+            <span class="c1"># underscored items are not commands</span>
+            <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+                <span class="k">continue</span>
 
-    <span class="k">def</span> <span class="nf">wait_for_idle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idle</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">[],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">,</span> <span class="n">poll_interval</span><span class="o">=</span><span class="mi">250</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Blocks for a specified amount of time _after_ an event has been received, or until</span>
-<span class="sd">        **timeout** elapses (whichever comes first).</span>
+            <span class="c1"># methods inherited from CommandProxy are not commands</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">CommandProxy</span><span class="p">):</span>
+                <span class="k">continue</span>
 
-<span class="sd">        This is useful for waiting for events to occur after performing an action, then giving some</span>
-<span class="sd">        amount of time for those events to &quot;settle&quot; (e.g.: allowing the page time to react to those</span>
-<span class="sd">        events without knowing ahead of time what, if any, listeners will be responding.)  A common</span>
-<span class="sd">        use case for this would be to wait a few seconds _after_ a resize has occurred for anything</span>
-<span class="sd">        that just loaded to finish doing so.</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()):</span>
+                    <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
+                        <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">qualify</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
 
+        <span class="k">return</span> <span class="n">names</span>
 
-<span class="sd">        ### Arguments</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">qualify</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;{}::{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
 
-<span class="sd">        - **idle** (`int`):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">as_qualifier</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">qualifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">qualifier</span>
 
-<span class="sd">            The amount of time, in milliseconds, that the event stream should be idle before</span>
-<span class="sd">            returning.</span>
-
-<span class="sd">        - **events** (`list`, optional):</span>
-
-<span class="sd">            If not empty, the **idle** time will be interpreted as the amount of time since _any</span>
-<span class="sd">            of these specific events_ have occurred.  The default is to wait for the browser to be</span>
-<span class="sd">            idle with respect to _any_ events.</span>
-
-<span class="sd">        - **timeout** (`int`):</span>
-
-<span class="sd">            The maximum amount of time to wait before raising a</span>
-<span class="sd">            `webfriend.exceptions.TimeoutError`.</span>
-
-<span class="sd">        - **poll_interval** (`int`):</span>
-
-<span class="sd">            How often to check the event timings to see if the idle time has elapsed.</span>
-
-<span class="sd">        ### Returns</span>
-<span class="sd">        An `int` representing the number of milliseconds we waited for.</span>
-
-<span class="sd">        ### Raises</span>
-<span class="sd">        `webfriend.exceptions.TimeoutError`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">):</span>
-            <span class="n">events</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">values</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for_idle</span><span class="p">(</span>
-            <span class="n">idle</span><span class="p">,</span>
-            <span class="n">events</span><span class="o">=</span><span class="n">events</span><span class="p">,</span>
-            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-            <span class="n">poll_interval</span><span class="o">=</span><span class="n">poll_interval</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 </pre></div>
 
   </div>
@@ -1254,13 +1231,12 @@ table {
       <div class="class">
           <h3>Ancestors (in MRO)</h3>
           <ul class="class_list">
-          <li><a href="#webfriend.scripting.commands.events.EventsProxy">EventsProxy</a></li>
-          <li>webfriend.scripting.commands.base.CommandProxy</li>
+          <li><a href="#webfriend.scripting.commands.base.CommandProxy">CommandProxy</a></li>
           <li>__builtin__.object</li>
           </ul>
           <h3>Class variables</h3>
             <div class="item">
-            <p id="webfriend.scripting.commands.events.EventsProxy.default_qualifier" class="name">var <span class="ident">default_qualifier</span></p>
+            <p id="webfriend.scripting.commands.base.CommandProxy.default_qualifier" class="name">var <span class="ident">default_qualifier</span></p>
             
 
             
@@ -1270,7 +1246,7 @@ table {
 
             </div>
             <div class="item">
-            <p id="webfriend.scripting.commands.events.EventsProxy.qualifier" class="name">var <span class="ident">qualifier</span></p>
+            <p id="webfriend.scripting.commands.base.CommandProxy.qualifier" class="name">var <span class="ident">qualifier</span></p>
             
 
             
@@ -1281,7 +1257,37 @@ table {
             </div>
           <h3>Instance variables</h3>
             <div class="item">
-            <p id="webfriend.scripting.commands.events.EventsProxy.tab" class="name">var <span class="ident">tab</span></p>
+            <p id="webfriend.scripting.commands.base.CommandProxy.browser" class="name">var <span class="ident">browser</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="webfriend.scripting.commands.base.CommandProxy.environment" class="name">var <span class="ident">environment</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="webfriend.scripting.commands.base.CommandProxy.scope" class="name">var <span class="ident">scope</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
+            <div class="item">
+            <p id="webfriend.scripting.commands.base.CommandProxy.tab" class="name">var <span class="ident">tab</span></p>
             
 
             
@@ -1293,7 +1299,7 @@ table {
           <h3>Methods</h3>
             
   <div class="item">
-    <div class="name def" id="webfriend.scripting.commands.events.EventsProxy.__init__">
+    <div class="name def" id="webfriend.scripting.commands.base.CommandProxy.__init__">
     <p>def <span class="ident">__init__</span>(</p><p>self, browser, environment=None, scope=None)</p>
     </div>
     
@@ -1301,8 +1307,8 @@ table {
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events.EventsProxy.__init__', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events.EventsProxy.__init__" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.base.CommandProxy.__init__', this);">Show source &equiv;</a></p>
+  <div id="source-webfriend.scripting.commands.base.CommandProxy.__init__" class="source">
     <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">browser</span> <span class="o">=</span> <span class="n">browser</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
@@ -1317,7 +1323,7 @@ table {
   
             
   <div class="item">
-    <div class="name def" id="webfriend.scripting.commands.events.EventsProxy.as_qualifier">
+    <div class="name def" id="webfriend.scripting.commands.base.CommandProxy.as_qualifier">
     <p>def <span class="ident">as_qualifier</span>(</p><p>cls)</p>
     </div>
     
@@ -1325,8 +1331,8 @@ table {
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events.EventsProxy.as_qualifier', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events.EventsProxy.as_qualifier" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.base.CommandProxy.as_qualifier', this);">Show source &equiv;</a></p>
+  <div id="source-webfriend.scripting.commands.base.CommandProxy.as_qualifier" class="source">
     <div class="codehilite"><pre><span></span><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">as_qualifier</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
     <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">qualifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
@@ -1341,7 +1347,7 @@ table {
   
             
   <div class="item">
-    <div class="name def" id="webfriend.scripting.commands.events.EventsProxy.get_command_names">
+    <div class="name def" id="webfriend.scripting.commands.base.CommandProxy.get_command_names">
     <p>def <span class="ident">get_command_names</span>(</p><p>cls)</p>
     </div>
     
@@ -1349,8 +1355,8 @@ table {
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events.EventsProxy.get_command_names', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events.EventsProxy.get_command_names" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.base.CommandProxy.get_command_names', this);">Show source &equiv;</a></p>
+  <div id="source-webfriend.scripting.commands.base.CommandProxy.get_command_names" class="source">
     <div class="codehilite"><pre><span></span><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">get_command_names</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
     <span class="n">names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -1377,7 +1383,7 @@ table {
   
             
   <div class="item">
-    <div class="name def" id="webfriend.scripting.commands.events.EventsProxy.qualify">
+    <div class="name def" id="webfriend.scripting.commands.base.CommandProxy.qualify">
     <p>def <span class="ident">qualify</span>(</p><p>cls, name)</p>
     </div>
     
@@ -1385,150 +1391,11 @@ table {
     
   
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events.EventsProxy.qualify', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events.EventsProxy.qualify" class="source">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.base.CommandProxy.qualify', this);">Show source &equiv;</a></p>
+  <div id="source-webfriend.scripting.commands.base.CommandProxy.qualify" class="source">
     <div class="codehilite"><pre><span></span><span class="nd">@classmethod</span>
 <span class="k">def</span> <span class="nf">qualify</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
     <span class="k">return</span> <span class="s1">&#39;{}::{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">(),</span> <span class="n">name</span><span class="p">)</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="webfriend.scripting.commands.events.EventsProxy.wait_for">
-    <p>def <span class="ident">wait_for</span>(</p><p>self, event_name, timeout=30000)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Block until a specific event is received, or until <strong>timeout</strong> elapses (whichever comes
-first).</p>
-<h3>Arguments</h3>
-<ul>
-<li>
-<p><strong>event_name</strong> (<code>str</code>):</p>
-<p>The name of the event to wait for.</p>
-</li>
-<li>
-<p><strong>timeout</strong> (<code>int</code>):</p>
-<p>The timeout, in milliseconds, before raising a <code>webfriend.exceptions.TimeoutError</code>.</p>
-</li>
-</ul>
-<h3>Returns</h3>
-<p><code>webfriend.rpc.event.Event</code></p>
-<h3>Raises</h3>
-<p><code>webfriend.exceptions.TimeoutError</code></p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events.EventsProxy.wait_for', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events.EventsProxy.wait_for" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">wait_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Block until a specific event is received, or until **timeout** elapses (whichever comes</span>
-<span class="sd">    first).</span>
-<span class="sd">    ### Arguments</span>
-<span class="sd">    - **event_name** (`str`):</span>
-<span class="sd">        The name of the event to wait for.</span>
-<span class="sd">    - **timeout** (`int`):</span>
-<span class="sd">        The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.</span>
-<span class="sd">    ### Returns</span>
-<span class="sd">    `webfriend.rpc.event.Event`</span>
-<span class="sd">    ### Raises</span>
-<span class="sd">    `webfriend.exceptions.TimeoutError`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">event_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-</pre></div>
-
-  </div>
-</div>
-
-  </div>
-  
-            
-  <div class="item">
-    <div class="name def" id="webfriend.scripting.commands.events.EventsProxy.wait_for_idle">
-    <p>def <span class="ident">wait_for_idle</span>(</p><p>self, idle, events=[], timeout=30000, poll_interval=250)</p>
-    </div>
-    
-
-    
-  
-    <div class="desc"><p>Blocks for a specified amount of time <em>after</em> an event has been received, or until
-<strong>timeout</strong> elapses (whichever comes first).</p>
-<p>This is useful for waiting for events to occur after performing an action, then giving some
-amount of time for those events to "settle" (e.g.: allowing the page time to react to those
-events without knowing ahead of time what, if any, listeners will be responding.)  A common
-use case for this would be to wait a few seconds <em>after</em> a resize has occurred for anything
-that just loaded to finish doing so.</p>
-<h3>Arguments</h3>
-<ul>
-<li>
-<p><strong>idle</strong> (<code>int</code>):</p>
-<p>The amount of time, in milliseconds, that the event stream should be idle before
-returning.</p>
-</li>
-<li>
-<p><strong>events</strong> (<code>list</code>, optional):</p>
-<p>If not empty, the <strong>idle</strong> time will be interpreted as the amount of time since <em>any
-of these specific events</em> have occurred.  The default is to wait for the browser to be
-idle with respect to <em>any</em> events.</p>
-</li>
-<li>
-<p><strong>timeout</strong> (<code>int</code>):</p>
-<p>The maximum amount of time to wait before raising a
-<code>webfriend.exceptions.TimeoutError</code>.</p>
-</li>
-<li>
-<p><strong>poll_interval</strong> (<code>int</code>):</p>
-<p>How often to check the event timings to see if the idle time has elapsed.</p>
-</li>
-</ul>
-<h3>Returns</h3>
-<p>An <code>int</code> representing the number of milliseconds we waited for.</p>
-<h3>Raises</h3>
-<p><code>webfriend.exceptions.TimeoutError</code></p></div>
-  <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.events.EventsProxy.wait_for_idle', this);">Show source &equiv;</a></p>
-  <div id="source-webfriend.scripting.commands.events.EventsProxy.wait_for_idle" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">wait_for_idle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idle</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">[],</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">,</span> <span class="n">poll_interval</span><span class="o">=</span><span class="mi">250</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Blocks for a specified amount of time _after_ an event has been received, or until</span>
-<span class="sd">    **timeout** elapses (whichever comes first).</span>
-<span class="sd">    This is useful for waiting for events to occur after performing an action, then giving some</span>
-<span class="sd">    amount of time for those events to &quot;settle&quot; (e.g.: allowing the page time to react to those</span>
-<span class="sd">    events without knowing ahead of time what, if any, listeners will be responding.)  A common</span>
-<span class="sd">    use case for this would be to wait a few seconds _after_ a resize has occurred for anything</span>
-<span class="sd">    that just loaded to finish doing so.</span>
-<span class="sd">    ### Arguments</span>
-<span class="sd">    - **idle** (`int`):</span>
-<span class="sd">        The amount of time, in milliseconds, that the event stream should be idle before</span>
-<span class="sd">        returning.</span>
-<span class="sd">    - **events** (`list`, optional):</span>
-<span class="sd">        If not empty, the **idle** time will be interpreted as the amount of time since _any</span>
-<span class="sd">        of these specific events_ have occurred.  The default is to wait for the browser to be</span>
-<span class="sd">        idle with respect to _any_ events.</span>
-<span class="sd">    - **timeout** (`int`):</span>
-<span class="sd">        The maximum amount of time to wait before raising a</span>
-<span class="sd">        `webfriend.exceptions.TimeoutError`.</span>
-<span class="sd">    - **poll_interval** (`int`):</span>
-<span class="sd">        How often to check the event timings to see if the idle time has elapsed.</span>
-<span class="sd">    ### Returns</span>
-<span class="sd">    An `int` representing the number of milliseconds we waited for.</span>
-<span class="sd">    ### Raises</span>
-<span class="sd">    `webfriend.exceptions.TimeoutError`</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="s1">&#39;values&#39;</span><span class="p">):</span>
-        <span class="n">events</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">values</span>
-    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">wait_for_idle</span><span class="p">(</span>
-        <span class="n">idle</span><span class="p">,</span>
-        <span class="n">events</span><span class="o">=</span><span class="n">events</span><span class="p">,</span>
-        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-        <span class="n">poll_interval</span><span class="o">=</span><span class="n">poll_interval</span>
-    <span class="p">)</span>
 </pre></div>
 
   </div>

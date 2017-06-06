@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 import os
-import json
-from webfriend import Chrome
-from webfriend.scripting import CommandSet, commands
 import logging
+from webfriend import Chrome, scripting
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 if os.getenv('DEBUG') == 'true':
@@ -13,11 +11,24 @@ if os.getenv('DEBUG') == 'true':
     Chrome.browser_arguments = ['--temp-profile'] + Chrome.browser_arguments
 
 with Chrome() as browser:
-    commandset = CommandSet(browser=browser)
+    commands = scripting.Environment(browser=browser)
 
-    commandset.register(commands.CoreProxy)
-    commandset.register(commands.PageProxy)
-    commandset.ready()
+    # navigate to Hacker News
+    www = commands.core.go('https://news.ycombinator.com')
 
-    print(json.dumps(commandset.core.go('https://google.com'), indent=4))
-    # print(commandset.page.source())
+    # log the result of loading the page
+    logging.info("Page loaded in {www[timing][requestTime]}ns".format(www=www))
+    logging.info("URL {www[url]}: Loaded with HTTP {www[status]}".format(www=www))
+
+    # take a screenshot of the current page
+    commands.page.screenshot('hackernews.png')
+
+    # and, while we're at it, retrieve all the cookies that we have, too
+    for index, cookie in enumerate(commands.cookies.all()):
+        logging.info("[{index}] {cookie[name]}:".format(
+            index=index,
+            cookie=cookie
+        ))
+
+        for k, v in cookie.items():
+            logging.info("  {k:13s} {v}".format(k=k, v=v))

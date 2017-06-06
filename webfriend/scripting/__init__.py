@@ -26,47 +26,12 @@ from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)  # noqa
 
 from . import parser
-from .proxy import CommandProxy, CommandSet
+from .environment import Environment
 from .scope import Scope
 import logging
 import gevent
 import time
-import inspect
 from .commands import *  # noqa
-
-PROXIES = dict([(p.as_qualifier(), p) for _, p in ALL_PROXIES])  # noqa
-EXEC_OPTIONS = {}
-
-
-def load_and_register_proxy(module, name=None, browser=None, commandset=None):
-    mod = __import__(module, fromlist=['*'])
-
-    classes = [
-        m[0] for m in inspect.getmembers(mod, inspect.isclass) if m[1].__module__ == module
-    ]
-
-    for c in classes:
-        if issubclass(c, CommandProxy):
-            register_proxy(c.as_qualifier(), c)
-
-            if browser and commandset:
-                commandset[c.as_qualifier()] = c(browser, commandset=commandset)
-
-
-def register_proxy(name, proxy_cls):
-    if name in PROXIES:
-        raise AttributeError("Proxy '{}' is already registered".format(name))
-
-    if not issubclass(proxy_cls, CommandProxy):
-        raise ValueError("Proxy class must be a subclass of CommandProxy")
-
-    PROXIES[name] = proxy_cls
-
-    return PROXIES[name]
-
-
-def get_all_proxy_commands():
-    return CommandSet(proxies=PROXIES).get_command_names()
 
 
 def execute_script(browser, script, scope=None):
@@ -74,19 +39,15 @@ def execute_script(browser, script, scope=None):
     if not scope:
         scope = Scope()
 
-    # setup the commandset
-    commandset = CommandSet(scope, browser=browser)
+    # setup the environment
+    environment = Environment(scope, browser=browser)
     callbacks = set()
 
-    # initalize proxy instances with a common scope
-    for name, proxy_cls in PROXIES.items():
-        commandset.register(proxy_cls, qualifier=name)
-
     # load and parse the script
-    friendscript = parser.Friendscript(data=script, commandset=commandset)
+    friendscript = parser.Friendscript(data=script, environment=environment)
 
-    # tell the commandset about the calling script
-    commandset.script = friendscript
+    # tell the environment about the calling script
+    environment.script = friendscript
 
     # show the initial state
     for k, v in scope.items():
@@ -102,9 +63,6 @@ def execute_script(browser, script, scope=None):
 
             logging.debug('Add event handler {}'.format(callback_id))
             callbacks.add(callback_id)
-
-    # okay, tell the commandset to get ready to rock
-    commandset.ready()
 
     # Script Execution starts NOW
     # ---------------------------------------------------------------------------------------------
@@ -132,14 +90,14 @@ def execute_script(browser, script, scope=None):
 
 
 def evaluate_block(scriptmgr, block, scope):
-    commandset = scriptmgr.commandset
+    environment = scriptmgr.environment
     # line, column = scriptmgr.get_item_position(block)
     # print('{} = line {}, column: {}'.format(block.__class__, line, column))
 
     # Assignment
     # ---------------------------------------------------------------------------------------------
     if isinstance(block, parser.variables.Assignment):
-        block.assign(commandset, scope)
+        block.assign(environment, scope)
 
     # Directives
     # ---------------------------------------------------------------------------------------------
@@ -153,15 +111,15 @@ def evaluate_block(scriptmgr, block, scope):
     elif isinstance(block, parser.commands.CommandSequence):
         # for each command in the pipeline...
         for command in block.commands:
-            key, value = commandset.execute(command, scope)
+            key, value = environment.execute(command, scope)
             value = parser.to_value(value, scope)
 
             if key is not None:
                 scope.set(key, value, force=True)
 
             # perform delay if we have one
-            if commandset.has_execution_option('demo.post_command_delay'):
-                delay = commandset.get_execution_option('demo.post_command_delay')
+            if environment.has_execution_option('demo.post_command_delay'):
+                delay = environment.get_execution_option('demo.post_command_delay')
                 time.sleep(delay / 1e3)
 
     # If / Else If / Else
@@ -169,7 +127,7 @@ def evaluate_block(scriptmgr, block, scope):
     elif isinstance(block, parser.conditions.IfElseBlock):
         subscope = Scope(parent=scope)
 
-        for subblock in block.get_blocks(commandset, scope=subscope):
+        for subblock in block.get_blocks(environment, scope=subscope):
             evaluate_block(scriptmgr, subblock, subscope)
 
     # Loops
@@ -177,7 +135,7 @@ def evaluate_block(scriptmgr, block, scope):
     elif isinstance(block, parser.loops.LoopBlock):
         loopscope = Scope(parent=scope)
 
-        for i, _, subblock, scope in block.execute_loop(commandset, scope=loopscope):
+        for i, _, subblock, scope in block.execute_loop(environment, scope=loopscope):
             try:
                 evaluate_block(scriptmgr, subblock, scope=scope)
 

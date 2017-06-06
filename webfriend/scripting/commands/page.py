@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import logging
 import time
 import io
-from .. import CommandProxy
+from . import CommandProxy
 from ... import exceptions
 
 

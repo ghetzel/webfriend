@@ -41,10 +41,10 @@ from . import commands, conditions, exceptions, lang, loops, types, variables  #
 
 
 class Friendscript(object):
-    def __init__(self, filename=None, data=None, commandset=None):
+    def __init__(self, filename=None, data=None, environment=None):
         self.model = None
         self.data = None
-        self.commandset = commandset
+        self.environment = environment
 
         try:
             self.metamodel = metamodel_from_file(

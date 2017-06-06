@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from .scope import Scope
-from . import parser
+from . import parser, commands
 import logging
 
 
@@ -8,72 +8,7 @@ class CommandSetNotReady(Exception):
     pass
 
 
-class CommandProxy(object):
-    qualifier = None
-
-    def __init__(self, browser, commandset=None, scope=None):
-        self.browser = browser
-        self.commandset = commandset
-        self.scope   = (scope or Scope())
-        self._tab    = None
-
-    @property
-    def tab(self):
-        if self._tab is None:
-            return self.browser.default
-        else:
-            try:
-                return self.browser.tabs[self._tab]
-            except KeyError:
-                raise KeyError("Could not retrieve unknown tab '{}'".format(self._tab))
-
-    def __contains__(self, local_command_name):
-        try:
-            return callable(getattr(self, local_command_name))
-        except AttributeError:
-            pass
-
-        return False
-
-    def __getitem__(self, local_command_name):
-        return getattr(self, local_command_name)
-
-    @classmethod
-    def get_command_names(cls):
-        names = set()
-
-        for name in dir(cls):
-            # underscored items are not commands
-            if name.startswith('_'):
-                continue
-
-            # methods inherited from CommandProxy are not commands
-            if name in dir(CommandProxy):
-                continue
-
-            if callable(getattr(cls, name)):
-                if len(cls.as_qualifier()):
-                    if cls.as_qualifier() == CommandSet.default_qualifier:
-                        names.add(name)
-                    else:
-                        names.add(cls.qualify(name))
-
-        return names
-
-    @classmethod
-    def qualify(cls, name):
-        return '{}::{}'.format(cls.as_qualifier(), name)
-
-    @classmethod
-    def as_qualifier(cls):
-        if cls.qualifier is not None:
-            return cls.qualifier
-
-        return cls.__name__.split('.')[-1].replace('Proxy', '').lower()
-
-
-class CommandSet(object):
-    default_qualifier = 'core'
+class Environment(object):
     default_result_key = 'result'
 
     def __init__(self, scope=None, proxies=None, browser=None):
@@ -83,7 +18,9 @@ class CommandSet(object):
         self.browser = browser
         self._is_ready = False
         self._exec_options = {}
+        self.register_defaults()
         self.sync_scopes()
+        self.ready()
 
     @property
     def scope(self):
@@ -118,20 +55,24 @@ class CommandSet(object):
 
         return names
 
+    def register_defaults(self):
+        for name, cls in commands.ALL_PROXIES:
+            self.register(cls, qualifier=name)
+
     def register(self, proxy_cls, qualifier=None):
-        if not issubclass(proxy_cls, CommandProxy):
+        if not issubclass(proxy_cls, commands.CommandProxy):
             raise ValueError("Proxy class must be a subclass of CommandProxy")
 
         if qualifier is None:
             qualifier = proxy_cls.as_qualifier()
 
-        self[qualifier] = proxy_cls(self.browser, commandset=self)
+        self[qualifier] = proxy_cls(self.browser, environment=self)
 
     def get_proxy_for_command(self, command):
         q_command = command.name.split('::', 1)
 
         if len(q_command) == 1:
-            proxy_name = self.default_qualifier
+            proxy_name = commands.CommandProxy.default_qualifier
             command_name = q_command[0]
         else:
             proxy_name = q_command[0]
@@ -215,7 +156,7 @@ class CommandSet(object):
             # NOTE: Future Sadness May Await
             #
             # this here is why commands should not execute in parallel, because we're changing the scope
-            # of the _entire_ commandset to the given scope for the duration of this call
+            # of the _entire_ environment to the given scope for the duration of this call
             self.set_scope(scope)
 
         # get the proxy and proxy-local command name from the CommandSet

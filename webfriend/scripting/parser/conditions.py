@@ -3,23 +3,23 @@ from . import MetaModel, to_value, exceptions, types
 
 
 class ConditionalExpression(MetaModel):
-    def evaluate(self, commandset, scope=None):
+    def evaluate(self, environment, scope=None):
         if scope is None:
-            scope = commandset.scope
+            scope = environment.scope
 
         # Inline Assignment and test condition
         # ------------------------------------------------------------------------------------------
         if self.assignment:
-            self.assignment.assign(commandset, scope, force=True)
+            self.assignment.assign(environment, scope, force=True)
 
             # recursively evaluate the condition portion of the statement
-            return self.condition.evaluate(commandset, scope)
+            return self.condition.evaluate(environment, scope)
 
         # Command Evaluation (with optional test condition)
         # ------------------------------------------------------------------------------------------
         elif self.command:
             # execute the command
-            resultkey, result = commandset.execute(self.command, scope)
+            resultkey, result = environment.execute(self.command, scope)
 
             # whatever the result of the expression command was, put it in the calling scope
             scope.set(resultkey, result, force=True)
@@ -27,7 +27,7 @@ class ConditionalExpression(MetaModel):
             # if the statement has a condition, then evaluate using it
             if self.condition:
                 # recursively evaluate the condition portion of the statement
-                return self.condition.evaluate(commandset, scope)
+                return self.condition.evaluate(environment, scope)
             else:
                 # no condition, so just do the same thing as a unary comparison
                 return self.compare(result)
@@ -104,12 +104,12 @@ class ConditionalExpression(MetaModel):
 
 
 class IfElseBlock(MetaModel):
-    def get_blocks(self, commandset, scope=None):
-        if self.if_expr.expression.evaluate(commandset, scope=scope):
+    def get_blocks(self, environment, scope=None):
+        if self.if_expr.expression.evaluate(environment, scope=scope):
             return self.if_expr.blocks
 
         for elseif in self.elseif_expr:
-            if elseif.statement.expression.evaluate(commandset, scope=scope):
+            if elseif.statement.expression.evaluate(environment, scope=scope):
                 return elseif.statement.blocks
 
         if self.else_expr:

@@ -1081,7 +1081,7 @@ table {
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.cookies', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.cookies" class="source">
     <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">CommandProxy</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">CommandProxy</span>
 <span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">exceptions</span>
 
 
@@ -1227,10 +1227,20 @@ table {
           <h3>Ancestors (in MRO)</h3>
           <ul class="class_list">
           <li><a href="#webfriend.scripting.commands.cookies.CookiesProxy">CookiesProxy</a></li>
-          <li>webfriend.scripting.proxy.CommandProxy</li>
+          <li>webfriend.scripting.commands.base.CommandProxy</li>
           <li>__builtin__.object</li>
           </ul>
           <h3>Class variables</h3>
+            <div class="item">
+            <p id="webfriend.scripting.commands.cookies.CookiesProxy.default_qualifier" class="name">var <span class="ident">default_qualifier</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
             <div class="item">
             <p id="webfriend.scripting.commands.cookies.CookiesProxy.qualifier" class="name">var <span class="ident">qualifier</span></p>
             
@@ -1256,7 +1266,7 @@ table {
             
   <div class="item">
     <div class="name def" id="webfriend.scripting.commands.cookies.CookiesProxy.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, browser, commandset=None, scope=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, browser, environment=None, scope=None)</p>
     </div>
     
 
@@ -1265,9 +1275,9 @@ table {
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.cookies.CookiesProxy.__init__', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.cookies.CookiesProxy.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">commandset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">browser</span> <span class="o">=</span> <span class="n">browser</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">commandset</span> <span class="o">=</span> <span class="n">commandset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">scope</span>   <span class="o">=</span> <span class="p">(</span><span class="n">scope</span> <span class="ow">or</span> <span class="n">Scope</span><span class="p">())</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span>    <span class="o">=</span> <span class="bp">None</span>
 </pre></div>
@@ -1406,7 +1416,7 @@ table {
             <span class="k">continue</span>
         <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()):</span>
-                <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="n">CommandSet</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
                     <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">qualify</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>

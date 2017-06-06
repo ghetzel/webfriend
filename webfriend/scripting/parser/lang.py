@@ -22,8 +22,8 @@ class EventHandlerBlock(MetaModel):
 
 
 class Expression(MetaModel):
-    def evaluate(self, commandset, scope=None):
+    def evaluate(self, environment, scope=None):
         if scope is None:
-            scope = commandset.scope
+            scope = environment.scope
 
         return False

@@ -1052,6 +1052,7 @@ table {
 
     <li class="set"><h3><a href="#header-submodules">Sub-modules</a></h3>
       <ul>
+        <li class="mono"><a href="base.m.html">webfriend.scripting.commands.base</a></li>
         <li class="mono"><a href="cookies.m.html">webfriend.scripting.commands.cookies</a></li>
         <li class="mono"><a href="core.m.html">webfriend.scripting.commands.core</a></li>
         <li class="mono"><a href="events.m.html">webfriend.scripting.commands.events</a></li>
@@ -1077,6 +1078,10 @@ table {
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands" class="source">
     <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
+<span class="kn">from</span> <span class="nn">pkgutil</span> <span class="kn">import</span> <span class="n">extend_path</span>
+<span class="n">__path__</span> <span class="o">=</span> <span class="n">extend_path</span><span class="p">(</span><span class="n">__path__</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">)</span>  <span class="c1"># noqa</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">CommandProxy</span>  <span class="c1"># noqa</span>
 <span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">CoreProxy</span>
 <span class="kn">from</span> <span class="nn">.events</span> <span class="kn">import</span> <span class="n">EventsProxy</span>
 <span class="kn">from</span> <span class="nn">.page</span> <span class="kn">import</span> <span class="n">PageProxy</span>
@@ -1112,6 +1117,12 @@ table {
 
 
     <h2 class="section-title" id="header-submodules">Sub-modules</h2>
+      <div class="item">
+      <p class="name"><a href="base.m.html">webfriend.scripting.commands.base</a></p>
+      
+  
+
+      </div>
       <div class="item">
       <p class="name"><a href="cookies.m.html">webfriend.scripting.commands.cookies</a></p>
       

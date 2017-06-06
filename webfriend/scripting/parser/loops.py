@@ -3,9 +3,9 @@ from . import MetaModel, to_value, variables
 
 
 class LoopBlock(MetaModel):
-    def execute_loop(self, commandset, scope=None):
+    def execute_loop(self, environment, scope=None):
         if scope is None:
-            scope = commandset.scope
+            scope = environment.scope
 
         i = 0
 
@@ -15,7 +15,7 @@ class LoopBlock(MetaModel):
             if isinstance(loop.iterator, variables.Variable):
                 iter_value = to_value(loop.iterator, scope)
             else:
-                _, iter_value = commandset.execute(loop.iterator, scope=scope)
+                _, iter_value = environment.execute(loop.iterator, scope=scope)
 
             try:
                 if isinstance(iter_value, dict):
@@ -42,7 +42,7 @@ class LoopBlock(MetaModel):
 
                     scope.set('index', i, force=True)
 
-                    for result in self.iterate_blocks(i, commandset, scope):
+                    for result in self.iterate_blocks(i, environment, scope):
                         yield result
 
                     i += 1
@@ -52,24 +52,24 @@ class LoopBlock(MetaModel):
 
         elif self.bounded:
             loop = self.bounded
-            commandset.execute(loop.initial, scope=scope)
+            environment.execute(loop.initial, scope=scope)
 
-            while loop.termination.evaluate(commandset, scope=scope):
+            while loop.termination.evaluate(environment, scope=scope):
                 scope.set('index', i, force=True)
 
-                for result in self.iterate_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, environment, scope):
                     yield result
 
-                commandset.execute(loop.next, scope=scope)
+                environment.execute(loop.next, scope=scope)
                 i += 1
 
         elif self.truthy:
             loop = self.truthy
 
-            while loop.termination.evaluate(commandset, scope=scope):
+            while loop.termination.evaluate(environment, scope=scope):
                 scope.set('index', i, force=True)
 
-                for result in self.iterate_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, environment, scope):
                     yield result
 
                 i += 1
@@ -81,7 +81,7 @@ class LoopBlock(MetaModel):
             for _ in range(count):
                 scope.set('index', i, force=True)
 
-                for result in self.iterate_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, environment, scope):
                     yield result
 
                 i += 1
@@ -90,14 +90,14 @@ class LoopBlock(MetaModel):
             while True:
                 scope.set('index', i, force=True)
 
-                for result in self.iterate_blocks(i, commandset, scope):
+                for result in self.iterate_blocks(i, environment, scope):
                     yield result
 
                 i += 1
 
-    def iterate_blocks(self, i, commandset, scope):
+    def iterate_blocks(self, i, environment, scope):
         for subblock in self.blocks:
-            yield i, commandset, subblock, scope
+            yield i, environment, subblock, scope
 
 
 class FlowControlWord(MetaModel):

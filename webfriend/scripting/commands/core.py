@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import logging
 import time
 import json
-from .. import CommandProxy
+from . import CommandProxy
 from ... import rpc, utils
 from uuid import uuid4
 
@@ -61,7 +61,7 @@ class CoreProxy(CommandProxy):
 
         if isinstance(demo, dict):
             if 'delay' in demo:
-                self.commandset.set_execution_option(
+                self.environment.set_execution_option(
                     'demo.post_command_delay',
                     float(demo['delay'])
                 )
@@ -83,12 +83,12 @@ class CoreProxy(CommandProxy):
                     if 'module' not in command_plugin:
                         raise ValueError("Command plugin must specify a 'module' attribute")
 
-                    load_and_register_proxy(
-                        command_plugin['module'],
-                        name=command_plugin.get('name'),
-                        browser=self.browser,
-                        commandset=self.commandset
-                    )
+                    # load_and_register_proxy(
+                    #     command_plugin['module'],
+                    #     name=command_plugin.get('name'),
+                    #     browser=self.browser,
+                    #     environment=self.environment
+                    # )
 
     def go(self, uri, referrer='random', wait_for_load=True, timeout=30000):
         """

@@ -1087,7 +1087,7 @@ table {
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">io</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">CommandProxy</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">CommandProxy</span>
 <span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">exceptions</span>
 
 
@@ -1100,7 +1100,7 @@ table {
         <span class="n">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">,</span>
         <span class="n">jpeg_quality</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">selector</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">,</span>
-        <span class="n">settle</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">settle</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
         <span class="n">after_events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">settle_timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">autoclose</span><span class="o">=</span><span class="bp">True</span>
@@ -1281,6 +1281,11 @@ table {
             <span class="k">return</span> <span class="n">elements</span><span class="p">[</span><span class="s1">&#39;nodes&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outer_html</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">outer_html</span>
+
+    <span class="c1"># def highlight(self, selector, **kwargs):</span>
+    <span class="c1">#     elements = self.tab.dom.select_nodes(selector, wait_for_match=True)</span>
+    <span class="c1">#     self.tab.dom.ensure_unique_element(selector, elements)</span>
+    <span class="c1">#     self.tab.overlay.highlight_node(node_id=elements[&#39;nodes&#39;][0].id, **kwargs)</span>
 
     <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="n">removed</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1320,7 +1325,7 @@ table {
         <span class="n">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">,</span>
         <span class="n">jpeg_quality</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">selector</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">,</span>
-        <span class="n">settle</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">settle</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
         <span class="n">after_events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">settle_timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">autoclose</span><span class="o">=</span><span class="bp">True</span>
@@ -1502,6 +1507,11 @@ table {
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">outer_html</span>
 
+    <span class="c1"># def highlight(self, selector, **kwargs):</span>
+    <span class="c1">#     elements = self.tab.dom.select_nodes(selector, wait_for_match=True)</span>
+    <span class="c1">#     self.tab.dom.ensure_unique_element(selector, elements)</span>
+    <span class="c1">#     self.tab.overlay.highlight_node(node_id=elements[&#39;nodes&#39;][0].id, **kwargs)</span>
+
     <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="n">removed</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -1523,10 +1533,20 @@ table {
           <h3>Ancestors (in MRO)</h3>
           <ul class="class_list">
           <li><a href="#webfriend.scripting.commands.page.PageProxy">PageProxy</a></li>
-          <li>webfriend.scripting.proxy.CommandProxy</li>
+          <li>webfriend.scripting.commands.base.CommandProxy</li>
           <li>__builtin__.object</li>
           </ul>
           <h3>Class variables</h3>
+            <div class="item">
+            <p id="webfriend.scripting.commands.page.PageProxy.default_qualifier" class="name">var <span class="ident">default_qualifier</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
             <div class="item">
             <p id="webfriend.scripting.commands.page.PageProxy.qualifier" class="name">var <span class="ident">qualifier</span></p>
             
@@ -1552,7 +1572,7 @@ table {
             
   <div class="item">
     <div class="name def" id="webfriend.scripting.commands.page.PageProxy.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, browser, commandset=None, scope=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, browser, environment=None, scope=None)</p>
     </div>
     
 
@@ -1561,9 +1581,9 @@ table {
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.page.PageProxy.__init__', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.page.PageProxy.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">commandset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">browser</span> <span class="o">=</span> <span class="n">browser</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">commandset</span> <span class="o">=</span> <span class="n">commandset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">scope</span>   <span class="o">=</span> <span class="p">(</span><span class="n">scope</span> <span class="ow">or</span> <span class="n">Scope</span><span class="p">())</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span>    <span class="o">=</span> <span class="bp">None</span>
 </pre></div>
@@ -1664,7 +1684,7 @@ table {
             <span class="k">continue</span>
         <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()):</span>
-                <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="n">CommandSet</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
                     <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">qualify</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
@@ -1726,7 +1746,7 @@ table {
             
   <div class="item">
     <div class="name def" id="webfriend.scripting.commands.page.PageProxy.screenshot">
-    <p>def <span class="ident">screenshot</span>(</p><p>self, destination=None, width=0, height=0, format=&#39;png&#39;, jpeg_quality=None, selector=&#39;html&#39;, settle=1000, after_events=None, settle_timeout=None, autoclose=True)</p>
+    <p>def <span class="ident">screenshot</span>(</p><p>self, destination=None, width=0, height=0, format=&#39;png&#39;, jpeg_quality=None, selector=&#39;html&#39;, settle=250, after_events=None, settle_timeout=None, autoclose=True)</p>
     </div>
     
 
@@ -1826,7 +1846,7 @@ when the screenshot is completed.</p>
     <span class="n">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">,</span>
     <span class="n">jpeg_quality</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
     <span class="n">selector</span><span class="o">=</span><span class="s1">&#39;html&#39;</span><span class="p">,</span>
-    <span class="n">settle</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">settle</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
     <span class="n">after_events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
     <span class="n">settle_timeout</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
     <span class="n">autoclose</span><span class="o">=</span><span class="bp">True</span>

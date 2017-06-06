@@ -1094,7 +1094,7 @@ table {
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">CommandProxy</span><span class="p">,</span> <span class="n">Scope</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">CommandProxy</span>
 <span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">rpc</span><span class="p">,</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid4</span>
 
@@ -1105,7 +1105,8 @@ table {
         <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">user_agent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span>
+        <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">plugins</span><span class="o">=</span><span class="bp">None</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Configures various features of the Remote Debugging protocol and provides environment</span>
@@ -1152,7 +1153,7 @@ table {
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">demo</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">if</span> <span class="s1">&#39;delay&#39;</span> <span class="ow">in</span> <span class="n">demo</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">commandset</span><span class="o">.</span><span class="n">set_execution_option</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">set_execution_option</span><span class="p">(</span>
                     <span class="s1">&#39;demo.post_command_delay&#39;</span><span class="p">,</span>
                     <span class="nb">float</span><span class="p">(</span><span class="n">demo</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span>
                 <span class="p">)</span>
@@ -1162,6 +1163,24 @@ table {
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_headers</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">plugins</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">load_and_register_proxy</span>
+
+            <span class="k">for</span> <span class="n">command_plugin</span> <span class="ow">in</span> <span class="n">plugins</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;commands&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                    <span class="n">load_and_register_proxy</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="s1">&#39;module&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">command_plugin</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Command plugin must specify a &#39;module&#39; attribute&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># load_and_register_proxy(</span>
+                    <span class="c1">#     command_plugin[&#39;module&#39;],</span>
+                    <span class="c1">#     name=command_plugin.get(&#39;name&#39;),</span>
+                    <span class="c1">#     browser=self.browser,</span>
+                    <span class="c1">#     environment=self.environment</span>
+                    <span class="c1"># )</span>
 
     <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">referrer</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">wait_for_load</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1330,7 +1349,7 @@ table {
 
         <span class="k">return</span> <span class="bp">None</span>
 
-    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Outputs a line to the log.</span>
 
@@ -1358,27 +1377,20 @@ table {
 <span class="sd">        ### Raises</span>
 <span class="sd">        `AttributeError` if the specified log level is not known.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># handle the case where we want to log a data structure without options or a format string</span>
         <span class="k">if</span> <span class="n">line</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">kwargs</span>
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">)</span>
-
-                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">Scope</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="n">indent</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="n">indent</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
                 <span class="k">except</span><span class="p">:</span>
                     <span class="k">pass</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">and</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;None&#39;</span><span class="p">:</span>
-                <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">)(</span><span class="n">line</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">line</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">None</span>
-
+            <span class="c1"># actually log the line</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">)(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">line</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Unknown log level &#39;{}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="p">))</span>
 
@@ -1577,7 +1589,8 @@ table {
         <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
         <span class="n">user_agent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-        <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span>
+        <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+        <span class="n">plugins</span><span class="o">=</span><span class="bp">None</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Configures various features of the Remote Debugging protocol and provides environment</span>
@@ -1624,7 +1637,7 @@ table {
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">demo</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">if</span> <span class="s1">&#39;delay&#39;</span> <span class="ow">in</span> <span class="n">demo</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">commandset</span><span class="o">.</span><span class="n">set_execution_option</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">set_execution_option</span><span class="p">(</span>
                     <span class="s1">&#39;demo.post_command_delay&#39;</span><span class="p">,</span>
                     <span class="nb">float</span><span class="p">(</span><span class="n">demo</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span>
                 <span class="p">)</span>
@@ -1634,6 +1647,24 @@ table {
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_headers</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">plugins</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">load_and_register_proxy</span>
+
+            <span class="k">for</span> <span class="n">command_plugin</span> <span class="ow">in</span> <span class="n">plugins</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;commands&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                    <span class="n">load_and_register_proxy</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">)</span>
+
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="s1">&#39;module&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">command_plugin</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Command plugin must specify a &#39;module&#39; attribute&quot;</span><span class="p">)</span>
+
+                    <span class="c1"># load_and_register_proxy(</span>
+                    <span class="c1">#     command_plugin[&#39;module&#39;],</span>
+                    <span class="c1">#     name=command_plugin.get(&#39;name&#39;),</span>
+                    <span class="c1">#     browser=self.browser,</span>
+                    <span class="c1">#     environment=self.environment</span>
+                    <span class="c1"># )</span>
 
     <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">referrer</span><span class="o">=</span><span class="s1">&#39;random&#39;</span><span class="p">,</span> <span class="n">wait_for_load</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30000</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -1802,7 +1833,7 @@ table {
 
         <span class="k">return</span> <span class="bp">None</span>
 
-    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Outputs a line to the log.</span>
 
@@ -1830,27 +1861,20 @@ table {
 <span class="sd">        ### Raises</span>
 <span class="sd">        `AttributeError` if the specified log level is not known.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># handle the case where we want to log a data structure without options or a format string</span>
         <span class="k">if</span> <span class="n">line</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">kwargs</span>
 
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">)</span>
-
-                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">Scope</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="n">indent</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="n">indent</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">line</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
                 <span class="k">except</span><span class="p">:</span>
                     <span class="k">pass</span>
 
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">and</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;None&#39;</span><span class="p">:</span>
-                <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">)(</span><span class="n">line</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">line</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="bp">None</span>
-
+            <span class="c1"># actually log the line</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">)(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">line</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Unknown log level &#39;{}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="p">))</span>
 
@@ -2035,10 +2059,20 @@ table {
           <h3>Ancestors (in MRO)</h3>
           <ul class="class_list">
           <li><a href="#webfriend.scripting.commands.core.CoreProxy">CoreProxy</a></li>
-          <li>webfriend.scripting.proxy.CommandProxy</li>
+          <li>webfriend.scripting.commands.base.CommandProxy</li>
           <li>__builtin__.object</li>
           </ul>
           <h3>Class variables</h3>
+            <div class="item">
+            <p id="webfriend.scripting.commands.core.CoreProxy.default_qualifier" class="name">var <span class="ident">default_qualifier</span></p>
+            
+
+            
+  
+  <div class="source_cont">
+</div>
+
+            </div>
             <div class="item">
             <p id="webfriend.scripting.commands.core.CoreProxy.qualifier" class="name">var <span class="ident">qualifier</span></p>
             
@@ -2064,7 +2098,7 @@ table {
             
   <div class="item">
     <div class="name def" id="webfriend.scripting.commands.core.CoreProxy.__init__">
-    <p>def <span class="ident">__init__</span>(</p><p>self, browser, commandset=None, scope=None)</p>
+    <p>def <span class="ident">__init__</span>(</p><p>self, browser, environment=None, scope=None)</p>
     </div>
     
 
@@ -2073,9 +2107,9 @@ table {
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.__init__', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.__init__" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">commandset</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">browser</span><span class="p">,</span> <span class="n">environment</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">browser</span> <span class="o">=</span> <span class="n">browser</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">commandset</span> <span class="o">=</span> <span class="n">commandset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">environment</span> <span class="o">=</span> <span class="n">environment</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">scope</span>   <span class="o">=</span> <span class="p">(</span><span class="n">scope</span> <span class="ow">or</span> <span class="n">Scope</span><span class="p">())</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_tab</span>    <span class="o">=</span> <span class="bp">None</span>
 </pre></div>
@@ -2207,7 +2241,7 @@ false, every matched element will be clicked on in the order they were matched i
             
   <div class="item">
     <div class="name def" id="webfriend.scripting.commands.core.CoreProxy.configure">
-    <p>def <span class="ident">configure</span>(</p><p>self, events=None, demo=None, user_agent=None, extra_headers=None)</p>
+    <p>def <span class="ident">configure</span>(</p><p>self, events=None, demo=None, user_agent=None, extra_headers=None, plugins=None)</p>
     </div>
     
 
@@ -2254,7 +2288,8 @@ here on.  An empty dict will clear previously set headers.</p>
     <span class="n">events</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
     <span class="n">demo</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
     <span class="n">user_agent</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-    <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span>
+    <span class="n">extra_headers</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+    <span class="n">plugins</span><span class="o">=</span><span class="bp">None</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configures various features of the Remote Debugging protocol and provides environment</span>
@@ -2287,7 +2322,7 @@ here on.  An empty dict will clear previously set headers.</p>
                     <span class="n">r</span><span class="o">.</span><span class="n">enable</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">demo</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">if</span> <span class="s1">&#39;delay&#39;</span> <span class="ow">in</span> <span class="n">demo</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">commandset</span><span class="o">.</span><span class="n">set_execution_option</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">environment</span><span class="o">.</span><span class="n">set_execution_option</span><span class="p">(</span>
                 <span class="s1">&#39;demo.post_command_delay&#39;</span><span class="p">,</span>
                 <span class="nb">float</span><span class="p">(</span><span class="n">demo</span><span class="p">[</span><span class="s1">&#39;delay&#39;</span><span class="p">])</span>
             <span class="p">)</span>
@@ -2295,6 +2330,14 @@ here on.  An empty dict will clear previously set headers.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_user_agent</span><span class="p">(</span><span class="n">user_agent</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tab</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">set_headers</span><span class="p">(</span><span class="n">extra_headers</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">plugins</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">load_and_register_proxy</span>
+        <span class="k">for</span> <span class="n">command_plugin</span> <span class="ow">in</span> <span class="n">plugins</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;commands&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+                <span class="n">load_and_register_proxy</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command_plugin</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s1">&#39;module&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">command_plugin</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Command plugin must specify a &#39;module&#39; attribute&quot;</span><span class="p">)</span>
 </pre></div>
 
   </div>
@@ -2410,7 +2453,7 @@ XPath query (e.g.: "xpath://body/p").</p>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">)):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()):</span>
-                <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="n">CommandSet</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_qualifier</span><span class="p">()</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_qualifier</span><span class="p">:</span>
                     <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">names</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">qualify</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
@@ -2516,7 +2559,7 @@ from the current page. Specifying None will omit the field from the request.</p>
             
   <div class="item">
     <div class="name def" id="webfriend.scripting.commands.core.CoreProxy.log">
-    <p>def <span class="ident">log</span>(</p><p>self, line, level=&#39;info&#39;, indent=4, **kwargs)</p>
+    <p>def <span class="ident">log</span>(</p><p>self, line=None, level=&#39;info&#39;, indent=4, **kwargs)</p>
     </div>
     
 
@@ -2553,7 +2596,7 @@ from the current page. Specifying None will omit the field from the request.</p>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-webfriend.scripting.commands.core.CoreProxy.log', this);">Show source &equiv;</a></p>
   <div id="source-webfriend.scripting.commands.core.CoreProxy.log" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">&#39;info&#39;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Outputs a line to the log.</span>
 <span class="sd">    ### Arguments</span>
@@ -2574,23 +2617,18 @@ from the current page. Specifying None will omit the field from the request.</p>
 <span class="sd">    ### Raises</span>
 <span class="sd">    `AttributeError` if the specified log level is not known.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># handle the case where we want to log a data structure without options or a format string</span>
     <span class="k">if</span> <span class="n">line</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">kwargs</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">unicode</span><span class="p">):</span>
-                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;UTF-8&#39;</span><span class="p">)</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">Scope</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="p">)</span><span class="o">.</span><span class="n">as_dict</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="n">indent</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">and</span> <span class="n">indent</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">line</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="k">pass</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">and</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;None&#39;</span><span class="p">:</span>
-            <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">)(</span><span class="n">line</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">line</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">None</span>
+        <span class="c1"># actually log the line</span>
+        <span class="nb">getattr</span><span class="p">(</span><span class="n">logging</span><span class="p">,</span> <span class="n">level</span><span class="p">)(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">line</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Unknown log level &#39;{}&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="p">))</span>
 </pre></div>

@@ -3,9 +3,8 @@
 # navigate to Hacker News
 go "https://news.ycombinator.com" -> $www
 
-log "Page loaded in {www[timing][requestTime]}ns"
-
 # log the result of loading the page
+log "Page loaded in {www[timing][requestTime]}ns"
 log "URL {www[url]}: Loaded with HTTP {www[status]}"
 
 # take a screenshot of the current page
