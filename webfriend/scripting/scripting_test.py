@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from unittest import TestCase
 from . import execute_script
 from . import parser
@@ -16,19 +17,19 @@ class ScriptingTest(TestCase):
             'null': None,
             'a': 1,
             'b': True,
-            'c': u"Test",
-            'c1': u"Test Test",
-            'c2': u"Test {c}",
+            'c': "Test",
+            'c1': "Test Test",
+            'c2': "Test {c}",
             'd': 3.14159,
             'e': [
                 1,
                 True,
-                u"Test",
+                "Test",
                 3.14159,
                 [
                     1,
                     True,
-                    u"Test",
+                    "Test",
                     3.14159,
                 ],
                 {
@@ -38,48 +39,69 @@ class ScriptingTest(TestCase):
             'f': {
                 'ok': True,
             },
-            'g': u'g',
-            'h': u'h',
-            'i': u'i',
-            'j': u'j',
+            'g': 'g',
+            'h': 'h',
+            'i': 'i',
+            'j': 'j',
             'k': None,
-            'l': u'l',
-            'm': u'm',
-            'o': u'o',
+            'l': 'l',
+            'm': 'm',
+            'o': 'o',
             'p': None,
-            'q': u'q',
-            's': u's',
+            'q': 'q',
+            's': 's',
             't': True,
             'u': None,
             'v': 1,
             'w': True,
-            'x': u"Test",
+            'x': "Test",
             'y': 3.14159,
-            'z': [1, True, u"Test", 3.14159],
+            'z': [1, True, "Test", 3.14159],
+            'z0': 1,
+            'z1': True,
+            'z2': 'Test',
+            'z3': 3.14159,
             'aa': 1,
             'bb': True,
-            'cc': u"Test",
+            'cc': "Test",
             'dd': 3.14159,
             'ee': {
                 'ok': True,
                 'always': {
                     'finishing': {
-                        'each_others': u'sentences',
+                        'each_others': 'sentences',
                     },
                 },
             },
             'ee1': {
                 'finishing': {
-                    'each_others': u'sentences',
+                    'each_others': 'sentences',
                 },
             },
             'ee2': {
-                'each_others': u'sentences',
+                'each_others': 'sentences',
             },
-            'ee3': u'sentences',
+            'ee3': 'sentences',
             'ee4': None,
-            'log_1': u'test 1',
-            'log_2': u'test {a}',
+            'ee5': True,
+            'ee6': 'sentences',
+            'ekey': 'always',
+            'ee7': 'sentences',
+            'ee8': {
+                'ok': True,
+                'always': {
+                    'finishing': {
+                        'each_others': 'sandwiches',
+                        'other': {
+                            'stuff': {
+                                'too': True,
+                            },
+                        },
+                    },
+                },
+            },
+            'log_1': 'test 1',
+            'log_2': 'test {a}',
         }, self._eval("""
             # set variables of with values of every type
             $null = null
@@ -102,6 +124,11 @@ class ScriptingTest(TestCase):
             $u = $f.nonexistent
             $v, $w, $x, $y, $z = [1, true, "Test", 3.14159, [1, true, "Test", 3.14159]]
 
+            $z0 = $z[0]
+            $z1 = $z[1]
+            $z2 = $z[2]
+            $z3 = $z[3]
+
             # capture command results as variables, and also put a bunch of them on the same line
             put 1 -> $aa; put true -> $bb; put "Test" -> $cc; put 3.14159 -> $dd
             put {
@@ -116,22 +143,30 @@ class ScriptingTest(TestCase):
             $ee1, $ee2 = $ee.always, $ee.always.finishing
             $ee3, $ee4 = [$ee.always.finishing.each_others, $ee.always.finishing.each_others.sandwiches]
 
+            $ee5 = $ee['ok']
+            $ee6 = $ee['always'].finishing['each_others']
+            $ekey = 'always'
+            $ee7 = $ee[$ekey].finishing['each_others']
+            $ee8 = $ee
+            $ee8.always['finishing'].each_others = 'sandwiches'
+            $ee8.always['finishing'].other['stuff'].too = True
+
             log "test {a}" -> $log_1
             log 'test {a}' -> $log_2
         """))
 
     def test_if_scopes(self):
         self.assertEqual({
-            'a':             u'top_a',
-            'b':             u'top_b',
-            'a_if':          u'top_a',
-            'b_if':          u'if_b',
-            'a_if_if':       u'if_if_a',
-            'b_if_if':       u'if_b',
-            'a_after_if_if': u'top_a',
-            'b_after_if_if': u'if_b',
-            'a_after_if':    u'top_a',
-            'b_after_if':    u'top_b',
+            'a':             'top_a',
+            'b':             'top_b',
+            'a_if':          'top_a',
+            'b_if':          'if_b',
+            'a_if_if':       'if_if_a',
+            'b_if_if':       'if_b',
+            'a_after_if_if': 'top_a',
+            'b_after_if_if': 'if_b',
+            'a_after_if':    'top_a',
+            'b_after_if':    'top_b',
             'enter_if_val':  51,
             'enter_el_val':  61,
             'result':        None,
@@ -192,8 +227,8 @@ class ScriptingTest(TestCase):
             'unset':          None,
             'true':           True,
             'false':          False,
-            'string':         u"string",
-            'names':          [u"Bob", u"Steve", u"Fred"],
+            'string':         "string",
+            'names':          ["Bob", "Steve", "Fred"],
             'if_eq':          True,
             'if_ne':          True,
             'if_eq_null':     True,
@@ -257,18 +292,48 @@ class ScriptingTest(TestCase):
             if not $false                    { $if_false       = true }
             if "Steve" in $names             { $if_in          = true }
             if "Bill" not in $names          { $if_not_in      = true }
-            if $string ~ /str[aeiou]ng/      { $if_match_1     = true }
-            if $string ~ /String/i           { $if_match_2     = true }
-            if $string ~ /.*/                { $if_match_3     = true }
+            if $string =~ /str[aeiou]ng/     { $if_match_1     = true }
+            if $string =~ /String/i          { $if_match_2     = true }
+            if $string =~ /.*/               { $if_match_3     = true }
             if $string !~ /strong/i          { $if_not_match_1 = true }
             if $string !~ /String/           { $if_not_match_2 = true }
             if $string !~ /^ring$/           { $if_not_match_3 = true }
             if not $string !~ /str[aeiou]ng/ { $if_match_4     = true }
             if not $string !~ /String/i      { $if_match_5     = true }
             if not $string !~ /.*/           { $if_match_6     = true }
-            if not $string ~ /strong/i       { $if_not_match_4 = true }
-            if not $string ~ /String/        { $if_not_match_5 = true }
-            if not $string ~ /^ring$/        { $if_not_match_6 = true }
+            if not $string =~ /strong/i      { $if_not_match_4 = true }
+            if not $string =~ /String/       { $if_not_match_5 = true }
+            if not $string =~ /^ring$/       { $if_not_match_6 = true }
+        """))
+
+    def test_expressions(self):
+        self.assertEqual({
+            'a': 2,
+            'b': 6,
+            'c': 20,
+            'd': 5,
+            'aa': 2,
+            'bb': 6,
+            'cc': 20,
+            'dd': 5,
+        }, self._eval("""
+            $a = 1 + 1
+            $b = 9 - 3
+            $c = 5 * 4
+            $d = 50 / 10
+            # $e = 4 * -6 * (3 * 7 + 5) + 2 * 7
+
+            $aa = 1
+            $aa += 1
+
+            $bb = 9
+            $bb -= 3
+
+            $cc = 5
+            $cc *= 4
+
+            $dd = 50
+            $dd /= 10
         """))
 
     def test_loops_all_sorts_of_loops(self):

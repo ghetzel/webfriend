@@ -5,15 +5,25 @@ import textx
 import os
 
 
-def to_value(value, scope):
+def to_value(value, scope, preserve_strings=False):
+    original_value = value
+
     # expand variables into values first
     if isinstance(value, variables.Variable):
         value = value.resolve(scope)
 
-    # do type detection and extraction
-    if isinstance(value, types.String):
-        value = value.value.decode('UTF-8')
+    # evaluate expressions
+    if isinstance(value, lang.Expression):
+        value, _ = value.process(scope)
 
+    # if we're told to, return string classes directly (for interpolation)
+    if preserve_strings and isinstance(original_value, types.String):
+        return original_value
+
+    if isinstance(value, types.String):
+        value = value.value
+
+    # do type detection and extraction
     elif isinstance(value, types.Array):
         value = [to_value(v, scope) for v in value.values]
 
@@ -26,7 +36,7 @@ def to_value(value, scope):
         if int(value) == value:
             value = int(value)
 
-    elif isinstance(value, str):
+    if isinstance(value, str):
         value = value.decode('UTF-8')
 
     # null become None
@@ -72,7 +82,10 @@ class Friendscript(object):
                     variables.Variable,
                 ]
             )
+        except textx.exceptions.TextXSyntaxError as e:
+            raise
 
+        try:
             if isinstance(data, basestring):
                 self.loads(data)
 

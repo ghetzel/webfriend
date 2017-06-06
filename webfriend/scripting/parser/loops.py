@@ -30,15 +30,15 @@ class LoopBlock(MetaModel):
                         for var_i, var in enumerate(loop.variables[0:len(item)]):
                             if not var.skip:
                                 if var_i < len(item):
-                                    scope.set(var.name, item[var_i], force=True)
+                                    scope.set(var.as_key(scope), item[var_i], force=True)
 
                         # null out any remaining variables
                         if len(loop.variables) > len(item):
                             for var in loop.variables[len(item):]:
-                                scope.set(var.name, None, force=True)
+                                scope.set(var.as_key(scope), None, force=True)
 
                     else:
-                        scope.set(loop.variables[0].name, item, force=True)
+                        scope.set(loop.variables[0].as_key(scope), item, force=True)
 
                     scope.set('index', i, force=True)
 

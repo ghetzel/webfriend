@@ -74,6 +74,7 @@ def execute_script(browser, script, scope=None):
             except parser.exceptions.ScriptError:
                 raise
             except Exception as e:
+                raise
                 raise parser.exceptions.ScriptError(str(e), model=block)
 
     finally:
@@ -104,7 +105,15 @@ def evaluate_block(scriptmgr, block, scope):
     elif isinstance(block, parser.lang.Directive):
         if block.is_unset:
             for var in block.variables:
-                scope.unset(var.name)
+                scope.unset(var.as_key(scope))
+
+    # Expressions
+    # ---------------------------------------------------------------------------------------------
+    elif isinstance(block, parser.lang.Expression):
+        result, put_result_in = block.evaluate(environment, scope)
+
+        if put_result_in:
+            scope.set(put_result_in.as_key(scope), result)
 
     # Commands
     # ---------------------------------------------------------------------------------------------

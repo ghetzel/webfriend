@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from . import Base
 import logging
 import math
+import copy
 import time
 from .. import exceptions
 
@@ -247,10 +248,10 @@ class DOMElement(object):
         self.dom.focus(self.id)
 
     def __getitem__(self, key):
-        if not len(self.attributes):
-            self.refresh_attributes()
-
         return self.attributes[key]
+
+    def __contains__(self, key):
+        return (key in self.attributes)
 
     def __setitem__(self, key, value):
         self.dom.call('setAttributeValue', nodeId=self.id, name=key, value=str(value))
@@ -296,11 +297,15 @@ class DOM(Base):
     domain = u'DOM'
     _root_element = None
     _elements = {}
+    _network_requests = {}
 
     def initialize(self):
         self.on(u'setChildNodes', self.on_child_nodes)
         self.on(u'childNodeRemoved', self.on_child_removed)
         self.tab.page.on(u'frameStartedLoading', self.reset)
+        self.tab.network.on(u'requestWillBeSent', self.on_network_request)
+        self.tab.network.on(u'responseReceived', self.on_network_response)
+        self.tab.network.on(u'requestServedFromCache', self.on_network_response)
 
     def reset(self, *args, **kwargs):
         """
@@ -309,6 +314,9 @@ class DOM(Base):
         """
         self._root_element = None
         self._elements = {}
+
+    def clear_requests(self, *args, **kwargs):
+        self._network_requests = {}
 
     def has_element(self, id):
         """
@@ -609,15 +617,13 @@ class DOM(Base):
                     results = {
                         'selector': selector,
                         'count':    len(elements),
+                        'nodes': [
+                            self.element(e.id, e) for e in elements
+                        ],
                     }
 
-                    # specifically only include nodes in the result if we actually have any
-                    # this lets us test for whether 'nodes' is in the result as a pass/fail
-                    # for a condition
-                    if len(elements):
-                        results['nodes'] = [
-                            self.element(e.id, e) for e in elements
-                        ]
+                    if not len(results['nodes']):
+                        return False
 
                     return results
             except (
@@ -660,6 +666,40 @@ class DOM(Base):
 
         if self.has_element(node_id):
             del self._elements[node_id]
+
+    @property
+    def resources(self):
+        return self._network_requests
+
+    def get_resource(self, url=None, request_id=None):
+        if not request_id and not url:
+            raise ValueError("Must specify either url or request_id")
+
+        if request_id:
+            return self.resources.get(request_id)
+        elif url:
+            for _, request in self.resources.items():
+                try:
+                    if url == request['request']['url']:
+                        return request
+                except KeyError:
+                    continue
+
+        return False
+
+    def on_network_request(self, event):
+        request_id = event.get('requestId')
+
+        if request_id:
+            self._network_requests[request_id] = copy.copy(event.payload)
+            self._network_requests[request_id]['id'] = request_id
+
+    def on_network_response(self, event):
+        request_id = event.get('requestId')
+
+        if request_id in self._network_requests:
+            self._network_requests[request_id].update(event.payload)
+            self._network_requests[request_id]['completed'] = True
 
     @classmethod
     def prepare_selector(cls, selector):

@@ -213,3 +213,30 @@ class PageProxy(CommandProxy):
 
     def dump_dom(self):
         self.tab.dom.print_node()
+
+    def resources(self):
+        return self.tab.dom.resources.values()
+
+    def resource(self, url, **kwargs):
+        kwargs.update({
+            'url': url,
+        })
+
+        request = self.tab.dom.get_resource(**kwargs)
+
+        if request and request.get('completed'):
+            out = {
+                'request': request,
+                'data': None,
+            }
+
+            try:
+                out['data'] = io.BytesIO()
+                out['data'].write(self.tab.network.get_response_body(request['id']))
+                out['data'].seek(0)
+            except:
+                pass
+
+            return out
+        else:
+            return False

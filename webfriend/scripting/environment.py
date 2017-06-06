@@ -124,14 +124,23 @@ class Environment(object):
 
         scope = Scope(kwargs, parent=scope)
         scopevars = scope.as_dict()
-        actual = parser.to_value(value, scope)
+
+        if isinstance(value, parser.lang.Expression):
+            value, _ = value.process(scope, preserve_types=True)
 
         # if this is an exact-match string, then interpolate is a no-op
         if isinstance(value, parser.types.String) and value.exact:
-            return actual
+            value = value.value
+
+            if isinstance(value, str):
+                value = value.decode('UTF-8')
+
+            return value
+
+        actual = parser.to_value(value, scope)
 
         # lists get recursed into
-        elif isinstance(actual, list):
+        if isinstance(actual, list):
             # recurse into lists
             return [self.interpolate(v, **scopevars) for v in actual]
 
@@ -175,7 +184,7 @@ class Environment(object):
             try:
                 # recursively interpolate all options
                 opts = self.interpolate(opts)
-
+                keyname = None
                 command_id = command.id
 
                 if command_id is not None:
@@ -187,13 +196,16 @@ class Environment(object):
 
                 # figure out where we want to store results
                 if isinstance(command.resultkey, parser.variables.Variable):
-                    resultkey = command.resultkey.name
+                    resultkey = command.resultkey.as_key(scope)
+                    keyname = '.'.join(resultkey)
 
                 elif isinstance(command.resultkey, basestring) and len(command.resultkey):
                     resultkey = self.interpolate(command.resultkey)
 
                 else:
                     resultkey = self.default_result_key
+
+                keyname = (keyname or str(resultkey))
 
             except KeyError as e:
                 raise parser.exceptions.ScriptError(
@@ -203,12 +215,12 @@ class Environment(object):
                     model=command
                 )
 
-            # call function
-            logging.debug(' ========= Execute: {} -> {}'.format(
+            logging.debug(' ========= Execute: {} -> ${}'.format(
                 proxy.qualify(command_name),
-                resultkey
+                keyname
             ))
 
+            # call function
             try:
                 if command_id is None:
                     return resultkey, fn(**opts)
@@ -218,8 +230,6 @@ class Environment(object):
                         **opts
                     )
             except Exception as e:
-                logging.exception('Runtime error')
-
                 raise parser.exceptions.CommandExecutionError(
                     "Error running command '{}': {}".format(command_name, e),
                     model=command

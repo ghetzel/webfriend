@@ -72,7 +72,7 @@ class ConditionalExpression(MetaModel):
             elif operator == '>=':
                 return (lhs >= rhs)
 
-            elif operator == '~':
+            elif operator == '=~':
                 if not isinstance(rhs, types.RegularExpression):
                     raise ValueError(
                         "Match operator must specify a regular expression on the right-hand side"

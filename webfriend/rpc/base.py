@@ -21,8 +21,6 @@ class Base(object):
         self.tab       = tab
         self.callbacks = {}
 
-        self.initialize()
-
     def initialize(self):
         pass
 

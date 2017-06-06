@@ -3,7 +3,7 @@ from . import CommandProxy
 
 
 class StateProxy(CommandProxy):
-    qualifier = 'var'
+    qualifier = 'vars'
 
     def interpolate(self, value, **kwargs):
         return super(self).interpolate(value, **kwargs)

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import logging
 import time
 import json
+import io
 from . import CommandProxy
 from ... import rpc, utils
 from uuid import uuid4
@@ -90,7 +91,7 @@ class CoreProxy(CommandProxy):
                     #     environment=self.environment
                     # )
 
-    def go(self, uri, referrer='random', wait_for_load=True, timeout=30000):
+    def go(self, uri, referrer='random', wait_for_load=True, timeout=30000, clear_requests=True):
         """
         Nagivate to a URL.
 
@@ -120,6 +121,10 @@ class CoreProxy(CommandProxy):
 
         if referrer is 'random':
             referrer = 'http://example.com/{}'.format(uuid4())
+
+        if clear_requests:
+            # since we've explicitly navigating, clear the network requests
+            self.tab.dom.clear_requests()
 
         reply = self.tab.page.navigate(uri, referrer=referrer)
 

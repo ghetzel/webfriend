@@ -68,6 +68,9 @@ class Tab(object):
         self.window       = Browser(self)
         self.overlay      = Overlay(self)
 
+        for domain in self.rpc_domains:
+            domain.initialize()
+
         # setup internal callbacks
         self.setup_callbacks()
 
@@ -78,12 +81,24 @@ class Tab(object):
                 height=self.initial_h,
             )
 
-    def enable_events(self):
+    @property
+    def rpc_domains(self):
+        instances = []
+
         for k in dir(self):
+            if k == 'rpc_domains':
+                continue
+
             attr = getattr(self, k)
 
             if isinstance(attr, Base):
-                attr.enable()
+                instances.append(attr)
+
+        return instances
+
+    def enable_events(self):
+        for domain in self.rpc_domains:
+            domain.enable()
 
     def stop(self):
         if self.g_recv:

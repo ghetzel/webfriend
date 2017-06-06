@@ -45,7 +45,7 @@ class Network(Base):
 
         self.call('setExtraHTTPHeaders', headers=headers)
 
-    def get_request_body(self, request_id):
+    def get_response_body(self, request_id):
         reply = self.call('getResponseBody', requestId=request_id)
         body = reply.get('body')
 

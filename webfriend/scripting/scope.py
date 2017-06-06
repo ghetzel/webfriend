@@ -24,6 +24,7 @@ class Scope(object):
         parent (Scope, optional):
             The parent scope, if any, to inherit values from.
     """
+    SCALAR_TYPES = (basestring, int, float, bool)
 
     def __init__(self, data=None, parent=None):
         if parent and not isinstance(parent, Scope):
@@ -43,8 +44,19 @@ class Scope(object):
 
     @classmethod
     def split_key(cls, key):
-        parts = key.split('.')
-        return parts[0], parts
+        if isinstance(key, tuple):
+            if not len(key):
+                raise KeyError("Must specify an index value")
+
+            return key[0], key
+        else:
+            parts = key.split('.')
+
+            for i, part in enumerate(parts):
+                if isinstance(part, str):
+                    parts[i] = part.decode('UTF-8')
+
+            return parts[0], parts
 
     def ancestors(self):
         out = []
@@ -117,7 +129,10 @@ class Scope(object):
                 base[k] = {}
             elif not isinstance(base[k], dict):
                 raise ValueError(
-                    "Cannot set intermediate key '{}': key exists, but not a dict".format(k)
+                    "Cannot set intermediate key '{}': key exists, but not a dict (is: {})".format(
+                        k,
+                        base[k].__class__.__name
+                    )
                 )
 
             base = base[k]
@@ -141,10 +156,27 @@ class Scope(object):
             # if that fails at any point, make our parent do the same, on and on
             # until there are no parents left and we just raise the KeyError
             for k in parts:
-                if isinstance(base, dict):
+                if isinstance(base, (list, tuple)):
+                    try:
+                        base = base[int(k)]
+                    except ValueError as e:
+                        if str(e).startswith('invalid literal for int'):
+                            raise ValueError(
+                                "Attempted to use non-numeric value '{}' to access an array element".format(k)
+                            )
+                        else:
+                            raise
+
+                elif hasattr(base, '__getitem__') and not isinstance(base, self.SCALAR_TYPES):
                     base = base[k]
+
+                elif isinstance(base, object) and hasattr(base, str(k)):
+                    base = getattr(base, str(k))
+
                 else:
-                    raise KeyError("Cannot retrieve key '{}' from non-dict".format(k))
+                    raise KeyError(
+                        "Cannot access key '{}' on {} value".format(k, base.__class__.__name__)
+                    )
 
             return base
         except KeyError:

@@ -42,7 +42,7 @@ LinearExecutionBlock:
 ;
 
 Assignment:
-    destinations+=Variable[','] '=' sources+=VariableOrType[',']
+    destinations+=Variable[','] op=AssignmentOperator sources+=Expression[',']
 ;
 
 Directive:
@@ -51,50 +51,48 @@ Directive:
     )
 ;
 
-NumericOperator:
+Operator:
     (
-        add='+' |
-        subtract='-' |
-        multiply='*' |
-        divide='/' |
-        modulus='%' |
-        power='**'
-    )
-;
-
-LogicOperator:
-    (
+        power='**'      |
+        multiply='*'    |
+        divide='/'      |
+        modulus='%'     |
+        add='+'         |
+        subtract='-'    |
         bitwise_and='&' |
-        bitwise_or='|' |
-        bitwise_not='^'
+        bitwise_or='|'  |
+        bitwise_not='~' |
+        bitwise_xor='^'
     )
 ;
 
 AssignmentOperator:
     (
-        plus_eq='+=' |
-        minus_eq='-=' |
-        multi_eq='*=' |
-        div_eq='/=' |
-        and_eq='&=' |
-        or_eq='|='
+        eq='='          |
+        multi_eq='*='   |
+        div_eq='/='     |
+        plus_eq='+='    |
+        minus_eq='-='   |
+        and_eq='&='     |
+        or_eq='|='      |
+        append='<<'
     )
 ;
 
-Operator:
-    ( NumericOperator | LogicOperator | AssignmentOperator )
+Expression:
+    lhs=ValueYielding (operator=Operator rhs=Expression)?
 ;
 
-Expression:
-    lhs=Variable operator=Operator rhs=VariableOrType
+ValueYielding:
+    (Type | Variable)
 ;
 
 ConditionalExpression:
     negate?='not'? (
         assignment=Assignment ';' condition=ConditionalExpression |
         command=Command ( ';' condition=ConditionalExpression )? |
-        lhs=VariableOrType operator=MatchOperator rhs=RegularExpression |
-        lhs=VariableOrType ( operator=ComparisonOperator rhs=VariableOrType )?
+        lhs=Expression operator=MatchOperator rhs=RegularExpression |
+        lhs=Expression ( operator=ComparisonOperator rhs=Expression )?
     )
 ;
 
@@ -103,7 +101,7 @@ ComparisonOperator:
 ;
 
 MatchOperator:
-    ( '!~' | '~' )
+    ( '!~' | '=~' )
 ;
 
 IfElseBlock:
@@ -161,16 +159,23 @@ IntOrVariable:
 ;
 
 Variable:
-    ( '$'- name=VariableName | skip?='_' )
+    (
+        '$'- parts+=VariableName['.'] |
+        skip?='_'
+    )
 ;
 
 VariableName[noskipws]:
-    /[^\d\W][\w\.]*\b/
+    key=/[^\d\W][\w]*\b/ ( '[' index=VariableIndex ']' )?
+;
+
+VariableIndex:
+    ( Variable | INT | String )
 ;
 
 EventHandlerBlock:
     'on' pattern=String? isolated?='isolated'? '{'
-        blocks += LinearExecutionBlock
+        blocks *= LinearExecutionBlock
     '}'
 ;
 
@@ -202,15 +207,11 @@ CommandStanza:
 ;
 
 KeyValuePair:
-    name=KeyType ':' values+=VariableOrType
+    name=KeyType ':' values+=Expression
 ;
 
 KeyType:
     ( !ReservedWord | ID | String )
-;
-
-VariableOrType:
-    (Variable | Type)
 ;
 
 Type:
@@ -237,7 +238,7 @@ Object:
 
 Array:
     '['
-        values *= VariableOrType[','] ','?
+        values *= Expression[','] ','?
     ']'
 ;
 
