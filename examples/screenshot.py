@@ -1,14 +1,8 @@
 #!/usr/bin/env python
-import os
 import logging
 from webfriend import Chrome, scripting
 
 logging.basicConfig(level=logging.INFO)
-
-
-if os.getenv('DEBUG') == 'true':
-    Chrome.browser_arguments.remove('--headless')
-    Chrome.browser_arguments = ['--temp-profile'] + Chrome.browser_arguments
 
 with Chrome() as browser:
     commands = scripting.Environment(browser=browser)
