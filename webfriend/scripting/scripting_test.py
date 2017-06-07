@@ -316,6 +316,7 @@ class ScriptingTest(TestCase):
             'bb': 6,
             'cc': 20,
             'dd': 5,
+            # 'f': u'This 2 is {b} and done',
         }, self._eval("""
             $a = 1 + 1
             $b = 9 - 3
@@ -334,6 +335,8 @@ class ScriptingTest(TestCase):
 
             $dd = 50
             $dd /= 10
+
+            # $f = "This {a}" + ' is {b}' + " and done"
         """))
 
     def test_loops_all_sorts_of_loops(self):
