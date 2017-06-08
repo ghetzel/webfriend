@@ -5,52 +5,73 @@ from webfriend.scripting import commands
 
 def document_commands():
     base = commands.base.CommandProxy
-    toc = set()
+    toc = []
+    subtoc = {}
     commands_body = []
+    classes = []
 
     for cls in inspect.getmembers(commands, inspect.isclass):
         if issubclass(cls[1], base):
             if cls[1] is not base:
-                proxy = cls[1]
-                proxy_docs = inspect.getdoc(proxy)
-                commands_body.append("## `{}` Command Set".format(proxy.as_qualifier()))
+                classes.append(cls)
+
+    classes = [
+        c for c in classes if c[0] == 'CoreProxy'
+    ] + sorted([
+        c for c in classes if c[0] != 'CoreProxy'
+    ])
+
+    print(classes)
+
+    for cls in classes:
+        proxy = cls[1]
+        proxy_docs = inspect.getdoc(proxy)
+        commands_body.append("## `{}` Command Set".format(proxy.as_qualifier()))
+        commands_body.append('')
+
+        tocentry = (proxy.as_qualifier().title(), proxy.as_qualifier())
+
+        if tocentry not in toc:
+            toc.append(tocentry)
+
+        subtoc[proxy.as_qualifier()] = set()
+
+        if proxy_docs:
+            commands_body.append(proxy_docs)
+
+        for method in inspect.getmembers(proxy, inspect.ismethod):
+            if method[0].startswith('_'):
+                continue
+
+            if method[0] in dir(base):
+                continue
+
+            commands_body.append("### `{}`".format(proxy.qualify(method[0])))
+            subtoc[proxy.as_qualifier()].add(proxy.qualify(method[0]))
+
+            commands_body.append("\n```\n{}{}\n```".format(
+                proxy.qualify(''),
+                get_signature(method)
+            ))
+
+            method_doc = inspect.getdoc(method[1])
+
+            if method_doc:
                 commands_body.append('')
+                commands_body.append(method_doc)
 
-                toc.add(
-                    (proxy.as_qualifier().title(), '#{}-command-set'.format(proxy.as_qualifier()))
-                )
+            commands_body.append('')
 
-                if proxy_docs:
-                    commands_body.append(proxy_docs)
-
-                for method in inspect.getmembers(proxy, inspect.ismethod):
-                    if method[0].startswith('_'):
-                        continue
-
-                    if method[0] in dir(base):
-                        continue
-
-                    commands_body.append("### `{}`".format(proxy.qualify(method[0])))
-
-                    commands_body.append("\n```\n{}{}\n```".format(
-                        proxy.qualify(''),
-                        get_signature(method)
-                    ))
-
-                    method_doc = inspect.getdoc(method[1])
-
-                    if method_doc:
-                        commands_body.append('')
-                        commands_body.append(method_doc)
-
-                    commands_body.append('')
-
-                commands_body.append('')
+        commands_body.append('')
 
     print('## Command Modules')
 
-    for title, link in toc:
-        print("- [{}]({})".format(title, link))
+    for title, qualifier in toc:
+        print("- [{}](#{}-command-set)".format(title, qualifier))
+
+        if qualifier in subtoc:
+            for method in sorted(list(subtoc[qualifier])):
+                print("   - [{}](#{})".format(method, method.replace('::', '')))
 
     print('')
 

@@ -1,59 +1,64 @@
+[('CoreProxy', <class 'webfriend.scripting.commands.core.CoreProxy'>), ('CookiesProxy', <class 'webfriend.scripting.commands.cookies.CookiesProxy'>), ('EventsProxy', <class 'webfriend.scripting.commands.events.EventsProxy'>), ('FileProxy', <class 'webfriend.scripting.commands.file.FileProxy'>), ('PageProxy', <class 'webfriend.scripting.commands.page.PageProxy'>), ('StateProxy', <class 'webfriend.scripting.commands.state.StateProxy'>)]
 ## Command Modules
-- [Cookies](#cookies-command-set)
 - [Core](#core-command-set)
+   - [click](#click)
+   - [close_tab](#close_tab)
+   - [configure](#configure)
+   - [field](#field)
+   - [focus](#focus)
+   - [go](#go)
+   - [log](#log)
+   - [new_tab](#new_tab)
+   - [resize](#resize)
+   - [rpc](#rpc)
+   - [scroll_to](#scroll_to)
+   - [select](#select)
+   - [switch_tab](#switch_tab)
+   - [tabs](#tabs)
+   - [type](#type)
+   - [wait](#wait)
+   - [wait_for_load](#wait_for_load)
+   - [xpath](#xpath)
+- [Cookies](#cookies-command-set)
+   - [cookies::all](#cookiesall)
+   - [cookies::delete](#cookiesdelete)
+   - [cookies::get](#cookiesget)
+   - [cookies::query](#cookiesquery)
+   - [cookies::set](#cookiesset)
 - [Events](#events-command-set)
+   - [events::wait_for](#eventswait_for)
+   - [events::wait_for_idle](#eventswait_for_idle)
 - [File](#file-command-set)
-- [Vars](#vars-command-set)
+   - [file::append](#fileappend)
+   - [file::basename](#filebasename)
+   - [file::close](#fileclose)
+   - [file::dirname](#filedirname)
+   - [file::exists](#fileexists)
+   - [file::mkdir](#filemkdir)
+   - [file::open](#fileopen)
+   - [file::read](#fileread)
+   - [file::temp](#filetemp)
+   - [file::write](#filewrite)
 - [Page](#page-command-set)
-
-## `cookies` Command Set
-
-### `cookies::all`
-
-```
-cookies::all _urls_
-```
-
-Return a list of all cookies, optionally restricted to just a specific URL.
-
-#### Arguments
-
-- **urls** (`list`, optional):
-    If specified, this is a list of URLs to retrieve cookies for.
-
-#### Returns
-A `list` of `dict` objects containing definitions for each cookie.
-
-### `cookies::delete`
-
-```
-cookies::delete _name_ {
-    domain: 'null'
-}
-```
-
-### `cookies::get`
-
-```
-cookies::get _name_ {
-    domain: 'null'
-}
-```
-
-### `cookies::query`
-
-```
-cookies::query _name_
-```
-
-### `cookies::set`
-
-```
-cookies::set _name_
-```
-
-See: `webfriend.rpc.network.set_cookie`
-
+   - [page::dump_dom](#pagedump_dom)
+   - [page::find](#pagefind)
+   - [page::remove](#pageremove)
+   - [page::resource](#pageresource)
+   - [page::resources](#pageresources)
+   - [page::screenshot](#pagescreenshot)
+   - [page::source](#pagesource)
+   - [page::start_capture](#pagestart_capture)
+   - [page::stop_capture](#pagestop_capture)
+   - [page::wait_for_capture](#pagewait_for_capture)
+- [Vars](#vars-command-set)
+   - [vars::clear](#varsclear)
+   - [vars::ensure](#varsensure)
+   - [vars::get](#varsget)
+   - [vars::interpolate](#varsinterpolate)
+   - [vars::pop](#varspop)
+   - [vars::push](#varspush)
+   - [vars::scope_at_level](#varsscope_at_level)
+   - [vars::set](#varsset)
 
 ## `core` Command Set
 
@@ -437,6 +442,55 @@ xpath
 ```
 
 See: `webfriend.rpc.dom.DOM.xpath`
+
+
+## `cookies` Command Set
+
+### `cookies::all`
+
+```
+cookies::all _urls_
+```
+
+Return a list of all cookies, optionally restricted to just a specific URL.
+
+#### Arguments
+
+- **urls** (`list`, optional):
+    If specified, this is a list of URLs to retrieve cookies for.
+
+#### Returns
+A `list` of `dict` objects containing definitions for each cookie.
+
+### `cookies::delete`
+
+```
+cookies::delete _name_ {
+    domain: 'null'
+}
+```
+
+### `cookies::get`
+
+```
+cookies::get _name_ {
+    domain: 'null'
+}
+```
+
+### `cookies::query`
+
+```
+cookies::query _name_
+```
+
+### `cookies::set`
+
+```
+cookies::set _name_
+```
+
+See: `webfriend.rpc.network.set_cookie`
 
 
 ## `events` Command Set
