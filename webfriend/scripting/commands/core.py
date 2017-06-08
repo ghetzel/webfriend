@@ -2,26 +2,37 @@ from __future__ import absolute_import
 import logging
 import time
 import json
-import io
+import urlnorm
+from urlparse import urlparse
 from . import CommandProxy
 from ... import rpc, utils
 from uuid import uuid4
 
 
 class CoreProxy(CommandProxy):
+    """
+    These represent very common tasks that one is likely to perform in a browser, such as navigating
+    to URLs, filling in form fields, and performing input with the mouse and keyboard.
+    """
+
+    @classmethod
+    def qualify(cls, name):
+        return name
+
     def configure(
         self,
         events=None,
         demo=None,
         user_agent=None,
         extra_headers=None,
+        cache=None,
         plugins=None
     ):
         """
         Configures various features of the Remote Debugging protocol and provides environment
         setup.
 
-        ### Arguments
+        #### Arguments
 
         - **events** (`list`, optional):
 
@@ -48,6 +59,10 @@ class CoreProxy(CommandProxy):
 
             If specified, these headers will be included in all HTTP(S) requests initiated from
             here on.  An empty dict will clear previously set headers.
+
+        - **cache** (`bool`, optional):
+
+            Whether caching is enabled or not for this session.
         """
         if events and hasattr(events, 'values') and isinstance(events.values, list):
             for domain in events.values:
@@ -73,16 +88,21 @@ class CoreProxy(CommandProxy):
         if isinstance(extra_headers, dict):
             self.tab.network.set_headers(extra_headers)
 
-        if isinstance(plugins, dict):
-            from .. import load_and_register_proxy
+        if cache is True:
+            self.tab.network.enable_cache()
+        elif cache is False:
+            self.tab.network.disable_cache()
 
-            for command_plugin in plugins.get('commands', []):
-                if isinstance(command_plugin, basestring):
-                    load_and_register_proxy(command_plugin)
+        # if isinstance(plugins, dict):
+        #     from .. import load_and_register_proxy
 
-                elif isinstance(command_plugin, dict):
-                    if 'module' not in command_plugin:
-                        raise ValueError("Command plugin must specify a 'module' attribute")
+        #     for command_plugin in plugins.get('commands', []):
+        #         if isinstance(command_plugin, basestring):
+        #             load_and_register_proxy(command_plugin)
+
+        #         elif isinstance(command_plugin, dict):
+        #             if 'module' not in command_plugin:
+        #                 raise ValueError("Command plugin must specify a 'module' attribute")
 
                     # load_and_register_proxy(
                     #     command_plugin['module'],
@@ -95,7 +115,7 @@ class CoreProxy(CommandProxy):
         """
         Nagivate to a URL.
 
-        ### Arguments
+        #### Arguments
 
         - **referrer** (`str`, optional):
 
@@ -115,7 +135,7 @@ class CoreProxy(CommandProxy):
 
             The amount of time, in milliseconds, to wait for the the to load.
 
-        ### Returns
+        #### Returns
         The URL that was loaded (`str`)
         """
 
@@ -126,6 +146,13 @@ class CoreProxy(CommandProxy):
             # since we've explicitly navigating, clear the network requests
             self.tab.dom.clear_requests()
 
+        uri_p = urlparse(uri)
+
+        if not len(uri_p.scheme):
+            uri = 'https://{}'.format(uri)
+
+        uri = urlnorm.norm(uri)
+
         reply = self.tab.page.navigate(uri, referrer=referrer)
 
         if wait_for_load:
@@ -133,16 +160,16 @@ class CoreProxy(CommandProxy):
 
         return reply
 
-    def sleep(self, milliseconds):
+    def wait(self, milliseconds):
         """
         Pauses execution of the current script for the given number of milliseconds.
 
-        ### Arguments
+        #### Arguments
 
         - **milliseconds** (`int`):
             The number of milliseconds to sleep for; can be fractional.
 
-        ### Returns
+        #### Returns
         The number of milliseconds.
         """
 
@@ -167,7 +194,7 @@ class CoreProxy(CommandProxy):
         This is useful for setting the size of the area that will be rendered for screenshots and
         screencasts.
 
-        ### Arguments
+        #### Arguments
 
         - **width** (`int`, optional):
             The desired width of the viewport.
@@ -204,7 +231,7 @@ class CoreProxy(CommandProxy):
         - **angle** (`int`, optional):
             The angle of the screen to emulate (in degrees; 0-360).
 
-        ### Returns
+        #### Returns
         `dict`
         """
 
@@ -241,32 +268,11 @@ class CoreProxy(CommandProxy):
             'height': height,
         }
 
-    def put(self, *args, **kwargs):
-        """
-        Store a value in the current scope.  Strings will be automatically converted into the
-        appropriate data types (float, int, bool) if possible.
-
-        ### Returns
-        The given value with automatic type detection applied.
-        """
-        if len(args) == 1:
-            return utils.autotype(args[0])
-
-        elif len(args) > 1:
-            return [utils.autotype(a) for a in args]
-
-        elif len(kwargs):
-            return dict([
-                (k, utils.autotype(v)) for k, v in kwargs.items()
-            ])
-
-        return None
-
     def log(self, line=None, level='info', indent=4, **kwargs):
         """
         Outputs a line to the log.
 
-        ### Arguments
+        #### Arguments
 
         - **line** (`str`):
                 A line of text that will have all current variables, as well as any given
@@ -284,10 +290,10 @@ class CoreProxy(CommandProxy):
         - **kwargs**:
                 All remaining arguments will be passed along to format() when interpolating 'line'.
 
-        ### Returns
+        #### Returns
         The line as printed.
 
-        ### Raises
+        #### Raises
         `AttributeError` if the specified log level is not known.
         """
         # handle the case where we want to log a data structure without options or a format string
@@ -311,7 +317,7 @@ class CoreProxy(CommandProxy):
         """
         Directly call an RPC method with the given parameters.
 
-        ### Arguments
+        #### Arguments
 
         - **method** (`str`):
 
@@ -321,7 +327,7 @@ class CoreProxy(CommandProxy):
 
         Zero of more arguments to pass in the 'params' section of the RPC call.
 
-        ### Returns
+        #### Returns
         A `dict` representation of the `webfriend.rpc.reply.Reply` class.
         """
         return self.tab.rpc(method, **kwargs).as_dict()
@@ -331,16 +337,16 @@ class CoreProxy(CommandProxy):
         Blocks until the "Page.loadEventFired" event has fired, or until timeout elapses (whichever
         comes first).
 
-        ### Arguments
+        #### Arguments
 
         - **timeout** (`int`):
 
             The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
-        ### Returns
+        #### Returns
         `webfriend.rpc.event.Event`
 
-        ### Raises
+        #### Raises
         `webfriend.exceptions.TimeoutError`
         """
 
@@ -351,7 +357,7 @@ class CoreProxy(CommandProxy):
         else:
             return self.tab.wait_for('Page.loadEventFired', timeout=timeout)
 
-    def input(self, text, **kwargs):
+    def type(self, text, **kwargs):
         """
         See: `webfriend.rpc.input.type_text`
         """
@@ -362,17 +368,17 @@ class CoreProxy(CommandProxy):
         Focuses the given HTML element described by **selector**.  One and only one element may
         match the selector.
 
-        ### Arguments
+        #### Arguments
 
         - **selector** (`str`):
 
             The page element to focus, given as a CSS-style selector, an ID (e.g. "#myid"), or an
             XPath query (e.g.: "xpath://body/p").
 
-        ### Returns
+        #### Returns
         The matching `webfriend.rpc.dom.DOMElement` that was given focus.
 
-        ### Raises
+        #### Raises
         - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
         - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
         """
@@ -389,7 +395,7 @@ class CoreProxy(CommandProxy):
         are supported (e.g.: double clicking, drag and drop) by supplying **x**/**y** coordinates
         directly.
 
-        ### Arguments
+        #### Arguments
 
         - **selector** (`str`, optional):
 
@@ -415,10 +421,10 @@ class CoreProxy(CommandProxy):
 
             Only applies to **x**/**y** click events, see: `webfriend.rpc.input.click_at`.
 
-        ### Returns
+        #### Returns
         A `list` of elements that were clicked on.
 
-        ### Raises
+        #### Raises
         For **selector**-based events:
             - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
             - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
@@ -478,3 +484,29 @@ class CoreProxy(CommandProxy):
         See: `webfriend.rpc.dom.DOM.xpath`
         """
         return self.tab.dom.xpath(*args, **kwargs)
+
+    def tabs(self, sync=True):
+        if sync:
+            self.browser.sync()
+
+        return [
+            t.as_dict() for t in self.browser.tabs.values()
+        ]
+
+    def new_tab(self, url, width=None, height=None, autoswitch=True):
+        tab_id = self.browser.create_tab(url, width=width, height=height)
+
+        if autoswitch:
+            self.browser.switch_to_tab(tab_id)
+
+        return tab_id
+
+    def switch_tab(self, tab_id):
+        self.browser.switch_to_tab(tab_id)
+        return self.tabs(sync=False)
+
+    def close_tab(self, tab_id=None):
+        if not tab_id:
+            tab_id = self.browser.default_tab
+
+        return self.browser.close_tab(tab_id)

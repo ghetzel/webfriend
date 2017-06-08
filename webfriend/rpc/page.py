@@ -8,6 +8,9 @@ import logging
 
 
 class Page(Base):
+    """
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Page
+    """
     domain = 'Page'
     capture_formats = ['jpeg', 'png']
 

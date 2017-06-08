@@ -1,15 +1,17 @@
 from __future__ import absolute_import
+import os
 import logging
 import json
 import click
 import click_log
 from . import Chrome
 from .scripting import execute_script, Scope
+from .repl import REPL
 
 
 @click.group(invoke_without_command=True)
-@click.argument('script', type=click.File('rb'))
-@click.option('--debug/--no-debug', default=False)
+@click.option('--interactive', '-I', is_flag=True, default=False)
+@click.option('--debug', '-D', is_flag=True, default=False)
 @click.option(
     '--debugger-url', '-u',
     metavar='URL',
@@ -20,23 +22,28 @@ from .scripting import execute_script, Scope
     '-L',
     default='INFO'
 )
+@click.argument('script', type=click.File('rb'), required=False)
+@click.argument('remainder', nargs=-1, type=click.UNPROCESSED)
 @click_log.init()
 @click.pass_context
-def main(ctx, script, debug, debugger_url):
+def main(ctx, interactive, debug, debugger_url, script, remainder):
     if debug:
-        Chrome.browser_arguments.remove('--headless')
-        Chrome.browser_arguments = ['--temp-profile'] + Chrome.browser_arguments
+        os.environ['WEBFRIEND_DEBUG'] = 'true'
 
     with Chrome(debug_url=debugger_url) as chrome:
         scope = Scope()
 
-        exit_state = execute_script(
-            chrome,
-            script.read(),
-            scope=Scope(parent=scope)
-        ).as_dict()
+        if interactive:
+            repl = REPL(chrome, scope)
+            repl.run()
+        else:
+            scope = execute_script(
+                chrome,
+                script.read(),
+                scope=Scope(parent=scope)
+            ).as_dict()
 
-        click.echo(json.dumps(exit_state, indent=4))
+        click.echo(json.dumps(scope, indent=4))
 
 
 try:

@@ -11,6 +11,9 @@ class ScriptError(Exception):
 
 
 class Runtime(Base):
+    """
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Runtime
+    """
     domain = 'Runtime'
     supports_events = False
 

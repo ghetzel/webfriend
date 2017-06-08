@@ -40,8 +40,8 @@ class Base(object):
         if self.supports_events:
             self.call('disable')
 
-    def call_boolean_response(self, method, field='result'):
-        if self.call(method).get(field) is True:
+    def call_boolean_response(self, method, field='result', **kwargs):
+        if self.call(method, **kwargs).get(field) is True:
             return True
 
         return False

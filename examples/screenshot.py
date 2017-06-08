@@ -2,13 +2,13 @@
 import logging
 from webfriend import Chrome, scripting
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 with Chrome() as browser:
     commands = scripting.Environment(browser=browser)
 
     # navigate to Hacker News
-    www = commands.core.go('https://news.ycombinator.com')
+    www = commands.core.go('https://nytimes.com')
 
     # log the result of loading the page
     logging.info("Page loaded in {www[timing][requestTime]}ns".format(www=www))

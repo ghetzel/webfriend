@@ -3,6 +3,10 @@ from . import Base
 
 
 class Browser(Base):
+    """
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Browser
+    """
+
     domain = 'Browser'
     supports_events = False
 

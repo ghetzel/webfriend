@@ -12,11 +12,13 @@ setup(
     install_requires=[
         'click',
         'click-log',
-        'gevent',
-        'textx',
-        'websocket-client',
         'ephemeral_port_reserve',
+        'gevent',
+        'pygments',
         'termcolor',
+        'textx',
+        'urlnorm',
+        'websocket-client',
     ],
     packages=find_packages(exclude=['*.tests']),
     entry_points={

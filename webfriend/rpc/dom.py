@@ -322,7 +322,7 @@ class DOM(Base):
         """
         Return whether we know about the given element ID or not.
 
-        ### Arguments
+        #### Arguments
 
         - **id** (`str`):
 
@@ -337,7 +337,7 @@ class DOM(Base):
         Return the given ID as a `webfriend.rpc.dom.DOMElement`, or `None` if we have not
         received the element from Chrome.
 
-        ### Arguments
+        #### Arguments
 
         - **id** (`str`):
 
@@ -347,7 +347,7 @@ class DOM(Base):
 
             The value to return if the element is not known.
 
-        ### Returns
+        #### Returns
         - `webfriend.rpc.dom.DOMElement` if the element is known, **fallback** if not.
         """
         return self._elements.get(id, fallback)
@@ -357,7 +357,7 @@ class DOM(Base):
         Return the topmost `webfriend.rpc.dom.DOMElement` at the given page coordinates, or `None`
         if there is no element there.
 
-        ### Arguments
+        #### Arguments
 
         - **x** (`int`):
 
@@ -372,7 +372,7 @@ class DOM(Base):
             If specified, include "shadow DOMs" in the query; see
             https://developers.google.com/web/fundamentals/getting-started/primers/shadowdom
 
-        ### Returns
+        #### Returns
         - `webfriend.rpc.dom.DOMElement` if an element is at the coordinates, `None` if not.
         """
         node_id = self.call(
@@ -407,7 +407,7 @@ class DOM(Base):
         """
         Returns the root DOM element for the current document.
 
-        ### Returns
+        #### Returns
         The `webfriend.rpc.dom.DOMElement` representing the root element.
         """
         if self._root_element is None:
@@ -462,10 +462,10 @@ class DOM(Base):
             The timeout (in milliseconds) before the query raises a
             `webfriend.exceptions.TimeoutError`.
 
-        ### Returns
+        #### Returns
         The matching `webfriend.rpc.dom.DOMElement`.
 
-        ### Raises
+        #### Raises
         - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
         - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
         - `webfriend.exceptions.TimeoutError` if the query times out.
@@ -520,10 +520,10 @@ class DOM(Base):
             The timeout (in milliseconds) before the query raises a
             `webfriend.exceptions.TimeoutError`.
 
-        ### Returns
+        #### Returns
         A `list` of matching `webfriend.rpc.dom.DOMElement` (zero or more).
 
-        ### Raises
+        #### Raises
         - `webfriend.exceptions.TimeoutError` if the query times out.
         """
         if node_id is None:
@@ -586,7 +586,7 @@ class DOM(Base):
         Polls the DOM for an element that matches the given selector.  Either the element will be
         found and returned within the given timeout, or a TimeoutError will be raised.
 
-        ### Arguments
+        #### Arguments
 
         - **selector** (`str`):
 
@@ -600,10 +600,10 @@ class DOM(Base):
 
             The polling interval, in milliseconds, used for rechecking for the element.
 
-        ### Returns
+        #### Returns
         `webfriend.rpc.dom.DOMElement`
 
-        ### Raises
+        #### Raises
         `webfriend.exceptions.TimeoutError`
         """
         started_at = time.time()

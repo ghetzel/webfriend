@@ -3,6 +3,9 @@ from . import Base
 
 
 class Overlay(Base):
+    """
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Overlay
+    """
     domain = 'Overlay'
     supports_events = False
 

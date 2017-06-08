@@ -18,10 +18,10 @@ ReservedWord:
         'case' |
         'continue' |
         'else' |
-        'for' |
         'if' |
         'in' |
         'is' |
+        'loop' |
         'not' |
         'on' |
         'unset' |

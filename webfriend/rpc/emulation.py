@@ -4,6 +4,9 @@ import math
 
 
 class Emulation(Base):
+    """
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Emulation
+    """
     domain = 'Emulation'
     supports_events = False
 

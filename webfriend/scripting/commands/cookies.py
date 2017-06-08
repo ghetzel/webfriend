@@ -5,6 +5,17 @@ from ... import exceptions
 
 class CookiesProxy(CommandProxy):
     def all(self, urls=None):
+        """
+        Return a list of all cookies, optionally restricted to just a specific URL.
+
+        #### Arguments
+
+        - **urls** (`list`, optional):
+            If specified, this is a list of URLs to retrieve cookies for.
+
+        #### Returns
+        A `list` of `dict` objects containing definitions for each cookie.
+        """
         return [
             c.as_dict() for c in self.tab.network.get_cookies(urls)
         ]
@@ -51,7 +62,7 @@ class CookiesProxy(CommandProxy):
 
     def set(self, name, **kwargs):
         """
-        See `webfriend.rpc.network.set_cookie`
+        See: `webfriend.rpc.network.set_cookie`
         """
         if not kwargs.get('url', None):
             raise ValueError("'url' option must be specified")

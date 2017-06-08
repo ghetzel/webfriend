@@ -34,13 +34,14 @@ import time
 from .commands import *  # noqa
 
 
-def execute_script(browser, script, scope=None):
-    # setup a new scope if we weren't given one
-    if not scope:
-        scope = Scope()
-
+def execute_script(browser, script, scope=None, environment=None, preserve_state=False):
     # setup the environment
-    environment = Environment(scope, browser=browser)
+    if not environment:
+        environment = Environment(scope, browser=browser)
+
+    if not scope:
+        scope = environment.scope
+
     callbacks = set()
 
     # load and parse the script
@@ -48,10 +49,6 @@ def execute_script(browser, script, scope=None):
 
     # tell the environment about the calling script
     environment.script = friendscript
-
-    # show the initial state
-    for k, v in scope.items():
-        logging.debug('VAR: {}={}'.format(k, v))
 
     if browser:
         # setup event handlers for this execution
@@ -74,14 +71,14 @@ def execute_script(browser, script, scope=None):
             except parser.exceptions.ScriptError:
                 raise
             except Exception as e:
-                raise
                 raise parser.exceptions.ScriptError(str(e), model=block)
 
     finally:
-        # unregister the event handlers we created for this run
-        for callback_id in callbacks:
-            logging.debug('Remove event handler {}'.format(callback_id))
-            browser.default.remove_handler(callback_id)
+        if not preserve_state:
+            # unregister the event handlers we created for this run
+            for callback_id in callbacks:
+                logging.debug('Remove event handler {}'.format(callback_id))
+                browser.default.remove_handler(callback_id)
 
     # ...and done.
     # ---------------------------------------------------------------------------------------------

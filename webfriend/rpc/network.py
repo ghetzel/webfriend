@@ -29,6 +29,9 @@ class Cookie(object):
 
 
 class Network(Base):
+    """
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Network
+    """
     domain = 'Network'
 
     connection_types = [

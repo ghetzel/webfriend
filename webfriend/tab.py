@@ -11,6 +11,7 @@ from .rpc import (
     Page,
     Reply,
     Runtime,
+    Target,
 )
 import json
 import time
@@ -23,10 +24,21 @@ from gevent.queue import Queue, Channel, Empty, Full
 
 
 class Tab(object):
-    default_width  = 1280
+    default_width  = 0
     default_height = 0
 
-    def __init__(self, browser, url, description, domains=None, width=None, height=None, frame_id=None):
+    def __init__(
+        self,
+        browser,
+        url,
+        description,
+        domains=None,
+        width=None,
+        height=None,
+        frame_id=None,
+        callbacks=True,
+        autoresize=True
+    ):
         if not isinstance(description, dict):
             raise AttributeError("Tab descriptor must be a dict")
 
@@ -67,19 +79,22 @@ class Tab(object):
         self.runtime      = Runtime(self)
         self.window       = Browser(self)
         self.overlay      = Overlay(self)
+        self.target       = Target(self)
 
         for domain in self.rpc_domains:
             domain.initialize()
 
         # setup internal callbacks
-        self.setup_callbacks()
+        if callbacks:
+            self.setup_callbacks()
 
         # perform initial calls
-        if self.initial_w or self.initial_h:
-            self.emulation.set_device_metrics_override(
-                width=self.initial_w,
-                height=self.initial_h,
-            )
+        if autoresize:
+            if self.initial_w or self.initial_h:
+                self.emulation.set_device_metrics_override(
+                    width=self.initial_w,
+                    height=self.initial_h,
+                )
 
     @property
     def rpc_domains(self):
@@ -95,6 +110,14 @@ class Tab(object):
                 instances.append(attr)
 
         return instances
+
+    def as_dict(self):
+        return {
+            'id': self.frame_id,
+            'url': self.url,
+            'webSocketDebuggerUrl': self.wsurl,
+            'target': (self.frame_id == self.browser.default_tab),
+        }
 
     def enable_events(self):
         for domain in self.rpc_domains:
@@ -264,7 +287,7 @@ class Tab(object):
         """
         Block until a specific event is received, or until **timeout** elapses (whichever comes first).
 
-        ### Arguments
+        #### Arguments
 
         - **event_name** (`str`):
 
@@ -274,10 +297,10 @@ class Tab(object):
 
             The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
-        ### Returns
+        #### Returns
         `webfriend.rpc.event.Event`
 
-        ### Raises
+        #### Raises
         `webfriend.exceptions.TimeoutError`
         """
 
@@ -316,7 +339,7 @@ class Tab(object):
         that just loaded to finish doing so.
 
 
-        ### Arguments
+        #### Arguments
 
         - **idle** (`int`):
 
@@ -338,10 +361,10 @@ class Tab(object):
 
             How often to check the event timings to see if the idle time has elapsed.
 
-        ### Returns
+        #### Returns
         An `int` representing the number of milliseconds we waited for.
 
-        ### Raises
+        #### Raises
         `webfriend.exceptions.TimeoutError`
         """
         started_at = time.time()

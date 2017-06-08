@@ -9,7 +9,10 @@ from .dom import DOM, DOMElement
 from .emulation import Emulation
 from .event import Event
 from .input import Input
+from .inspector import Inspector
 from .network import Network
 from .overlay import Overlay
 from .page import Page
 from .runtime import Runtime
+from .schema import Schema
+from .target import Target

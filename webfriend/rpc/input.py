@@ -5,6 +5,10 @@ from random import random
 
 
 class Input(Base):
+    """
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Input
+    """
+
     domain = 'Input'
     supports_events = False
     key_event_types = ['keyDown', 'keyUp', 'rawKeyDown', 'char']
@@ -192,7 +196,7 @@ class Input(Base):
         """
         Dispatch low-level mouse events at the given coordinates to perform a variety of actions.
 
-        ### Arguments
+        #### Arguments
 
         - **x** (`int`):
 

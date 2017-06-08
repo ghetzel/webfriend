@@ -24,7 +24,7 @@ class PageProxy(CommandProxy):
         Capture the current screen contents as an image and write the image to a file or return it
         as a file-like object.
 
-        ### Arguments
+        #### Arguments
 
         - **destination** (`str`, _file-like object_, optional):
 
@@ -80,7 +80,7 @@ class PageProxy(CommandProxy):
             If a file handle is given as the **destination**, should it be automatically closed
             when the screenshot is completed.
 
-        ### Returns
+        #### Returns
         `dict`, with keys:
 
         - _element_ (`webfriend.rpc.dom.DOMElement`):

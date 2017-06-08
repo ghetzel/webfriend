@@ -8,7 +8,7 @@ class EventsProxy(CommandProxy):
         Block until a specific event is received, or until **timeout** elapses (whichever comes
         first).
 
-        ### Arguments
+        #### Arguments
 
         - **event_name** (`str`):
 
@@ -18,10 +18,10 @@ class EventsProxy(CommandProxy):
 
             The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
-        ### Returns
+        #### Returns
         `webfriend.rpc.event.Event`
 
-        ### Raises
+        #### Raises
         `webfriend.exceptions.TimeoutError`
         """
         return self.tab.wait_for(event_name, timeout=timeout)
@@ -38,7 +38,7 @@ class EventsProxy(CommandProxy):
         that just loaded to finish doing so.
 
 
-        ### Arguments
+        #### Arguments
 
         - **idle** (`int`):
 
@@ -60,10 +60,10 @@ class EventsProxy(CommandProxy):
 
             How often to check the event timings to see if the idle time has elapsed.
 
-        ### Returns
+        #### Returns
         An `int` representing the number of milliseconds we waited for.
 
-        ### Raises
+        #### Raises
         `webfriend.exceptions.TimeoutError`
         """
         if hasattr(events, 'values'):

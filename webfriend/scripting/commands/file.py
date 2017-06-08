@@ -64,7 +64,7 @@ class FileProxy(CommandProxy):
             else:
                 shutil.copyfileobj(data, open(filename, 'a'))
 
-    def temp(self, directory='.', prefix='cf', suffix=''):
+    def temp(self, directory='.', prefix='webfriend-', suffix=''):
         tmp = tempfile.mkstemp(
             suffix=suffix,
             prefix=prefix,
