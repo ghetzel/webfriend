@@ -1,63 +1,63 @@
 ## Command Reference
 - [Core](#core-command-set)
    - [click](#click)
-   - [close_tab](#close_tab)
+   - _[close_tab](#close_tab)_
    - [configure](#configure)
-   - [field](#field)
+   - _[field](#field)_
    - [focus](#focus)
    - [go](#go)
    - [log](#log)
-   - [new_tab](#new_tab)
+   - _[new_tab](#new_tab)_
    - [resize](#resize)
    - [rpc](#rpc)
-   - [scroll_to](#scroll_to)
+   - _[scroll_to](#scroll_to)_
    - [select](#select)
-   - [switch_tab](#switch_tab)
-   - [tabs](#tabs)
+   - _[switch_tab](#switch_tab)_
+   - _[tabs](#tabs)_
    - [type](#type)
    - [wait](#wait)
    - [wait_for_load](#wait_for_load)
    - [xpath](#xpath)
 - [Cookies](#cookies-command-set)
    - [cookies::all](#cookiesall)
-   - [cookies::delete](#cookiesdelete)
-   - [cookies::get](#cookiesget)
-   - [cookies::query](#cookiesquery)
+   - _[cookies::delete](#cookiesdelete)_
+   - _[cookies::get](#cookiesget)_
+   - _[cookies::query](#cookiesquery)_
    - [cookies::set](#cookiesset)
 - [Events](#events-command-set)
    - [events::wait_for](#eventswait_for)
    - [events::wait_for_idle](#eventswait_for_idle)
 - [File](#file-command-set)
-   - [file::append](#fileappend)
-   - [file::basename](#filebasename)
-   - [file::close](#fileclose)
-   - [file::dirname](#filedirname)
-   - [file::exists](#fileexists)
-   - [file::mkdir](#filemkdir)
-   - [file::open](#fileopen)
-   - [file::read](#fileread)
-   - [file::temp](#filetemp)
-   - [file::write](#filewrite)
+   - _[file::append](#fileappend)_
+   - _[file::basename](#filebasename)_
+   - _[file::close](#fileclose)_
+   - _[file::dirname](#filedirname)_
+   - _[file::exists](#fileexists)_
+   - _[file::mkdir](#filemkdir)_
+   - _[file::open](#fileopen)_
+   - _[file::read](#fileread)_
+   - _[file::temp](#filetemp)_
+   - _[file::write](#filewrite)_
 - [Page](#page-command-set)
-   - [page::dump_dom](#pagedump_dom)
-   - [page::find](#pagefind)
-   - [page::remove](#pageremove)
-   - [page::resource](#pageresource)
-   - [page::resources](#pageresources)
+   - _[page::dump_dom](#pagedump_dom)_
+   - _[page::find](#pagefind)_
+   - _[page::remove](#pageremove)_
+   - _[page::resource](#pageresource)_
+   - _[page::resources](#pageresources)_
    - [page::screenshot](#pagescreenshot)
-   - [page::source](#pagesource)
-   - [page::start_capture](#pagestart_capture)
-   - [page::stop_capture](#pagestop_capture)
-   - [page::wait_for_capture](#pagewait_for_capture)
+   - _[page::source](#pagesource)_
+   - _[page::start_capture](#pagestart_capture)_
+   - _[page::stop_capture](#pagestop_capture)_
+   - _[page::wait_for_capture](#pagewait_for_capture)_
 - [Vars](#vars-command-set)
-   - [vars::clear](#varsclear)
-   - [vars::ensure](#varsensure)
-   - [vars::get](#varsget)
-   - [vars::interpolate](#varsinterpolate)
-   - [vars::pop](#varspop)
-   - [vars::push](#varspush)
-   - [vars::scope_at_level](#varsscope_at_level)
-   - [vars::set](#varsset)
+   - _[vars::clear](#varsclear)_
+   - _[vars::ensure](#varsensure)_
+   - _[vars::get](#varsget)_
+   - _[vars::interpolate](#varsinterpolate)_
+   - _[vars::pop](#varspop)_
+   - _[vars::push](#varspush)_
+   - _[vars::scope_at_level](#varsscope_at_level)_
+   - _[vars::set](#varsset)_
 
 ## `core` Command Set
 

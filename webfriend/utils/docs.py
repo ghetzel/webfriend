@@ -44,15 +44,17 @@ def document_commands():
             if method[0] in dir(base):
                 continue
 
+            method_doc = inspect.getdoc(method[1])
+
             commands_body.append("### `{}`".format(proxy.qualify(method[0])))
-            subtoc[proxy.as_qualifier()].add(proxy.qualify(method[0]))
+            subtoc[proxy.as_qualifier()].add(
+                (proxy.qualify(method[0]), (method_doc is not None))
+            )
 
             commands_body.append("\n```\n{}{}\n```".format(
                 proxy.qualify(''),
                 get_signature(method)
             ))
-
-            method_doc = inspect.getdoc(method[1])
 
             if method_doc:
                 commands_body.append('')
@@ -68,8 +70,13 @@ def document_commands():
         print("- [{}](#{}-command-set)".format(title, qualifier))
 
         if qualifier in subtoc:
-            for method in sorted(list(subtoc[qualifier])):
-                print("   - [{}](#{})".format(method, method.replace('::', '')))
+            for method, has_docs in sorted(list(subtoc[qualifier])):
+                wrap_l = wrap_r = ''
+
+                if not has_docs:
+                    wrap_l = wrap_r = '_'
+
+                print("   - {}[{}](#{}){}".format(wrap_l, method, method.replace('::', ''), wrap_r))
 
     print('')
 
