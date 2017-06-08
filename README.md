@@ -24,12 +24,12 @@ make
 
 ## Documentation
 
-* [Getting Started](tree/master/docs/getting-started.md)
+* [Getting Started](docs/getting-started.md)
 
 * Friendscript (Web Automation Scripting Language)
 
-    - [Beginner's Guide](tree/master/docs/intro.md)
+    - [Beginner's Guide](docs/intro.md)
 
-    - [Language Overview](tree/master/docs/language.md)
+    - [Language Overview](docs/language.md)
 
-    - [Command Reference](tree/master/docs/commands.md)
+    - [Command Reference](docs/commands.md)
