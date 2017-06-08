@@ -117,6 +117,12 @@ class CoreProxy(CommandProxy):
 
             The amount of time, in milliseconds, to wait for the the to load.
 
+        - **clear_requests** (`bool`, optional):
+
+            Whether the resources stack that is queried in [page::resources](#pageresources) and
+            [page::resource](#pageresource) is cleared before navigating.  Set this to _false_ to
+            preserve the ability to retrieve data that was loaded on previous pages.
+
         #### Returns
         The URL that was loaded (`str`)
         """
@@ -149,6 +155,7 @@ class CoreProxy(CommandProxy):
         #### Arguments
 
         - **milliseconds** (`int`):
+
             The number of milliseconds to sleep for; can be fractional.
 
         #### Returns
@@ -214,7 +221,7 @@ class CoreProxy(CommandProxy):
             The angle of the screen to emulate (in degrees; 0-360).
 
         #### Returns
-        `dict`
+        A `dict` containing the resulting *width* and *height* as keys.
         """
 
         if hasattr(mobile, 'as_dict'):
@@ -254,7 +261,16 @@ class CoreProxy(CommandProxy):
         """
         Store a value in the current scope.  Strings will be automatically converted into the
         appropriate data types (float, int, bool) if possible.
-        ### Returns
+
+        #### Arguments
+
+        If a single argument is given, automatic type detection will be applied to it and the
+        resulting value will be returned.
+
+        If options are provided, they will be interpreted as an object, each of whose values will
+        have automatic type detection applied.  The resulting object will be returned.
+
+        #### Returns
         The given value with automatic type detection applied.
         """
         if len(args) == 1:
@@ -330,7 +346,7 @@ class CoreProxy(CommandProxy):
         Zero of more arguments to pass in the 'params' section of the RPC call.
 
         #### Returns
-        A `dict` representation of the `webfriend.rpc.reply.Reply` class.
+        A `dict` representation of the `webfriend.rpc.Reply` class.
         """
         return self.tab.rpc(method, **kwargs).as_dict()
 
@@ -346,7 +362,7 @@ class CoreProxy(CommandProxy):
             The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
         #### Returns
-        `webfriend.rpc.event.Event`
+        `webfriend.rpc.Event`
 
         #### Raises
         `webfriend.exceptions.TimeoutError`
@@ -361,7 +377,7 @@ class CoreProxy(CommandProxy):
 
     def type(self, text, **kwargs):
         """
-        See: `webfriend.rpc.input.type_text`
+        See: `webfriend.rpc.Input.type_text`
         """
         return self.tab.input.type_text(text, **kwargs)
 
@@ -378,7 +394,7 @@ class CoreProxy(CommandProxy):
             XPath query (e.g.: "xpath://body/p").
 
         #### Returns
-        The matching `webfriend.rpc.dom.DOMElement` that was given focus.
+        The matching `webfriend.rpc.DOMElement` that was given focus.
 
         #### Raises
         - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
@@ -421,15 +437,16 @@ class CoreProxy(CommandProxy):
 
         - **kwargs**:
 
-            Only applies to **x**/**y** click events, see: `webfriend.rpc.input.click_at`.
+            Only applies to **x**/**y** click events, see: `webfriend.rpc.Input.click_at`.
 
         #### Returns
         A `list` of elements that were clicked on.
 
         #### Raises
         For **selector**-based events:
-            - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
-            - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+
+        - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
+        - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
         """
         if selector:
             elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
@@ -451,6 +468,27 @@ class CoreProxy(CommandProxy):
             ]
 
     def field(self, selector, value, autoclear=True):
+        """
+        Locate and enter data into a form input field.
+
+        #### Arguments
+
+        - **selector** (`str`):
+
+            The page element to enter data into, given as a CSS-style selector, an ID
+            (e.g. "#myid"), or an XPath query (e.g.: "xpath://body/p").
+
+        - **value** (`str`):
+
+            The text value to type into the located field.
+
+        - **autoclear** (`bool`, optional):
+
+            Whether to clear the existing contents of the field before entering new data.
+
+        #### Returns
+        The text that was entered, as a string.
+        """
         if not isinstance(value, basestring):
             raise ValueError("'value' must be specified")
 
@@ -462,9 +500,27 @@ class CoreProxy(CommandProxy):
             field['value'] = ''
 
         field.focus()
-        return self.input(value)
+        return self.type(value)
 
     def scroll_to(self, selector=None, x=None, y=None):
+        """
+        Scroll the viewport to the given location, either that of the named element or, if
+        provided, the specfic (X,Y) coordinates relative to the top-left of the current page.
+
+        #### Arguments
+
+        - **selector** (`str`, optional):
+
+            The page element to scroll to, given as a CSS-style selector, an ID (e.g. "#myid"), or
+            an XPath query (e.g.: "xpath://body/p").
+
+        - **x**, **y** (`int`, optional):
+
+            If both **x* and **y** are provided, these are the coordinates to scroll to.
+
+        #### Returns
+        The result of the scroll operation.
+        """
         if selector:
             elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
             self.tab.dom.ensure_unique_element(selector, elements)
@@ -477,17 +533,48 @@ class CoreProxy(CommandProxy):
 
     def select(self, *args, **kwargs):
         """
-        See: `webfriend.rpc.dom.DOM.select_nodes`
+        See: `webfriend.rpc.DOM.select_nodes`
         """
         return self.tab.dom.select_nodes(*args, **kwargs)
 
     def xpath(self, *args, **kwargs):
         """
-        See: `webfriend.rpc.dom.DOM.xpath`
+        See: `webfriend.rpc.DOM.xpath`
         """
         return self.tab.dom.xpath(*args, **kwargs)
 
     def tabs(self, sync=True):
+        """
+        Return a description of all of the currently-open tabs.
+
+        #### Arguments
+
+        - **sync** (`bool`):
+
+            Whether to perform a preemptive sync with the browser before returning the tab
+            descriptions.
+
+        #### Returns
+        A `list` of `dicts` describing all browser tabs currently open.  Each `dict` will at least
+        contain the keys:
+
+        - *id* (`str`):
+
+            The tab ID that can be used with other tab management commands.
+
+        - *url* (`str`):
+
+            The URL of the tab being described.
+
+        - *webSocketDebuggerUrl* (`str`):
+
+            The URL of the inspection Websocket used to issue and receive RPC traffic.
+
+        - *target* (`bool`):
+
+            Whether the tab being described is the active tab that other commands will be issued
+            against.
+        """
         if sync:
             self.browser.sync()
 
@@ -496,6 +583,28 @@ class CoreProxy(CommandProxy):
         ]
 
     def new_tab(self, url, width=None, height=None, autoswitch=True):
+        """
+        Open a new tab and navigate to the given URL.
+
+        #### Arguments
+
+        - **url** (`str`):
+
+            The URL that the new tab will be navigated to.
+
+        - **width**, **height** (`int`, optional):
+
+            If provided, these represent the width and height (in pixels) that the new tab should
+            be created with.
+
+        - **autoswitch** (`bool`, optional):
+
+            Whether to automatically switch to the newly-created tab as the active tab for
+            subsequent commands.
+
+        #### Returns
+        A `str` representing the ID of the newly-created tab.
+        """
         tab_id = self.browser.create_tab(url, width=width, height=height)
 
         if autoswitch:
@@ -504,10 +613,25 @@ class CoreProxy(CommandProxy):
         return tab_id
 
     def switch_tab(self, tab_id):
+        """
+        See: `webfriend.browser.Chrome.switch_to_tab`
+        """
         self.browser.switch_to_tab(tab_id)
         return self.tabs(sync=False)
 
     def close_tab(self, tab_id=None):
+        """
+        Close the tab identified by the given ID.
+
+        #### Arguments
+
+        - **tab_id** (`str`):
+
+            The ID of the tab to close.
+
+        #### Returns
+        A `bool` value representing whether the tab was closed successfully or not.
+        """
         if not tab_id:
             tab_id = self.browser.default_tab
 

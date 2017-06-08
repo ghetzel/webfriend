@@ -19,7 +19,7 @@ class EventsProxy(CommandProxy):
             The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
         #### Returns
-        `webfriend.rpc.event.Event`
+        `webfriend.rpc.Event`
 
         #### Raises
         `webfriend.exceptions.TimeoutError`

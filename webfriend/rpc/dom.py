@@ -672,6 +672,22 @@ class DOM(Base):
         return self._network_requests
 
     def get_resource(self, url=None, request_id=None):
+        """
+        Return a `dict` describing a specific network resource, or false if none was found.
+
+        #### Arguments
+
+        - **url** (`str`, optional):
+
+            If specified, this is the URL of the requested resource to retrieve.
+
+        - **request_id** (`str`, optional):
+
+            If specified, this is the specific resource to retrieve by Request ID.
+
+        #### Returns
+        A `dict` representing the resource, or _false_ if a match was not found.
+        """
         if not request_id and not url:
             raise ValueError("Must specify either url or request_id")
 

@@ -55,7 +55,7 @@ class Input(Base):
         is_system=False
     ):
         """
-        See https://chromedevtools.github.io/devtools-protocol/tot/Input/#method-dispatchKeyEvent
+        See: https://chromedevtools.github.io/devtools-protocol/tot/Input/#method-dispatchKeyEvent
         """
         params = {
             'type':      event_type,
@@ -98,6 +98,49 @@ class Input(Base):
         delay=50,
         delay_jitter=0
     ):
+        """
+        Input the given textual data as keyboard input into the browser in its current state.
+
+        #### Arguments
+
+        - **text** (`str`, optional):
+
+            The text string to input, one character or symbol at a time.
+
+        - **file** (`str`, optional):
+
+            If specified, read the text to input from the named file.
+
+        - **alt**, **control**, **meta**, **shift** (`bool`):
+
+            Declares that the Alt, Control, Meta/Command, and/or Shift keys (respectively) are
+            depressed at the time of the click action.
+
+        - **is_keypad** (`bool`, optional):
+
+            Whether the text being input is issued via the numeric keypad or not.
+
+        - **key_down_time** (`int`, optional):
+
+            How long, in milliseconds, that each individual keystroke will remain down for.
+
+        - **key_down_jitter** (`int`, optional):
+
+            An amount of time, in milliseconds, to randomly vary the **key_down_time** duration
+            from within each keystroke.
+
+        - **delay** (`int`, optional):
+
+            How long, in milliseconds, to wait between issuing individual keystrokes.
+
+        - **delay_jitter** (`int`, optional):
+
+            An amount of time, in milliseconds, to randomly vary the **delay** duration
+            from between keystrokes.
+
+        #### Returns
+        The text that was submitted.
+        """
         if file:
             text = open(text, 'r').read()
         elif text is None:
@@ -198,13 +241,9 @@ class Input(Base):
 
         #### Arguments
 
-        - **x** (`int`):
+        - **x**, **y** (`int`):
 
-            The X-coordinate describing the click location.
-
-        - **y** (`int`):
-
-            The Y-coordinate describing the click location.
+            The X- and Y-coordinates describing the click location.
 
         **button** (`str`):
 

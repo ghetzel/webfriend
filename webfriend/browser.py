@@ -197,7 +197,6 @@ class Chrome(object):
                     continue
 
                 if tab['type'] == 'page':
-                    print('Handling tab {}'.format(frame_id))
                     logging.info('Register tab {}'.format(frame_id))
                     self.tabs[frame_id] = Tab(self, 'about:blank', tab, frame_id=frame_id)
 

@@ -1,30 +1,30 @@
 ## Command Reference
 - [Core](#core-command-set)
    - **[click](#click)**
-   - [close_tab](#close_tab)
+   - **[close_tab](#close_tab)**
    - **[configure](#configure)**
-   - [field](#field)
+   - **[field](#field)**
    - **[focus](#focus)**
    - **[go](#go)**
    - **[log](#log)**
-   - [new_tab](#new_tab)
+   - **[new_tab](#new_tab)**
    - **[put](#put)**
    - **[resize](#resize)**
    - **[rpc](#rpc)**
-   - [scroll_to](#scroll_to)
+   - **[scroll_to](#scroll_to)**
    - **[select](#select)**
-   - [switch_tab](#switch_tab)
-   - [tabs](#tabs)
+   - **[switch_tab](#switch_tab)**
+   - **[tabs](#tabs)**
    - **[type](#type)**
    - **[wait](#wait)**
    - **[wait_for_load](#wait_for_load)**
    - **[xpath](#xpath)**
 - [Cookies](#cookies-command-set)
    - **[cookies::all](#cookiesall)**
-   - [cookies::delete](#cookiesdelete)
-   - [cookies::get](#cookiesget)
-   - [cookies::query](#cookiesquery)
-   - **[cookies::set](#cookiesset)**
+   - **[cookies::delete](#cookiesdelete)**
+   - **[cookies::get](#cookiesget)**
+   - **[cookies::query](#cookiesquery)**
+   - [cookies::set](#cookiesset)
 - [Events](#events-command-set)
    - **[events::wait_for](#eventswait_for)**
    - **[events::wait_for_idle](#eventswait_for_idle)**
@@ -40,13 +40,13 @@
    - [file::temp](#filetemp)
    - [file::write](#filewrite)
 - [Page](#page-command-set)
-   - [page::dump_dom](#pagedump_dom)
+   - **[page::dump_dom](#pagedump_dom)**
    - [page::find](#pagefind)
-   - [page::remove](#pageremove)
-   - [page::resource](#pageresource)
-   - [page::resources](#pageresources)
+   - **[page::remove](#pageremove)**
+   - **[page::resource](#pageresource)**
+   - **[page::resources](#pageresources)**
    - **[page::screenshot](#pagescreenshot)**
-   - [page::source](#pagesource)
+   - **[page::source](#pagesource)**
    - [page::start_capture](#pagestart_capture)
    - [page::stop_capture](#pagestop_capture)
    - [page::wait_for_capture](#pagewait_for_capture)
@@ -64,13 +64,14 @@
 
 These represent very common tasks that one is likely to perform in a browser, such as
 navigating to URLs, filling in form fields, and performing input with the mouse and keyboard.
+
 ### `click`
 
 ```
-click _selector_ {
-    x: 'null',
-    y: 'null',
-    unique_match: 'null'
+click <SELECTOR> {
+    x:            null,
+    y:            null,
+    unique_match: true
 }
 ```
 
@@ -102,31 +103,47 @@ directly.
 
 - **kwargs**:
 
-    Only applies to **x**/**y** click events, see: `webfriend.rpc.input.click_at`.
+    Only applies to **x**/**y** click events, see: `webfriend.rpc.Input.click_at`.
 
 #### Returns
 A `list` of elements that were clicked on.
 
 #### Raises
 For **selector**-based events:
-    - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
-    - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+
+- `webfriend.exceptions.EmptyResult` if zero elements were matched, or
+- `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+
+---
 
 ### `close_tab`
 
 ```
-close_tab _tab_id_
+close_tab <TAB_ID>
 ```
+
+Close the tab identified by the given ID.
+
+#### Arguments
+
+- **tab_id** (`str`):
+
+    The ID of the tab to close.
+
+#### Returns
+A `bool` value representing whether the tab was closed successfully or not.
+
+---
 
 ### `configure`
 
 ```
-configure _events_ {
-    demo: 'null',
-    user_agent: 'null',
-    extra_headers: 'null',
-    cache: 'null',
-    plugins: 'null'
+configure <EVENTS> {
+    demo:          null,
+    user_agent:    null,
+    extra_headers: null,
+    cache:         null,
+    plugins:       null
 }
 ```
 
@@ -165,19 +182,43 @@ setup.
 
     Whether caching is enabled or not for this session.
 
+---
+
 ### `field`
 
 ```
-field _selector_ {
-    value: 'null',
-    autoclear: 'null'
+field <SELECTOR> {
+    value:     <REQUIRED>,
+    autoclear: true
 }
 ```
+
+Locate and enter data into a form input field.
+
+#### Arguments
+
+- **selector** (`str`):
+
+    The page element to enter data into, given as a CSS-style selector, an ID
+    (e.g. "#myid"), or an XPath query (e.g.: "xpath://body/p").
+
+- **value** (`str`):
+
+    The text value to type into the located field.
+
+- **autoclear** (`bool`, optional):
+
+    Whether to clear the existing contents of the field before entering new data.
+
+#### Returns
+The text that was entered, as a string.
+
+---
 
 ### `focus`
 
 ```
-focus _selector_
+focus <SELECTOR>
 ```
 
 Focuses the given HTML element described by **selector**.  One and only one element may
@@ -191,20 +232,22 @@ match the selector.
     XPath query (e.g.: "xpath://body/p").
 
 #### Returns
-The matching `webfriend.rpc.dom.DOMElement` that was given focus.
+The matching `webfriend.rpc.DOMElement` that was given focus.
 
 #### Raises
 - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
 - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
 
+---
+
 ### `go`
 
 ```
-go _uri_ {
-    referrer: 'null',
-    wait_for_load: 'null',
-    timeout: 'null',
-    clear_requests: 'null'
+go <URI> {
+    referrer:       'random',
+    wait_for_load:  true,
+    timeout:        30000,
+    clear_requests: true
 }
 ```
 
@@ -230,15 +273,23 @@ Nagivate to a URL.
 
     The amount of time, in milliseconds, to wait for the the to load.
 
+- **clear_requests** (`bool`, optional):
+
+    Whether the resources stack that is queried in [page::resources](#pageresources) and
+    [page::resource](#pageresource) is cleared before navigating.  Set this to _false_ to
+    preserve the ability to retrieve data that was loaded on previous pages.
+
 #### Returns
 The URL that was loaded (`str`)
+
+---
 
 ### `log`
 
 ```
-log _line_ {
-    level: 'null',
-    indent: 'null'
+log <LINE> {
+    level:  'info',
+    indent: 4
 }
 ```
 
@@ -268,15 +319,40 @@ The line as printed.
 #### Raises
 `AttributeError` if the specified log level is not known.
 
+---
+
 ### `new_tab`
 
 ```
-new_tab _url_ {
-    width: 'null',
-    height: 'null',
-    autoswitch: 'null'
+new_tab <URL> {
+    width:      null,
+    height:     null,
+    autoswitch: true
 }
 ```
+
+Open a new tab and navigate to the given URL.
+
+#### Arguments
+
+- **url** (`str`):
+
+    The URL that the new tab will be navigated to.
+
+- **width**, **height** (`int`, optional):
+
+    If provided, these represent the width and height (in pixels) that the new tab should
+    be created with.
+
+- **autoswitch** (`bool`, optional):
+
+    Whether to automatically switch to the newly-created tab as the active tab for
+    subsequent commands.
+
+#### Returns
+A `str` representing the ID of the newly-created tab.
+
+---
 
 ### `put`
 
@@ -286,19 +362,30 @@ put
 
 Store a value in the current scope.  Strings will be automatically converted into the
 appropriate data types (float, int, bool) if possible.
-### Returns
+
+#### Arguments
+
+If a single argument is given, automatic type detection will be applied to it and the
+resulting value will be returned.
+
+If options are provided, they will be interpreted as an object, each of whose values will
+have automatic type detection applied.  The resulting object will be returned.
+
+#### Returns
 The given value with automatic type detection applied.
+
+---
 
 ### `resize`
 
 ```
-resize _width_ {
-    height: 'null',
-    scale: 'null',
-    mobile: 'null',
-    fit_window: 'null',
-    orientation: 'null',
-    angle: 'null'
+resize <WIDTH> {
+    height:      0,
+    scale:       0,
+    mobile:      false,
+    fit_window:  false,
+    orientation: null,
+    angle:       0
 }
 ```
 
@@ -347,12 +434,14 @@ screencasts.
     The angle of the screen to emulate (in degrees; 0-360).
 
 #### Returns
-`dict`
+A `dict` containing the resulting *width* and *height* as keys.
+
+---
 
 ### `rpc`
 
 ```
-rpc _method_
+rpc <METHOD>
 ```
 
 Directly call an RPC method with the given parameters.
@@ -368,16 +457,37 @@ The name of the backend RPC method to call.
 Zero of more arguments to pass in the 'params' section of the RPC call.
 
 #### Returns
-A `dict` representation of the `webfriend.rpc.reply.Reply` class.
+A `dict` representation of the `webfriend.rpc.Reply` class.
+
+---
 
 ### `scroll_to`
 
 ```
-scroll_to _selector_ {
-    x: 'null',
-    y: 'null'
+scroll_to <SELECTOR> {
+    x:        null,
+    y:        null
 }
 ```
+
+Scroll the viewport to the given location, either that of the named element or, if
+provided, the specfic (X,Y) coordinates relative to the top-left of the current page.
+
+#### Arguments
+
+- **selector** (`str`, optional):
+
+    The page element to scroll to, given as a CSS-style selector, an ID (e.g. "#myid"), or
+    an XPath query (e.g.: "xpath://body/p").
+
+- **x**, **y** (`int`, optional):
+
+    If both **x* and **y** are provided, these are the coordinates to scroll to.
+
+#### Returns
+The result of the scroll operation.
+
+---
 
 ### `select`
 
@@ -385,32 +495,163 @@ scroll_to _selector_ {
 select
 ```
 
-See: `webfriend.rpc.dom.DOM.select_nodes`
+Polls the DOM for an element that matches the given selector.  Either the element will be
+found and returned within the given timeout, or a TimeoutError will be raised.
+
+#### Arguments
+
+- **selector** (`str`):
+
+    The CSS-style selector that specifies the DOM element to look for.
+
+- **timeout** (`int`):
+
+    The number of milliseconds to wait for the element to be returned.
+
+- **interval** (`int`):
+
+    The polling interval, in milliseconds, used for rechecking for the element.
+
+#### Returns
+`webfriend.rpc.dom.DOMElement`
+
+#### Raises
+`webfriend.exceptions.TimeoutError`
+
+---
 
 ### `switch_tab`
 
 ```
-switch_tab _tab_id_
+switch_tab <TAB_ID>
 ```
+
+Switches the active tab to a given tab.
+
+#### Arguments
+
+- **id** (`str`):
+    The ID of the tab to switch to, or one of a selection of special values:
+
+    #### Special Values
+
+    - `next`: Switch to the next tab in the tab sequence (in the UI, this is the tab to
+       the immediate _right_ of the current tab.)  If the current tab is the last in the
+       sequence, wrap-around to the first tab.
+
+    - `previous`: Switch to the previous tab in the tab sequence (in the UI, this is the
+       tab to the immediate _left_ of the current tab.)  If the current tab is the first in
+       the sequence, wrap-around to the last tab.
+
+    - `first`: Switch to the first tab.
+
+    - `last`: Switch to the last tab.
+
+    - `random`: Switch to a randomly selected tab.
+
+    - **Negative integer**: Switch to the tab _n_ tabs to the left of the current tab (e.g.
+      if you specify `-2`, then switch to the tab two to the left of the current one.)
+
+    - **Positive integer**: Switch to the _nth_ tab.  Tabs are counted from left-to-right,
+      starting from zero (`0`).
+
+#### Returns
+An instance of `webfriend.Tab` representing the tab that was just switched to.
+
+---
 
 ### `tabs`
 
 ```
-tabs _sync_
+tabs <SYNC>
 ```
+
+Return a description of all of the currently-open tabs.
+
+#### Arguments
+
+- **sync** (`bool`):
+
+    Whether to perform a preemptive sync with the browser before returning the tab
+    descriptions.
+
+#### Returns
+A `list` of `dicts` describing all browser tabs currently open.  Each `dict` will at least
+contain the keys:
+
+- *id* (`str`):
+
+    The tab ID that can be used with other tab management commands.
+
+- *url* (`str`):
+
+    The URL of the tab being described.
+
+- *webSocketDebuggerUrl* (`str`):
+
+    The URL of the inspection Websocket used to issue and receive RPC traffic.
+
+- *target* (`bool`):
+
+    Whether the tab being described is the active tab that other commands will be issued
+    against.
+
+---
 
 ### `type`
 
 ```
-type _text_
+type <TEXT>
 ```
 
-See: `webfriend.rpc.input.type_text`
+Input the given textual data as keyboard input into the browser in its current state.
+
+#### Arguments
+
+- **text** (`str`, optional):
+
+    The text string to input, one character or symbol at a time.
+
+- **file** (`str`, optional):
+
+    If specified, read the text to input from the named file.
+
+- **alt**, **control**, **meta**, **shift** (`bool`):
+
+    Declares that the Alt, Control, Meta/Command, and/or Shift keys (respectively) are
+    depressed at the time of the click action.
+
+- **is_keypad** (`bool`, optional):
+
+    Whether the text being input is issued via the numeric keypad or not.
+
+- **key_down_time** (`int`, optional):
+
+    How long, in milliseconds, that each individual keystroke will remain down for.
+
+- **key_down_jitter** (`int`, optional):
+
+    An amount of time, in milliseconds, to randomly vary the **key_down_time** duration
+    from within each keystroke.
+
+- **delay** (`int`, optional):
+
+    How long, in milliseconds, to wait between issuing individual keystrokes.
+
+- **delay_jitter** (`int`, optional):
+
+    An amount of time, in milliseconds, to randomly vary the **delay** duration
+    from between keystrokes.
+
+#### Returns
+The text that was submitted.
+
+---
 
 ### `wait`
 
 ```
-wait _milliseconds_
+wait <MILLISECONDS>
 ```
 
 Pauses execution of the current script for the given number of milliseconds.
@@ -418,16 +659,19 @@ Pauses execution of the current script for the given number of milliseconds.
 #### Arguments
 
 - **milliseconds** (`int`):
+
     The number of milliseconds to sleep for; can be fractional.
 
 #### Returns
 The number of milliseconds.
 
+---
+
 ### `wait_for_load`
 
 ```
-wait_for_load _timeout_ {
-    idle_time: 'null'
+wait_for_load <TIMEOUT> {
+    idle_time: 500
 }
 ```
 
@@ -441,10 +685,12 @@ comes first).
     The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
 #### Returns
-`webfriend.rpc.event.Event`
+`webfriend.rpc.Event`
 
 #### Raises
 `webfriend.exceptions.TimeoutError`
+
+---
 
 ### `xpath`
 
@@ -452,7 +698,9 @@ comes first).
 xpath
 ```
 
-See: `webfriend.rpc.dom.DOM.xpath`
+TBD
+
+---
 
 
 ## `cookies` Command Set
@@ -460,7 +708,7 @@ See: `webfriend.rpc.dom.DOM.xpath`
 ### `cookies::all`
 
 ```
-cookies::all _urls_
+cookies::all <URLS>
 ```
 
 Return a list of all cookies, optionally restricted to just a specific URL.
@@ -473,35 +721,119 @@ Return a list of all cookies, optionally restricted to just a specific URL.
 #### Returns
 A `list` of `dict` objects containing definitions for each cookie.
 
+---
+
 ### `cookies::delete`
 
 ```
-cookies::delete _name_ {
-    domain: 'null'
+cookies::delete <NAME> {
+    domain: null
 }
 ```
+
+Delete the cookie specified by the given **name** and (optionally) **domain**.
+
+#### Arguments
+
+- **name** (`str`, optional):
+
+    The name of the cookie to delete.
+
+- **domain** (`str`, optional):
+
+    The domain value of the cookie being retrieved to ensure an unambiguous result.
+
+---
 
 ### `cookies::get`
 
 ```
-cookies::get _name_ {
-    domain: 'null'
+cookies::get <NAME> {
+    domain: null
 }
 ```
+
+Retrieve a specific cookie by name and (optionally) domain.  The domain should be provided
+to ensure the cookie returns at most one result.
+
+#### Arguments
+
+- **domain** (`str`, optional):
+
+    The domain value of the cookie being retrieved to ensure an unambiguous result.
+
+#### Returns
+A `dict` describing the cookie returned, or `None`.
+
+#### Raises
+A `webfriend.exceptions.TooManyResults` exception if more than one cookie matches the given
+values.
+
+---
 
 ### `cookies::query`
 
 ```
-cookies::query _name_
+cookies::query <NAME>
 ```
+
+Query all known cookies and return a list of cookies matching those with specific values.
+
+#### Arguments
+
+The first argument (optional) is the name of the cookie as defined in its description. All
+options fields are taken as additional filters used to further restrict which cookies are
+returned.
+
+- **value** (`str`, optional):
+
+    The value of the cookie.
+
+- **domain** (`str`, optional):
+
+    The domain for which the cookie is valid for.
+
+- **path** (`str`, optional):
+
+    The path valid of the cookie.
+
+- **expires** (`int`, optional):
+
+    Cookie expiration date as the number of seconds since the UNIX epoch.
+
+- **size** (`int`, optional):
+
+    The size of the cookie, in bytes.
+
+- **httpOnly** (`bool`, optional):
+
+    Whether the cookie is marked as "HTTP only" or not.
+
+- **secure** (`bool`, optional):
+
+    Whether the cookie is marked as secure or not.
+
+- **session** (`bool`, optional):
+
+    Whether the cookie is marked as a session cookie or not.
+
+- **sameSite** (`bool`, optional):
+
+    Whether the cookie is marked as a sameSite cookie or not.
+
+#### Returns
+A `list` of `dicts` describing the cookies that matched the given query, whose fields
+will be the same as the ones described above.
+
+---
 
 ### `cookies::set`
 
 ```
-cookies::set _name_
+cookies::set <NAME>
 ```
 
-See: `webfriend.rpc.network.set_cookie`
+---
 
 
 ## `events` Command Set
@@ -509,8 +841,8 @@ See: `webfriend.rpc.network.set_cookie`
 ### `events::wait_for`
 
 ```
-events::wait_for _event_name_ {
-    timeout: 'null'
+events::wait_for <EVENT_NAME> {
+    timeout:    30000
 }
 ```
 
@@ -528,18 +860,20 @@ first).
     The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
 #### Returns
-`webfriend.rpc.event.Event`
+`webfriend.rpc.Event`
 
 #### Raises
 `webfriend.exceptions.TimeoutError`
 
+---
+
 ### `events::wait_for_idle`
 
 ```
-events::wait_for_idle _idle_ {
-    events: 'null',
-    timeout: 'null',
-    poll_interval: 'null'
+events::wait_for_idle <IDLE> {
+    events:        [],
+    timeout:       30000,
+    poll_interval: 250
 }
 ```
 
@@ -581,90 +915,112 @@ An `int` representing the number of milliseconds we waited for.
 #### Raises
 `webfriend.exceptions.TimeoutError`
 
+---
+
 
 ## `file` Command Set
 
 ### `file::append`
 
 ```
-file::append _filename_ {
-    data: 'null'
+file::append <FILENAME> {
+    data:     <REQUIRED>
 }
 ```
+
+---
 
 ### `file::basename`
 
 ```
-file::basename _filename_ {
-    trim_query_string: 'null'
+file::basename <FILENAME> {
+    trim_query_string: true
 }
 ```
+
+---
 
 ### `file::close`
 
 ```
-file::close _handle_
+file::close <HANDLE>
 ```
+
+---
 
 ### `file::dirname`
 
 ```
-file::dirname _filename_ {
-    trim_query_string: 'null'
+file::dirname <FILENAME> {
+    trim_query_string: true
 }
 ```
+
+---
 
 ### `file::exists`
 
 ```
-file::exists _filename_ {
-    trim_query_string: 'null'
+file::exists <FILENAME> {
+    trim_query_string: true
 }
 ```
+
+---
 
 ### `file::mkdir`
 
 ```
-file::mkdir _path_ {
-    recursive: 'null',
-    mode: 'null'
+file::mkdir <PATH> {
+    recursive: true,
+    mode:      493
 }
 ```
+
+---
 
 ### `file::open`
 
 ```
-file::open _filename_ {
-    read: 'null',
-    write: 'null',
-    truncate: 'null',
-    append: 'null',
-    binary: 'null'
+file::open <FILENAME> {
+    read:     true,
+    write:    true,
+    truncate: false,
+    append:   false,
+    binary:   false
 }
 ```
+
+---
 
 ### `file::read`
 
 ```
-file::read _filename_
+file::read <FILENAME>
 ```
+
+---
 
 ### `file::temp`
 
 ```
-file::temp _directory_ {
-    prefix: 'null',
-    suffix: 'null'
+file::temp <DIRECTORY> {
+    prefix:    'webfriend-',
+    suffix:    ''
 }
 ```
+
+---
 
 ### `file::write`
 
 ```
-file::write _filename_ {
-    data: 'null'
+file::write <FILENAME> {
+    data:     <REQUIRED>
 }
 ```
+
+---
 
 
 ## `page` Command Set
@@ -675,23 +1031,62 @@ file::write _filename_ {
 page::dump_dom
 ```
 
+Print the portion of the DOM the local page cache is currently aware of to log output.
+This is primarily useful for debugging WebFriend.
+
+---
+
 ### `page::find`
 
 ```
-page::find _text_
+page::find <TEXT>
 ```
+
+---
 
 ### `page::remove`
 
 ```
-page::remove _selector_
+page::remove <SELECTOR>
 ```
+
+Removes ALL elements that match the given selector from the page.
+
+#### Arguments
+
+- **selector** (`str`):
+
+    The page elements to remove, given as a CSS-style selector, an ID
+    (e.g. "#myid"), or an XPath query (e.g.: "xpath://body/p").
+
+#### Returns
+A `list` of `webfriend.rpc.DOMElement` instances that were matched and removed from the
+page.
+
+---
 
 ### `page::resource`
 
 ```
-page::resource _url_
+page::resource <URL>
 ```
+
+Return a `dict` describing a specific network resource, or false if none was found.
+
+#### Arguments
+
+- **url** (`str`, optional):
+
+    If specified, this is the URL of the requested resource to retrieve.
+
+- **request_id** (`str`, optional):
+
+    If specified, this is the specific resource to retrieve by Request ID.
+
+#### Returns
+A `dict` representing the resource, or _false_ if a match was not found.
+
+---
 
 ### `page::resources`
 
@@ -699,19 +1094,28 @@ page::resource _url_
 page::resources
 ```
 
+Return a list of objects describing every network request that has occurred since the last
+invocation of `[go](#go)`, since the resource cache was last cleared with
+`[page::clear_resources](#pageclear_resources)`, or since the current tab was loaded.
+
+#### Returns
+A `list` of `dict` containing details about the network requests that were performed.
+
+---
+
 ### `page::screenshot`
 
 ```
-page::screenshot _destination_ {
-    width: 'null',
-    height: 'null',
-    format: 'null',
-    jpeg_quality: 'null',
-    selector: 'null',
-    settle: 'null',
-    after_events: 'null',
-    settle_timeout: 'null',
-    autoclose: 'null'
+page::screenshot <DESTINATION> {
+    width:          0,
+    height:         0,
+    format:         'png',
+    jpeg_quality:   null,
+    selector:       'html',
+    settle:         250,
+    after_events:   null,
+    settle_timeout: null,
+    autoclose:      true
 }
 ```
 
@@ -777,7 +1181,7 @@ as a file-like object.
 #### Returns
 `dict`, with keys:
 
-- _element_ (`webfriend.rpc.dom.DOMElement`):
+- _element_ (`webfriend.rpc.DOMElement`):
     The element that was used as a measurement reference.
 
 - _width_ (`int`):
@@ -792,23 +1196,45 @@ as a file-like object.
 - _path_ (`str`, optional):
     The filesystem path of the file data was written to, if specified.
 
+---
+
 ### `page::source`
 
 ```
-page::source _selector_
+page::source <SELECTOR>
 ```
+
+Retrieves the `outerHtml` of the matching page element.
+
+#### Arguments
+
+- **selector** (`str`):
+
+    The page element to retrieve source for, given as a CSS-style selector, an ID
+    (e.g. "#myid"), or an XPath query (e.g.: "xpath://body/p").
+
+#### Returns
+A `unicode` string representing the HTML contents of the matched element.
+
+#### Raises
+- `webfriend.exceptions.EmptyResult` if zero elements were matched, or
+- `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+
+---
 
 ### `page::start_capture`
 
 ```
-page::start_capture _destination_ {
-    duration: 'null',
-    format: 'null',
-    jpeg_quality: 'null',
-    every_nth: 'null',
-    filename_format: 'null'
+page::start_capture <DESTINATION> {
+    duration:        null,
+    format:          'png',
+    jpeg_quality:    85,
+    every_nth:       null,
+    filename_format: null
 }
 ```
+
+---
 
 ### `page::stop_capture`
 
@@ -816,11 +1242,15 @@ page::start_capture _destination_ {
 page::stop_capture
 ```
 
+---
+
 ### `page::wait_for_capture`
 
 ```
 page::wait_for_capture
 ```
+
+---
 
 
 ## `vars` Command Set
@@ -828,67 +1258,83 @@ page::wait_for_capture
 ### `vars::clear`
 
 ```
-vars::clear _key_ {
-    parent: 'null'
+vars::clear <KEY> {
+    parent: 0
 }
 ```
+
+---
 
 ### `vars::ensure`
 
 ```
-vars::ensure _key_ {
-    parent: 'null',
-    message: 'null'
+vars::ensure <KEY> {
+    parent:  0,
+    message: null
 }
 ```
+
+---
 
 ### `vars::get`
 
 ```
-vars::get _key_ {
-    fallback: 'null',
-    parent: 'null'
+vars::get <KEY> {
+    fallback: null,
+    parent:   0
 }
 ```
+
+---
 
 ### `vars::interpolate`
 
 ```
-vars::interpolate _value_
+vars::interpolate <VALUE>
 ```
+
+---
 
 ### `vars::pop`
 
 ```
-vars::pop _key_ {
-    parent: 'null'
+vars::pop <KEY> {
+    parent: 0
 }
 ```
+
+---
 
 ### `vars::push`
 
 ```
-vars::push _key_ {
-    value: 'null',
-    interpolate: 'null',
-    parent: 'null'
+vars::push <KEY> {
+    value:       <REQUIRED>,
+    interpolate: true,
+    parent:      0
 }
 ```
+
+---
 
 ### `vars::scope_at_level`
 
 ```
-vars::scope_at_level _level_
+vars::scope_at_level <LEVEL>
 ```
+
+---
 
 ### `vars::set`
 
 ```
-vars::set _key_ {
-    value: 'null',
-    interpolate: 'null',
-    parent: 'null'
+vars::set <KEY> {
+    value:       <REQUIRED>,
+    interpolate: true,
+    parent:      0
 }
 ```
+
+---
 
 

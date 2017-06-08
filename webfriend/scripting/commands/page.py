@@ -83,7 +83,7 @@ class PageProxy(CommandProxy):
         #### Returns
         `dict`, with keys:
 
-        - _element_ (`webfriend.rpc.dom.DOMElement`):
+        - _element_ (`webfriend.rpc.DOMElement`):
             The element that was used as a measurement reference.
 
         - _width_ (`int`):
@@ -190,6 +190,23 @@ class PageProxy(CommandProxy):
         raise exceptions.NotImplemented("find()")
 
     def source(self, selector=None):
+        """
+        Retrieves the `outerHtml` of the matching page element.
+
+        #### Arguments
+
+        - **selector** (`str`):
+
+            The page element to retrieve source for, given as a CSS-style selector, an ID
+            (e.g. "#myid"), or an XPath query (e.g.: "xpath://body/p").
+
+        #### Returns
+        A `unicode` string representing the HTML contents of the matched element.
+
+        #### Raises
+        - `webfriend.exceptions.EmptyResult` if zero elements were matched, or
+        - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
+        """
         if selector:
             elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
             self.tab.dom.ensure_unique_element(selector, elements)
@@ -203,6 +220,20 @@ class PageProxy(CommandProxy):
     #     self.tab.overlay.highlight_node(node_id=elements['nodes'][0].id, **kwargs)
 
     def remove(self, selector):
+        """
+        Removes ALL elements that match the given selector from the page.
+
+        #### Arguments
+
+        - **selector** (`str`):
+
+            The page elements to remove, given as a CSS-style selector, an ID
+            (e.g. "#myid"), or an XPath query (e.g.: "xpath://body/p").
+
+        #### Returns
+        A `list` of `webfriend.rpc.DOMElement` instances that were matched and removed from the
+        page.
+        """
         removed = []
 
         for element in self.tab.dom.query_all(selector):
@@ -212,12 +243,27 @@ class PageProxy(CommandProxy):
         return removed
 
     def dump_dom(self):
+        """
+        Print the portion of the DOM the local page cache is currently aware of to log output.
+        This is primarily useful for debugging WebFriend.
+        """
         self.tab.dom.print_node()
 
     def resources(self):
+        """
+        Return a list of objects describing every network request that has occurred since the last
+        invocation of `[go](#go)`, since the resource cache was last cleared with
+        `[page::clear_resources](#pageclear_resources)`, or since the current tab was loaded.
+
+        #### Returns
+        A `list` of `dict` containing details about the network requests that were performed.
+        """
         return self.tab.dom.resources.values()
 
     def resource(self, url, **kwargs):
+        """
+        See: `webfriend.rpc.DOM.get_resource`
+        """
         kwargs.update({
             'url': url,
         })

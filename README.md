@@ -22,12 +22,14 @@ python setup.py install
 make
 ```
 
-## Command Reference
+## Documentation
 
-* [Index](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/index.html)
-    - [Core Functions](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/core.m.html)
-    - [Events](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/events.m.html)
-    - [File Management](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/file.m.html)
-    - [Page & DOM](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/page.m.html)
-    - [Cookies](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/cookies.m.html)
-    - [Variables & State](https://htmlpreview.github.io/?https://raw.githubusercontent.com/ghetzel/webfriend/master/docs/commands/state.m.html)
+* [Getting Started](tree/master/docs/getting-started.md)
+
+* Friendscript (Web Automation Scripting Language)
+
+    - [Beginner's Guide](tree/master/docs/intro.md)
+
+    - [Language Overview](tree/master/docs/language.md)
+
+    - [Command Reference](tree/master/docs/commands.md)
