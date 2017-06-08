@@ -1,4 +1,4 @@
-## Command Modules
+## Command Reference
 - [Core](#core-command-set)
    - [click](#click)
    - [close_tab](#close_tab)

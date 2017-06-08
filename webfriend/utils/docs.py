@@ -62,7 +62,7 @@ def document_commands():
 
         commands_body.append('')
 
-    print('## Command Modules')
+    print('## Command Reference')
 
     for title, qualifier in toc:
         print("- [{}](#{}-command-set)".format(title, qualifier))
