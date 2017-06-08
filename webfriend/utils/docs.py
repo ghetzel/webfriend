@@ -21,8 +21,6 @@ def document_commands():
         c for c in classes if c[0] != 'CoreProxy'
     ])
 
-    print(classes)
-
     for cls in classes:
         proxy = cls[1]
         proxy_docs = inspect.getdoc(proxy)

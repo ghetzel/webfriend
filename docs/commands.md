@@ -1,4 +1,3 @@
-[('CoreProxy', <class 'webfriend.scripting.commands.core.CoreProxy'>), ('CookiesProxy', <class 'webfriend.scripting.commands.cookies.CookiesProxy'>), ('EventsProxy', <class 'webfriend.scripting.commands.events.EventsProxy'>), ('FileProxy', <class 'webfriend.scripting.commands.file.FileProxy'>), ('PageProxy', <class 'webfriend.scripting.commands.page.PageProxy'>), ('StateProxy', <class 'webfriend.scripting.commands.state.StateProxy'>)]
 ## Command Modules
 - [Core](#core-command-set)
    - [click](#click)
