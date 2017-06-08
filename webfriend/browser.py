@@ -14,7 +14,6 @@ from .utils.commands import locate_browser_process
 from ephemeral_port_reserve import reserve, LOCALHOST
 from gevent import monkey, subprocess
 from urlparse import urlparse
-from .rpc import Target
 from collections import OrderedDict
 
 monkey.patch_all()

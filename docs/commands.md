@@ -1,68 +1,69 @@
 ## Command Reference
 - [Core](#core-command-set)
-   - [click](#click)
-   - _[close_tab](#close_tab)_
-   - [configure](#configure)
-   - _[field](#field)_
-   - [focus](#focus)
-   - [go](#go)
-   - [log](#log)
-   - _[new_tab](#new_tab)_
-   - [resize](#resize)
-   - [rpc](#rpc)
-   - _[scroll_to](#scroll_to)_
-   - [select](#select)
-   - _[switch_tab](#switch_tab)_
-   - _[tabs](#tabs)_
-   - [type](#type)
-   - [wait](#wait)
-   - [wait_for_load](#wait_for_load)
-   - [xpath](#xpath)
+   - **[click](#click)**
+   - [close_tab](#close_tab)
+   - **[configure](#configure)**
+   - [field](#field)
+   - **[focus](#focus)**
+   - **[go](#go)**
+   - **[log](#log)**
+   - [new_tab](#new_tab)
+   - **[put](#put)**
+   - **[resize](#resize)**
+   - **[rpc](#rpc)**
+   - [scroll_to](#scroll_to)
+   - **[select](#select)**
+   - [switch_tab](#switch_tab)
+   - [tabs](#tabs)
+   - **[type](#type)**
+   - **[wait](#wait)**
+   - **[wait_for_load](#wait_for_load)**
+   - **[xpath](#xpath)**
 - [Cookies](#cookies-command-set)
-   - [cookies::all](#cookiesall)
-   - _[cookies::delete](#cookiesdelete)_
-   - _[cookies::get](#cookiesget)_
-   - _[cookies::query](#cookiesquery)_
-   - [cookies::set](#cookiesset)
+   - **[cookies::all](#cookiesall)**
+   - [cookies::delete](#cookiesdelete)
+   - [cookies::get](#cookiesget)
+   - [cookies::query](#cookiesquery)
+   - **[cookies::set](#cookiesset)**
 - [Events](#events-command-set)
-   - [events::wait_for](#eventswait_for)
-   - [events::wait_for_idle](#eventswait_for_idle)
+   - **[events::wait_for](#eventswait_for)**
+   - **[events::wait_for_idle](#eventswait_for_idle)**
 - [File](#file-command-set)
-   - _[file::append](#fileappend)_
-   - _[file::basename](#filebasename)_
-   - _[file::close](#fileclose)_
-   - _[file::dirname](#filedirname)_
-   - _[file::exists](#fileexists)_
-   - _[file::mkdir](#filemkdir)_
-   - _[file::open](#fileopen)_
-   - _[file::read](#fileread)_
-   - _[file::temp](#filetemp)_
-   - _[file::write](#filewrite)_
+   - [file::append](#fileappend)
+   - [file::basename](#filebasename)
+   - [file::close](#fileclose)
+   - [file::dirname](#filedirname)
+   - [file::exists](#fileexists)
+   - [file::mkdir](#filemkdir)
+   - [file::open](#fileopen)
+   - [file::read](#fileread)
+   - [file::temp](#filetemp)
+   - [file::write](#filewrite)
 - [Page](#page-command-set)
-   - _[page::dump_dom](#pagedump_dom)_
-   - _[page::find](#pagefind)_
-   - _[page::remove](#pageremove)_
-   - _[page::resource](#pageresource)_
-   - _[page::resources](#pageresources)_
-   - [page::screenshot](#pagescreenshot)
-   - _[page::source](#pagesource)_
-   - _[page::start_capture](#pagestart_capture)_
-   - _[page::stop_capture](#pagestop_capture)_
-   - _[page::wait_for_capture](#pagewait_for_capture)_
+   - [page::dump_dom](#pagedump_dom)
+   - [page::find](#pagefind)
+   - [page::remove](#pageremove)
+   - [page::resource](#pageresource)
+   - [page::resources](#pageresources)
+   - **[page::screenshot](#pagescreenshot)**
+   - [page::source](#pagesource)
+   - [page::start_capture](#pagestart_capture)
+   - [page::stop_capture](#pagestop_capture)
+   - [page::wait_for_capture](#pagewait_for_capture)
 - [Vars](#vars-command-set)
-   - _[vars::clear](#varsclear)_
-   - _[vars::ensure](#varsensure)_
-   - _[vars::get](#varsget)_
-   - _[vars::interpolate](#varsinterpolate)_
-   - _[vars::pop](#varspop)_
-   - _[vars::push](#varspush)_
-   - _[vars::scope_at_level](#varsscope_at_level)_
-   - _[vars::set](#varsset)_
+   - [vars::clear](#varsclear)
+   - [vars::ensure](#varsensure)
+   - [vars::get](#varsget)
+   - [vars::interpolate](#varsinterpolate)
+   - [vars::pop](#varspop)
+   - [vars::push](#varspush)
+   - [vars::scope_at_level](#varsscope_at_level)
+   - [vars::set](#varsset)
 
 ## `core` Command Set
 
-These represent very common tasks that one is likely to perform in a browser, such as navigating
-to URLs, filling in form fields, and performing input with the mouse and keyboard.
+These represent very common tasks that one is likely to perform in a browser, such as
+navigating to URLs, filling in form fields, and performing input with the mouse and keyboard.
 ### `click`
 
 ```
@@ -276,6 +277,17 @@ new_tab _url_ {
     autoswitch: 'null'
 }
 ```
+
+### `put`
+
+```
+put
+```
+
+Store a value in the current scope.  Strings will be automatically converted into the
+appropriate data types (float, int, bool) if possible.
+### Returns
+The given value with automatic type detection applied.
 
 ### `resize`
 

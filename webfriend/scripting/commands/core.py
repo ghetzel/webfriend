@@ -11,8 +11,8 @@ from uuid import uuid4
 
 class CoreProxy(CommandProxy):
     """
-    These represent very common tasks that one is likely to perform in a browser, such as navigating
-    to URLs, filling in form fields, and performing input with the mouse and keyboard.
+    These represent very common tasks that one is likely to perform in a browser, such as
+    navigating to URLs, filling in form fields, and performing input with the mouse and keyboard.
     """
 
     @classmethod
@@ -92,24 +92,6 @@ class CoreProxy(CommandProxy):
             self.tab.network.enable_cache()
         elif cache is False:
             self.tab.network.disable_cache()
-
-        # if isinstance(plugins, dict):
-        #     from .. import load_and_register_proxy
-
-        #     for command_plugin in plugins.get('commands', []):
-        #         if isinstance(command_plugin, basestring):
-        #             load_and_register_proxy(command_plugin)
-
-        #         elif isinstance(command_plugin, dict):
-        #             if 'module' not in command_plugin:
-        #                 raise ValueError("Command plugin must specify a 'module' attribute")
-
-                    # load_and_register_proxy(
-                    #     command_plugin['module'],
-                    #     name=command_plugin.get('name'),
-                    #     browser=self.browser,
-                    #     environment=self.environment
-                    # )
 
     def go(self, uri, referrer='random', wait_for_load=True, timeout=30000, clear_requests=True):
         """
@@ -267,6 +249,26 @@ class CoreProxy(CommandProxy):
             'width':  width,
             'height': height,
         }
+
+    def put(self, *args, **kwargs):
+        """
+        Store a value in the current scope.  Strings will be automatically converted into the
+        appropriate data types (float, int, bool) if possible.
+        ### Returns
+        The given value with automatic type detection applied.
+        """
+        if len(args) == 1:
+            return utils.autotype(args[0])
+
+        elif len(args) > 1:
+            return [utils.autotype(a) for a in args]
+
+        elif len(kwargs):
+            return dict([
+                (k, utils.autotype(v)) for k, v in kwargs.items()
+            ])
+
+        return None
 
     def log(self, line=None, level='info', indent=4, **kwargs):
         """

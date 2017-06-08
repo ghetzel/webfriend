@@ -1,6 +1,6 @@
 .PHONY: test deps docs build shell clean
 
-all: env deps build test
+all: env deps build test docs
 
 deps:
 	./env/bin/pip install -q -r 'test-requirements.txt'
@@ -19,6 +19,9 @@ test:
 	./env/bin/flake8
 	./env/bin/bandit -ll -ii --recursive .
 	./env/bin/py.test -v
+
+docs:
+	./env/bin/python webfriend/utils/docs.py > docs/commands.md
 
 clean:
 	-rm -rf env *.egg-info build dist

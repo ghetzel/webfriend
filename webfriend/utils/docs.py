@@ -71,10 +71,10 @@ def document_commands():
 
         if qualifier in subtoc:
             for method, has_docs in sorted(list(subtoc[qualifier])):
-                wrap_l = wrap_r = ''
+                wrap_l = wrap_r = '**'
 
                 if not has_docs:
-                    wrap_l = wrap_r = '_'
+                    wrap_l = wrap_r = ''
 
                 print("   - {}[{}](#{}){}".format(wrap_l, method, method.replace('::', ''), wrap_r))
 
@@ -136,6 +136,7 @@ def get_signature(method):
         return '{} _{}_'.format(method[0], arguments[0])
     else:
         return '{} _{}_ {{\n{}\n}}'.format(method[0], arguments[0], ',\n'.join(arguments[1:]))
+
 
 if __name__ == '__main__':
     document_commands()

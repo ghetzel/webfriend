@@ -1,6 +1,7 @@
+# flake8: noqa
 from __future__ import absolute_import
 from pygments.lexer import RegexLexer, bygroups
-from pygments.token import *  # noqa
+from pygments.token import *
 
 
 class FriendscriptLexer(RegexLexer):
