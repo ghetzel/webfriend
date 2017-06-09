@@ -148,6 +148,12 @@ class CoreProxy(CommandProxy):
 
         return reply
 
+    def reload(self):
+        self.tab.page.reload()
+
+    def stop(self):
+        self.tab.page.stop()
+
     def wait(self, milliseconds):
         """
         Pauses execution of the current script for the given number of milliseconds.
@@ -309,7 +315,7 @@ class CoreProxy(CommandProxy):
                 All remaining arguments will be passed along to format() when interpolating 'line'.
 
         #### Returns
-        The line as printed.
+        None
 
         #### Raises
         `AttributeError` if the specified log level is not known.
@@ -327,7 +333,7 @@ class CoreProxy(CommandProxy):
 
             # actually log the line
             getattr(logging, level)(line)
-            return line
+            return None
         else:
             raise AttributeError("Unknown log level '{}'".format(level))
 
@@ -637,5 +643,8 @@ class CoreProxy(CommandProxy):
 
         return self.browser.close_tab(tab_id)
 
-    def script(self, body):
-        print('<script>{}</script>'.format(body))
+    def javascript(self, body):
+        return self.tab.evaluate(body, data=self.scope.as_dict(), calling_context=self.environment)
+
+    def herpderp(self, expression):
+        return self.tab.dom.xpath(expression)

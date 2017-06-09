@@ -142,6 +142,9 @@ class Network(Base):
         same_site=None,
         expires=None
     ):
+        """
+        Create or update a cookie based on the given values.
+        """
         params = {
             'url':   url,
             'name':  name,

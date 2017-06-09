@@ -69,7 +69,7 @@ class Chrome(object):
         },
     }
 
-    def __init__(self, debug_url=None, ping_retries=40, ping_delay=125):
+    def __init__(self, debug_url=None, ping_retries=40, ping_delay=125, use_temp_profile=True):
         self.temp_profile_path = None
         self.args = copy.copy(self.browser_arguments)
 
@@ -85,6 +85,7 @@ class Chrome(object):
         self.default_tab = None
         self.ping_retries = ping_retries
         self.ping_delay = ping_delay
+        self.use_temp_profile = use_temp_profile
         self.started_at = time.time()
 
     def start(self):
@@ -102,8 +103,9 @@ class Chrome(object):
             return self
 
         else:
-            # otherwise, we're going to launch the process ourselves
-            self.create_temp_profile()
+            if self.use_temp_profile:
+                # otherwise, we're going to launch the process ourselves
+                self.create_temp_profile()
 
             self.args = list(
                 self.args + [
@@ -193,15 +195,16 @@ class Chrome(object):
             if frame_id is not None:
                 tabs_seen.add(frame_id)
 
-                if frame_id in self.tabs:
-                    continue
-
                 if tab['type'] == 'page':
-                    logging.info('Register tab {}'.format(frame_id))
-                    self.tabs[frame_id] = Tab(self, 'about:blank', tab, frame_id=frame_id)
+                    if frame_id in self.tabs:
+                        self.tabs[frame_id].description.update(tab)
 
-                    if default_tab is None:
-                        default_tab = frame_id
+                    else:
+                        logging.info('Register tab {}'.format(frame_id))
+                        self.tabs[frame_id] = Tab(self, tab, frame_id=frame_id)
+
+                        if default_tab is None:
+                            default_tab = frame_id
 
         for k in self.tabs.keys():
             if k not in tabs_seen:

@@ -286,3 +286,31 @@ class PageProxy(CommandProxy):
             return out
         else:
             return False
+
+    def dialog_cancel(self):
+        """
+        Cancels an open modal dialog (presses 'Cancel').
+        """
+        self.tab.page.dialog(False)
+
+    def dialog_ok(self):
+        """
+        Accepts an open modal dialog (presses 'OK' or 'Yes').
+        """
+        self.tab.page.dialog(True)
+
+    def prompt_text(self, text, submit=True):
+        """
+        Enters the given text into an open prompt dialog and (optionally) submits it.
+
+        #### Arguments
+
+        - **text** (`str`):
+
+            The text value to enter into the prompt dialog.
+
+        - **submit** (`bool`, optional):
+
+            Whether to automatically submit the dialog or not.
+        """
+        self.tab.page.dialog(submit, text=text)

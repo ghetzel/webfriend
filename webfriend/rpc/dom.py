@@ -415,7 +415,7 @@ class DOM(Base):
 
             self._root_element = DOMElement(
                 self,
-                self.call('getDocument', depth=0).get('root')
+                self.call('getDocument', depth=1).get('root')
             )
 
             self._elements[self._root_element.id] = self._root_element
@@ -550,36 +550,16 @@ class DOM(Base):
             })) for i in node_ids
         ]
 
-    def xpath(self, expression, node_id=None):
-        """
-        TBD
-        """
-        if node_id is None:
-            node_id = self.root.id
-
-        element = self.element(node_id)
-
-        out = element.evaluate(
-            """
-            var results = document.evaluate('{}', this, null, XPathResult.ANY_TYPE, null);
-            var nodes = [];
-            var next = results.iterateNext();
-
-            while (next) {{
-                nodes.push({{
-                    'nodeName': next.nodeName,
-                    'nodeType': next.nodeType,
-                    'text':     next.text,
-                }});
-                next = results.iterateNext();
-            }}
-
-            return nodes;
-            """.format(expression.replace("'", "\\'")),
-            return_by_value=True
-        )
-
-        return out
+    def xpath(self, expression):
+        # This is crazy hard for some reason because:
+        # - DOM.querySelector and DOM.querySelectorAll are not XPath (and that's wonderful, but...)
+        # - DOM.performSearch + DOM.getSearchResults are returning invalid nodes (all with NodeId=0)
+        # - as is calling DOM.requestNode on objects returned via Runtime.evaluate
+        # - AND DOM.pushNodeByPathToFrontend has a FIXME and doesn't seem to work
+        # - ...and not sure how to get a BackendNodeID for nodes I don't already have, so I can't
+        #   use DOM.pushNodesByBackendIdsToFrontend
+        #
+        raise exceptions.NotImplemented("find()")
 
     def select_nodes(self, selector, wait_for_match=False, timeout=10000, interval=250):
         """
@@ -746,3 +726,45 @@ class DOM(Base):
             )
 
         return True
+
+    def perform_search(self, query, shadow=True):
+        params = {
+            'query': query,
+        }
+
+        if shadow:
+            params['includeUserAgentShadowDOM'] = shadow
+
+        return self.call('performSearch', **params)
+
+    def get_search_results(self, search_id, from_index=0, to_index=0):
+        node_ids = self.call(
+            'getSearchResults',
+            searchId=search_id,
+            fromIndex=from_index,
+            toIndex=to_index
+        ).get('nodeIds', [])
+
+        return [
+            self.element(i, DOMElement(self, {
+                'nodeId': i,
+            })) for i in node_ids
+        ]
+
+    def discard_search_results(self, search_id):
+        self.call('discardSearchResults', searchId=search_id)
+
+    def push_node_by_path_to_frontend(self, path):
+        node_ids = self.call('pushNodeByPathToFrontend', path=path).get('nodeIds', [])
+
+        return [
+            self.element(i, DOMElement(self, {
+                'nodeId': i,
+            })) for i in node_ids
+        ]
+
+    def push_node_by_backend_ids_to_frontend(self, backend_node_ids):
+        return self.call('pushNodesByBackendIdsToFrontend', backendNodeIds=backend_node_ids)
+
+    def request_node(self, remote_object):
+        return self.call('requestNode', objectId=remote_object).get('nodeId')

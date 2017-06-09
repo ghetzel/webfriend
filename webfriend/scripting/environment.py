@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from .scope import Scope
 from . import parser, commands
 import logging
+import traceback
 
 
 class CommandSetNotReady(Exception):
@@ -21,10 +22,20 @@ class Environment(object):
         self.register_defaults()
         self.sync_scopes()
         self.ready()
+        self._line = 0
+        self._col  = 0
 
     @property
     def scope(self):
         return self._scope
+
+    @property
+    def line(self):
+        return self._line
+
+    @property
+    def col(self):
+        return self._col
 
     def ready(self):
         if self._is_ready:
@@ -169,6 +180,12 @@ class Environment(object):
             # of the _entire_ environment to the given scope for the duration of this call
             self.set_scope(scope)
 
+        # if the script manager is specified, use it to record the current line/col we are evaluating
+        # in the script
+        self._line, self._col = command._tx_metamodel.parser.pos_to_linecol(
+            command._tx_position
+        )
+
         # get the proxy and proxy-local command name from the CommandSet
         proxy, command_name = self.get_proxy_for_command(command)
 
@@ -231,9 +248,21 @@ class Environment(object):
                         **opts
                     )
             except Exception as e:
+                line = col = None
+
+                if hasattr(e, 'line'):
+                    line = e.line
+
+                if hasattr(e, 'col'):
+                    col = e.col
+
+                logging.debug(traceback.format_exc(e))
+
                 raise parser.exceptions.CommandExecutionError(
                     "Error running command '{}': {}".format(command_name, e),
-                    model=command
+                    model=command,
+                    line=line,
+                    col=col
                 )
 
         else:

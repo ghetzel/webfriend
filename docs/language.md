@@ -185,6 +185,22 @@ When interpolating, all variables in the current scope and any parent scopes (re
 For more information on the supported formatting options, see the documentation on Python's [Format Specification Mini-Language](https://docs.python.org/2/library/string.html#formatspec).
 
 
+## Multiline String Literals (Heredocs)
+
+Friendscript supports a syntax for entering large string values that span multiple lines whose syntax may frequently conflict with Friendscript's own.  These are sometimes referred to as "heredocs", and are particularly useful for including the source code of other languages inside of an automation script.  Here is an example of some inline Javascript:
+
+```
+javascript begin
+  var tag = document.getElementById('cool_tag');
+
+  if(tag) {
+    tag.nodeValue = 'My Stuff';
+  }
+end
+```
+
+Everything between the `begin` and `end` statements is part of the string value passed as the first argument to the `javascript` command.  This syntax is accepted wherever a string is, including setting variables and as command option values.
+
 ## Conditional Statements
 
 Friendscript supports conditional statements in the form of `if/else if/else` constructs.  The basic form of conditional statements is:

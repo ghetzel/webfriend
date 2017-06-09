@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from .exceptions import ChromeProtocolError
 from .rpc import (
     Base,
@@ -30,7 +32,6 @@ class Tab(object):
     def __init__(
         self,
         browser,
-        url,
         description,
         domains=None,
         width=None,
@@ -53,9 +54,7 @@ class Tab(object):
 
         self.browser      = browser
         self.frame_id     = frame_id
-        self.url          = url
         self.description  = description
-        self.wsurl        = self.description['webSocketDebuggerUrl']
         self.message_id   = 0
         self.socket       = websocket.create_connection(self.wsurl)
         self.waiters      = {}
@@ -95,6 +94,14 @@ class Tab(object):
                     width=self.initial_w,
                     height=self.initial_h,
                 )
+
+    @property
+    def url(self):
+        return self.description.get('url')
+
+    @property
+    def wsurl(self):
+        return self.description.get('webSocketDebuggerUrl')
 
     @property
     def rpc_domains(self):
@@ -239,6 +246,8 @@ class Tab(object):
 
                 if message is None:
                     continue
+
+                # print(json.dumps(message, indent=4))
 
                 if isinstance(message, Exception):
                     self.dispatch_reply(message.id, message, [])
@@ -441,6 +450,9 @@ class Tab(object):
             message = e.get('message', {})
             level = message.get('level', 'log')
             body = message.get('text', '').strip()
+
+            if isinstance(body, str):
+                body = body.encode('UTF-8')
 
             if len(body):
                 l = '--'

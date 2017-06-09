@@ -6,25 +6,29 @@
    - **[field](#field)**
    - **[focus](#focus)**
    - **[go](#go)**
+   - [herpderp](#herpderp)
+   - [javascript](#javascript)
    - **[log](#log)**
    - **[new_tab](#new_tab)**
    - **[put](#put)**
+   - [reload](#reload)
    - **[resize](#resize)**
    - **[rpc](#rpc)**
    - **[scroll_to](#scroll_to)**
    - **[select](#select)**
+   - [stop](#stop)
    - **[switch_tab](#switch_tab)**
    - **[tabs](#tabs)**
    - **[type](#type)**
    - **[wait](#wait)**
    - **[wait_for_load](#wait_for_load)**
-   - **[xpath](#xpath)**
+   - [xpath](#xpath)
 - [Cookies](#cookies-command-set)
    - **[cookies::all](#cookiesall)**
    - **[cookies::delete](#cookiesdelete)**
    - **[cookies::get](#cookiesget)**
    - **[cookies::query](#cookiesquery)**
-   - [cookies::set](#cookiesset)
+   - **[cookies::set](#cookiesset)**
 - [Events](#events-command-set)
    - **[events::wait_for](#eventswait_for)**
    - **[events::wait_for_idle](#eventswait_for_idle)**
@@ -40,8 +44,11 @@
    - [file::temp](#filetemp)
    - [file::write](#filewrite)
 - [Page](#page-command-set)
+   - **[page::dialog_cancel](#pagedialog_cancel)**
+   - **[page::dialog_ok](#pagedialog_ok)**
    - **[page::dump_dom](#pagedump_dom)**
    - [page::find](#pagefind)
+   - **[page::prompt_text](#pageprompt_text)**
    - **[page::remove](#pageremove)**
    - **[page::resource](#pageresource)**
    - **[page::resources](#pageresources)**
@@ -284,6 +291,22 @@ The URL that was loaded (`str`)
 
 ---
 
+### `herpderp`
+
+```
+herpderp <EXPRESSION>
+```
+
+---
+
+### `javascript`
+
+```
+javascript <BODY>
+```
+
+---
+
 ### `log`
 
 ```
@@ -314,7 +337,7 @@ Outputs a line to the log.
         All remaining arguments will be passed along to format() when interpolating 'line'.
 
 #### Returns
-The line as printed.
+None
 
 #### Raises
 `AttributeError` if the specified log level is not known.
@@ -373,6 +396,14 @@ have automatic type detection applied.  The resulting object will be returned.
 
 #### Returns
 The given value with automatic type detection applied.
+
+---
+
+### `reload`
+
+```
+reload
+```
 
 ---
 
@@ -517,6 +548,14 @@ found and returned within the given timeout, or a TimeoutError will be raised.
 
 #### Raises
 `webfriend.exceptions.TimeoutError`
+
+---
+
+### `stop`
+
+```
+stop
+```
 
 ---
 
@@ -698,8 +737,6 @@ comes first).
 xpath
 ```
 
-TBD
-
 ---
 
 
@@ -832,6 +869,53 @@ will be the same as the ones described above.
 ```
 cookies::set <NAME>
 ```
+
+Create or update a cookie based on the given values.
+
+#### Arguments
+
+- **name** (`str`):
+
+    The name of the cookie to set.
+
+- **value** (any):
+
+    The value to set in the cookie.
+
+- **url** (`str`, optional):
+
+    The URL to associate the cookie with. This is important when dealing with things like
+    host-only cookies (if **domain** isn't set, a host-only cookie will be created.)  In
+    this case, the cookie will only be valid for the exact URL that was used.
+
+    The default value is the URL of the currently active tab.
+
+- **domain** (`str`, optional):
+
+    The domain for which the cookie will be presented.
+
+- **path** (`str`, optional):
+
+    The path value of the cookie.
+
+- **secure** (`bool`, optional):
+
+    Whether the cookie is flagged as secure or not.
+
+- **http_only** (`bool`, optional):
+
+    Whether the cookie is flagged as an HTTP-only cookie or not.
+
+- **same_site** (`str`, optional):
+
+    Sets the "Same Site" attribute of the cookie.  The value "strict" will restrict any
+    cross-site usage of the cookie.  The value "lax" allows top-level navigation changes
+    to receive the cookie.
+
+- **expires** (`int`, optional):
+
+    Specifies when the cookie expires in epoch seconds (number of seconds
+    since 1970-01-01 00:00:00 UTC).
 
 ---
 
@@ -1025,6 +1109,26 @@ file::write <FILENAME> {
 
 ## `page` Command Set
 
+### `page::dialog_cancel`
+
+```
+page::dialog_cancel
+```
+
+Cancels an open modal dialog (presses 'Cancel').
+
+---
+
+### `page::dialog_ok`
+
+```
+page::dialog_ok
+```
+
+Accepts an open modal dialog (presses 'OK' or 'Yes').
+
+---
+
 ### `page::dump_dom`
 
 ```
@@ -1041,6 +1145,28 @@ This is primarily useful for debugging WebFriend.
 ```
 page::find <TEXT>
 ```
+
+---
+
+### `page::prompt_text`
+
+```
+page::prompt_text <TEXT> {
+    submit: true
+}
+```
+
+Enters the given text into an open prompt dialog and (optionally) submits it.
+
+#### Arguments
+
+- **text** (`str`):
+
+    The text value to enter into the prompt dialog.
+
+- **submit** (`bool`, optional):
+
+    Whether to automatically submit the dialog or not.
 
 ---
 

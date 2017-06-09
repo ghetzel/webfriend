@@ -100,8 +100,8 @@ class ScriptingTest(TestCase):
                     },
                 },
             },
-            'log_1': 'test 1',
-            'log_2': 'test {a}',
+            'put_1': 'test 1',
+            'put_2': 'test {a}',
         }, self._eval("""
             # set variables of with values of every type
             $null = null
@@ -151,8 +151,8 @@ class ScriptingTest(TestCase):
             $ee8.always['finishing'].each_others = 'sandwiches'
             $ee8.always['finishing'].other['stuff'].too = True
 
-            log "test {a}" -> $log_1
-            log 'test {a}' -> $log_2
+            put "test {a}" -> $put_1
+            put 'test {a}' -> $put_2
         """))
 
     def test_if_scopes(self):
@@ -317,8 +317,8 @@ class ScriptingTest(TestCase):
             'cc': 20,
             'dd': 5,
             # 'f': u'This 2 is {b} and done',
-            'log_a': 'this is some stuff',
-            'log_b': 'buncha\nmuncha\ncruncha\nlines',
+            'put_a': 'this is some stuff',
+            'put_b': 'buncha\nmuncha\ncruncha\nlines',
         }, self._eval("""
             $a = 1 + 1
             $b = 9 - 3
@@ -340,16 +340,16 @@ class ScriptingTest(TestCase):
 
             # $f = "This {a}" + ' is {b}' + " and done"
 
-            log begin
+            put begin
                 this is some stuff
-            end -> $log_a
+            end -> $put_a
 
-            log begin
+            put begin
                 buncha
                 muncha
                 cruncha
                 lines
-            end -> $log_b
+            end -> $put_b
         """))
 
     def test_loops_all_sorts_of_loops(self):

@@ -41,8 +41,11 @@ class ScriptError(Exception):
                     model._tx_position
                 )
 
-                self.line = line
-                self.col = col
+                if self.line is None:
+                    self.line = line
+
+                if self.col is None:
+                    self.col = col
 
                 # get the local Friendscript manager class from the root model,
                 # then get the raw script data from there

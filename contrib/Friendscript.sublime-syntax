@@ -1,0 +1,155 @@
+%YAML1.2
+---
+# See https://manual.macromates.com/en/language_grammars#naming_conventions
+# for what values are used in 'scope' definitions
+#
+name: Friendscript
+file_extensions:
+  - fs
+  - friendscript
+
+scope: source.friendscript
+contexts:
+  main:
+    # comments
+    - match: '#'
+      scope: punctuation.definition.comment.friendscript
+      push: line_comment
+
+    # inline regex literal
+    - match: '\/.*\/[a-z]*'
+      scope: string.regexp.friendscript
+
+    # single-quoted (literal) strings
+    - match: "'"
+      scope: punctuation.definition.string.begin.friendscript
+      push:  single_quoted_string
+
+    # double-quoted (interpolated) strings
+    - match: '"'
+      scope: punctuation.definition.string.begin.friendscript
+      push: double_quoted_string
+
+    # special highlighting for javascript heredocs
+    - match: '\b(javascript)\s+(begin)\b'
+      captures:
+        1: source.friendscript
+        2: keyword.other.friendscript
+      push: 'Packages/JavaScript/JavaScript.sublime-syntax'
+      with_prototype:
+        - match: '^end\b'
+          scope: keyword.other.friendscript
+          pop: true
+
+    # heredoc
+    - match: '\bbegin\b'
+      scope: keyword.other.friendscript
+      push: heredoc
+
+    # operators (comparison)
+    - match: '(=~|!~|!=|==|(?:<|>)=?)'
+      scope: keyword.operator.comparison.friendscript
+
+    # operators (assignment)
+    - match: '(<<|->|[&\|\^\+\-\*\/]=|=|as)'
+      scope: keyword.operator.assignment.friendscript
+
+    # operators (arithmetic)
+    - match: '(%|\+|\-|\*|\/)'
+      scope: keyword.operator.arithmetic.friendscript
+
+    # operators (logical)
+    - match: '\b(in|is|not|&|\|)\b'
+      scope: keyword.operator.logical.friendscript
+
+    # keywords (flow control)
+    - match: '\b(break|case|continue|else|if|loop(\s+count)?|on|when)\b'
+      scope: keyword.control.friendscript
+
+    # keywords (other)
+    - match: '\b(unset)\b'
+      scope: keyword.other.friendscript
+
+    # numbers
+    - match: '\b(-)?[0-9.]+\b'
+      scope: constant.numeric.friendscript
+
+    # booleans and named values
+    - match: '\b(true|false|null)\b'
+      scope: constant.language.friendscript
+
+    # variables
+    - match: '\$[^\d\W][\w\.]*\b'
+      scope: variable.friendscript
+
+    # object keys
+    - match: '([\w\d]+)\s*(:)(?!:)'
+      captures:
+        1: variable.parameter.friendscript
+        2: punctuation.friendscript
+
+    # commands
+    - match: '([\w\d][\w\d]*)(::[\w\d][\w\d]*)*'
+      scope: source.friendscript
+
+  double_quoted_string:
+    - meta_scope: string.quoted.double.friendscript
+    - match: '\\.'
+      scope: constant.character.escape.friendscript
+
+    - match: '{'
+      scope: constant.other.placeholder.friendscript
+      push: interpolation
+
+    - match: '"'
+      scope: punctuation.definition.string.end.friendscript
+      pop: true
+
+  interpolation:
+    - meta_scope: constant.other.placeholder.friendscript
+
+    - match: '"'
+      scope: invalid.illegal.friendscript
+
+    - match: ':[^\}]+'
+      scope: constant.other.placeholder.friendscript
+
+    - match: '\d+'
+      scope: support.constant.friendscript
+
+    - match: '[\d\w]*'
+      scope: variable.parameter.friendscript
+
+    - match: '\['
+      scope: constant.other.placeholder.friendscript
+      push: interpolation
+
+    - match: '(\}|\])'
+      pop: true
+
+
+  single_quoted_string:
+    - meta_scope: string.quoted.single.friendscript
+
+    - match: '\\.'
+      scope: constant.character.escape.friendscript
+
+    - match: "'"
+      scope: punctuation.definition.string.end.friendscript
+      pop: true
+
+
+  heredoc:
+    - meta_scope: string.unquoted.friendscript
+
+    - match: '^end\b'
+      scope: keyword.other.friendscript
+      pop: true
+
+
+  line_comment:
+    - meta_scope: comment.line.friendscript
+
+    - match: '$'
+      pop: true
+

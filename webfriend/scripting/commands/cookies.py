@@ -139,12 +139,72 @@ class CookiesProxy(CommandProxy):
 
         self.tab.network.delete_cookie(domain, name)
 
+    # def set_cookie(
+    #     self,
+    #     url,
+    #     name,
+    #     value,
+    #     domain=None,
+    #     path=None,
+    #     secure=None,
+    #     http_only=None,
+    #     same_site=None,
+    #     expires=None
+    # ):
     def set(self, name, **kwargs):
         """
-        See: `webfriend.rpc.Network.set_cookie`
+        Create or update a cookie based on the given values.
+
+        #### Arguments
+
+        - **name** (`str`):
+
+            The name of the cookie to set.
+
+        - **value** (any):
+
+            The value to set in the cookie.
+
+        - **url** (`str`, optional):
+
+            The URL to associate the cookie with. This is important when dealing with things like
+            host-only cookies (if **domain** isn't set, a host-only cookie will be created.)  In
+            this case, the cookie will only be valid for the exact URL that was used.
+
+            The default value is the URL of the currently active tab.
+
+        - **domain** (`str`, optional):
+
+            The domain for which the cookie will be presented.
+
+        - **path** (`str`, optional):
+
+            The path value of the cookie.
+
+        - **secure** (`bool`, optional):
+
+            Whether the cookie is flagged as secure or not.
+
+        - **http_only** (`bool`, optional):
+
+            Whether the cookie is flagged as an HTTP-only cookie or not.
+
+        - **same_site** (`str`, optional):
+
+            Sets the "Same Site" attribute of the cookie.  The value "strict" will restrict any
+            cross-site usage of the cookie.  The value "lax" allows top-level navigation changes
+            to receive the cookie.
+
+        - **expires** (`int`, optional):
+
+            Specifies when the cookie expires in epoch seconds (number of seconds
+            since 1970-01-01 00:00:00 UTC).
         """
         if not kwargs.get('url', None):
-            raise ValueError("'url' option must be specified")
+            kwargs['url'] = self.tab.url
+
+        if kwargs.get('same_site', None):
+            kwargs['same_site'] = kwargs['same_site'].title()
 
         if not kwargs.get('value', None):
             raise ValueError("'value' option must be specified")

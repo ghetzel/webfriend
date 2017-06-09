@@ -19,6 +19,7 @@ log.addHandler(err)
 @click.group(invoke_without_command=True)
 @click.option('--interactive', '-I', is_flag=True, default=False)
 @click.option('--suppress-output', '-o', is_flag=True, default=False)
+@click.option('--no-temp-profile', '-T', is_flag=True, default=False)
 @click.option('--debug', '-D', is_flag=True, default=False)
 @click.option(
     '--debugger-url', '-u',
@@ -33,7 +34,17 @@ log.addHandler(err)
 @click.argument('script', type=click.File('rb'), required=False)
 @click.argument('remainder', nargs=-1, type=click.UNPROCESSED)
 @click.pass_context
-def main(ctx, interactive, suppress_output, debug, debugger_url, log_level, script, remainder):
+def main(
+    ctx,
+    interactive,
+    suppress_output,
+    no_temp_profile,
+    debug,
+    debugger_url,
+    log_level,
+    script,
+    remainder
+):
     log.setLevel(logging.getLevelName(log_level.upper()))
 
     if debug:
@@ -43,7 +54,10 @@ def main(ctx, interactive, suppress_output, debug, debugger_url, log_level, scri
         raise IOError("Must provide the path to script to execute.")
 
     # using the with-syntax launches an instance of chrome in the background before proceeding
-    with Chrome(debug_url=debugger_url) as chrome:
+    with Chrome(
+        debug_url=debugger_url,
+        use_temp_profile=(not no_temp_profile)
+    ) as chrome:
         scope = Scope()
 
         # interactive REPL
