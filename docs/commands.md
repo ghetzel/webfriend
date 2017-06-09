@@ -6,7 +6,6 @@
    - **[field](#field)**
    - **[focus](#focus)**
    - **[go](#go)**
-   - [herpderp](#herpderp)
    - [javascript](#javascript)
    - **[log](#log)**
    - **[new_tab](#new_tab)**
@@ -288,14 +287,6 @@ Nagivate to a URL.
 
 #### Returns
 The URL that was loaded (`str`)
-
----
-
-### `herpderp`
-
-```
-herpderp <EXPRESSION>
-```
 
 ---
 

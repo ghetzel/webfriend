@@ -645,6 +645,3 @@ class CoreProxy(CommandProxy):
 
     def javascript(self, body):
         return self.tab.evaluate(body, data=self.scope.as_dict(), calling_context=self.environment)
-
-    def herpderp(self, expression):
-        return self.tab.dom.xpath(expression)
