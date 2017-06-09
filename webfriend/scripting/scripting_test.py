@@ -317,6 +317,8 @@ class ScriptingTest(TestCase):
             'cc': 20,
             'dd': 5,
             # 'f': u'This 2 is {b} and done',
+            'log_a': 'this is some stuff',
+            'log_b': 'buncha\nmuncha\ncruncha\nlines',
         }, self._eval("""
             $a = 1 + 1
             $b = 9 - 3
@@ -337,6 +339,17 @@ class ScriptingTest(TestCase):
             $dd /= 10
 
             # $f = "This {a}" + ' is {b}' + " and done"
+
+            log begin
+                this is some stuff
+            end -> $log_a
+
+            log begin
+                buncha
+                muncha
+                cruncha
+                lines
+            end -> $log_b
         """))
 
     def test_loops_all_sorts_of_loops(self):

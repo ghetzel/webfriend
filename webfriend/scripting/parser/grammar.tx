@@ -84,7 +84,7 @@ Expression:
 ;
 
 ValueYielding:
-    (Type | Variable)
+    ( Type | Variable )
 ;
 
 ConditionalExpression:
@@ -211,19 +211,35 @@ KeyValuePair:
 ;
 
 KeyType:
-    ( !ReservedWord | ID | String )
+    ( !ReservedWord | ID | Heredoc | String )
 ;
 
 Type:
-    (Object | Array | RegularExpression | ScalarType | 'null')
+    ( Object | Array | RegularExpression | ScalarType | Null )
+;
+
+Null:
+    'null'
 ;
 
 ScalarType:
-    ( NUMBER | BOOL | String )
+    ( NUMBER | BOOL | String | Heredoc )
 ;
 
 String[noskipws]:
     ( exact="'" value=/[^']*/ "'" | '"' value=/[^"]*/ '"' )
+;
+
+Heredoc:
+    ( HeredocStart body=/\s*(.|\n)*?(?=\n\s*end\s+)/ HeredocEnd )
+;
+
+HeredocStart:
+    'begin'
+;
+
+HeredocEnd:
+    'end'
 ;
 
 RegularExpression:

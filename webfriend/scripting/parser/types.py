@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from collections import OrderedDict
 from . import MetaModel
 import re
+import os
 
 
 class Array(MetaModel):
@@ -10,6 +11,21 @@ class Array(MetaModel):
 
 class String(MetaModel):
     pass
+
+
+class Heredoc(MetaModel):
+    @property
+    def value(self):
+        lines = self.body.split('\n')
+
+        if len(lines) > 1:
+            common = os.path.commonprefix(lines[1:])
+        else:
+            common = ''
+
+        return '\n'.join([
+            line.lstrip(common) for line in lines
+        ])
 
 
 class RegularExpression(MetaModel):

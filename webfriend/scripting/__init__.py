@@ -71,6 +71,7 @@ def execute_script(browser, script, scope=None, environment=None, preserve_state
             except parser.exceptions.ScriptError:
                 raise
             except Exception as e:
+                logging.debug('Exception')
                 raise parser.exceptions.ScriptError(str(e), model=block)
 
     finally:
@@ -107,7 +108,7 @@ def evaluate_block(scriptmgr, block, scope):
     # Expressions
     # ---------------------------------------------------------------------------------------------
     elif isinstance(block, parser.lang.Expression):
-        result, put_result_in = block.evaluate(environment, scope)
+        result, put_result_in = block.process(environment, scope)
 
         if put_result_in:
             scope.set(put_result_in.as_key(scope), result)
@@ -190,6 +191,7 @@ def _handle_event(scriptmgr, handler, scope):
                 except parser.exceptions.ScriptError:
                     raise
                 except Exception as e:
+                    logging.debug('Exception')
                     raise parser.exceptions.ScriptError(str(e), model=block)
 
             return local_scope

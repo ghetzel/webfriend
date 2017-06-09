@@ -20,7 +20,7 @@ def to_value(value, scope, preserve_strings=False):
     if preserve_strings and isinstance(original_value, types.String):
         return original_value
 
-    if isinstance(value, types.String):
+    if isinstance(value, (types.String, types.Heredoc)):
         value = value.value
 
     # do type detection and extraction
@@ -74,6 +74,7 @@ class Friendscript(object):
                     loops.FlowControlWord,
                     loops.LoopBlock,
                     types.Array,
+                    types.Heredoc,
                     types.Object,
                     types.RegularExpression,
                     types.String,

@@ -636,3 +636,6 @@ class CoreProxy(CommandProxy):
             tab_id = self.browser.default_tab
 
         return self.browser.close_tab(tab_id)
+
+    def script(self, body):
+        print('<script>{}</script>'.format(body))

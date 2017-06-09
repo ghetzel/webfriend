@@ -129,7 +129,8 @@ class Environment(object):
             value, _ = value.process(scope, preserve_types=True)
 
         # if this is an exact-match string, then interpolate is a no-op
-        if isinstance(value, parser.types.String) and value.exact:
+        if isinstance(value, parser.types.String) and value.exact or \
+           isinstance(value, parser.types.Heredoc):
             value = value.value
 
             if isinstance(value, str):
