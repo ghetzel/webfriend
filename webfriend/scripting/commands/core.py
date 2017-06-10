@@ -94,7 +94,7 @@ class CoreProxy(CommandProxy):
         elif cache is False:
             self.tab.network.disable_cache()
 
-        if isinstance(plugins, []):
+        if isinstance(plugins, list):
             for plugin in plugins:
                 module, _ = utils.get_module_from_string(
                     'webfriend.scripting.commands.{}'.format(plugin)
