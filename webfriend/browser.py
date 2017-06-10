@@ -8,9 +8,9 @@ import requests
 import shutil
 import tempfile
 import time
-from .tab import Tab
-from .scripting import execute_script
-from .utils.commands import locate_browser_process
+from webfriend.tab import Tab
+from webfriend.scripting.execute import execute_script
+from webfriend.utils.commands import locate_browser_process
 from ephemeral_port_reserve import reserve, LOCALHOST
 from gevent import monkey, subprocess
 from urlparse import urlparse

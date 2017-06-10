@@ -1,6 +1,6 @@
 from __future__ import absolute_import
-from . import Base
-from .. import exceptions, utils
+from webfriend.rpc import Base
+from webfriend import exceptions, utils
 from base64 import b64decode
 import os
 import time

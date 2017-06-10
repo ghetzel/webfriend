@@ -1,10 +1,10 @@
 from __future__ import absolute_import
-from . import Base
+from webfriend.rpc import Base
 import logging
 import math
 import copy
 import time
-from .. import exceptions
+from webfriend import exceptions
 
 
 class NoSuchElement(Exception):
@@ -88,7 +88,7 @@ class DOMElement(object):
                     result_id,
                     own_properties=own_properties,
                     accessors_only=accessors_only
-                ).result.get('result', [])
+                )
 
                 # release that object
                 self.dom.tab.runtime.release_object(result_id)

@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from .exceptions import ChromeProtocolError
-from .rpc import (
+from webfriend.rpc import (
     Base,
     Browser,
     Console,
@@ -17,8 +16,8 @@ from .rpc import (
 )
 import json
 import time
-from . import exceptions
-from .utils import patch_json  # noqa
+from webfriend import exceptions
+from webfriend.utils import patch_json  # noqa
 import gevent
 import websocket
 import logging
@@ -188,7 +187,7 @@ class Tab(object):
                 if reply['id'] == data['id']:
                     return Reply(reply, request=data, events=events)
                 else:
-                    raise ChromeProtocolError("Reply Message ID does not match Request Message ID")
+                    raise exceptions.ChromeProtocolError("Reply Message ID does not match Request Message ID")
 
             else:
                 return None
@@ -277,11 +276,11 @@ class Tab(object):
                     if 'data' in error:
                         message += ' - {}'.format(error['data'])
 
-                    exc = ChromeProtocolError(
+                    exc = exceptions.ChromeProtocolError(
                         'Protocol Error {}: {}'.format(error.get('code', -1), message)
                     )
                 else:
-                    exc = ChromeProtocolError('Malformed Error Response')
+                    exc = exceptions.ChromeProtocolError('Malformed Error Response')
 
             if exc is not None:
                 exc.id = body.get('id')

@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 import json
-from .scripting import execute_script, Environment
+from webfriend.scripting.environment import Environment
+from webfriend.scripting.execute import execute_script
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.styles import style_from_pygments
 from prompt_toolkit.token import Token
-from .scripting.parser.pygments import FriendscriptLexer
+from webfriend.scripting.parser.pygments import FriendscriptLexer
 from pygments.styles.monokai import MonokaiStyle
 
 

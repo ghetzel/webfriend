@@ -2,8 +2,8 @@ from __future__ import absolute_import
 import logging
 import time
 import io
-from . import CommandProxy
-from ... import exceptions
+from webfriend.scripting.commands.base import CommandProxy
+from webfriend import exceptions
 
 
 class PageProxy(CommandProxy):

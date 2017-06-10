@@ -1,5 +1,7 @@
 import os.path
 import random
+import inspect
+import importlib
 import string
 
 PACKAGE_ROOT = os.path.abspath(
@@ -33,3 +35,36 @@ def autotype(value):
                 pass
 
     return value
+
+
+def get_module_from_string(string, package=None):
+    parts = string.split('.')
+    remainder = []
+
+    while len(parts):
+        try:
+            return importlib.import_module('.'.join(parts), package=package), remainder
+        except ImportError:
+            remainder = [parts.pop()] + remainder
+
+    return None, string.split('.')
+
+
+def resolve_object(parts, parent=None):
+    if not parent:
+        parent = globals()
+
+    while len(parts):
+        proceed = False
+
+        for member in inspect.getmembers(parent):
+            if member[0] == parts[0]:
+                parent = member[1]
+                parts = parts[1:]
+                proceed = True
+                break
+
+        if not proceed:
+            return None
+
+    return parent

@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from unittest import TestCase
-from .scope import Scope
+from webfriend.scripting.scope import Scope
 
 
 class ScopeTest(TestCase):

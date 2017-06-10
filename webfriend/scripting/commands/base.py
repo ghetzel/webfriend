@@ -1,9 +1,19 @@
-from ..scope import Scope
+from webfriend.scripting.scope import Scope
+import inspect
+import importlib
 
 
 class CommandProxy(object):
     qualifier = None
     default_qualifier = 'core'
+    enabled_proxies = [
+        'core',
+        'cookies',
+        'events',
+        'file',
+        'page',
+        'state',
+    ]
 
     def __init__(self, browser, environment=None, scope=None):
         self.browser = browser
@@ -31,6 +41,19 @@ class CommandProxy(object):
 
     def __getitem__(self, local_command_name):
         return getattr(self, local_command_name)
+
+    @classmethod
+    def get_all_proxies(cls):
+        proxies = []
+        for proxy_module in cls.enabled_proxies:
+            module = importlib.import_module('webfriend.scripting.commands.{}'.format(proxy_module))
+            members = inspect.getmembers(module, inspect.isclass)
+
+            for subcls in members:
+                if issubclass(subcls[1], CommandProxy) and subcls[1] is not CommandProxy:
+                    proxies.append((subcls[1].as_qualifier(), subcls[1]))
+
+        return proxies
 
     @classmethod
     def get_command_names(cls):

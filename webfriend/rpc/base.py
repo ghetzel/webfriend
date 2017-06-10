@@ -4,7 +4,7 @@ Implementation of the Chrome Remote DevTools debugging protocol.
 See: https://chromedevtools.github.io/devtools-protocol
 """
 from __future__ import absolute_import
-from .event import Event
+from webfriend.rpc.event import Event
 from uuid import uuid4
 from collections import OrderedDict
 import logging

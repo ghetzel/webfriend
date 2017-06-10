@@ -3,9 +3,10 @@ import logging
 import time
 import json
 import urlnorm
+import inspect
 from urlparse import urlparse
-from . import CommandProxy
-from ... import rpc, utils
+from webfriend.scripting.commands.base import CommandProxy
+from webfriend import rpc, utils
 from uuid import uuid4
 
 
@@ -92,6 +93,16 @@ class CoreProxy(CommandProxy):
             self.tab.network.enable_cache()
         elif cache is False:
             self.tab.network.disable_cache()
+
+        if isinstance(plugins, []):
+            for plugin in plugins:
+                module, _ = utils.get_module_from_string(
+                    'webfriend.scripting.commands.{}'.format(plugin)
+                )
+
+                for name, obj in inspect.getmembers(module, inspect.isclass):
+                    if issubclass(CommandProxy, obj) and obj is not CommandProxy:
+                        self.environment.register(obj)
 
     def go(self, uri, referrer='random', wait_for_load=True, timeout=30000, clear_requests=True):
         """

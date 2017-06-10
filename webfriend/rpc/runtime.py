@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from . import Base
+from webfriend.rpc import Base
 from uuid import uuid4
 import json
 

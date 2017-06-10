@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from . import MetaModel
+from webfriend.scripting.parser import MetaModel
 
 
 class CommandStanza(object):

@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from . import to_value
+from webfriend.scripting.parser import to_value
 
 
 class MetaModel(object):

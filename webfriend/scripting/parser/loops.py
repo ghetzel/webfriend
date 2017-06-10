@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from . import MetaModel, to_value, variables
+from webfriend.scripting.parser import MetaModel, to_value, variables
 
 
 class LoopBlock(MetaModel):

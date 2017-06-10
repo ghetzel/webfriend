@@ -6,9 +6,10 @@ import logging
 import os
 import sys
 import traceback
-from . import Chrome
-from .scripting import execute_script, Scope
-from .repl import REPL
+from webfriend.browser import Chrome
+from webfriend.scripting.execute import execute_script
+from webfriend.scripting.execute import Scope
+from webfriend.repl import REPL
 
 log = logging.getLogger()
 err = logging.StreamHandler(stream=sys.stderr)

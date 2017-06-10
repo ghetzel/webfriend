@@ -1,30 +1,25 @@
 from __future__ import absolute_import
 import inspect
-import importlib
 import logging
 import re
-from webfriend.scripting import commands
+from webfriend.scripting.commands.base import CommandProxy
+from webfriend.utils import get_module_from_string, resolve_object
 
 RX_DOCSTRING_SEEOTHER = re.compile('(?P<head>.*)\s*see:\s*`(?P<module>.*)`\s*(?P<tail>.*)', re.IGNORECASE)
 
 
 def document_commands():
-    base = commands.base.CommandProxy
+    base = CommandProxy
     toc = []
     subtoc = {}
     commands_body = []
-    classes = []
+    classes = CommandProxy.get_all_proxies()
     final = []
 
-    for cls in inspect.getmembers(commands, inspect.isclass):
-        if issubclass(cls[1], base):
-            if cls[1] is not base:
-                classes.append(cls)
-
     classes = [
-        c for c in classes if c[0] == 'CoreProxy'
+        c for c in classes if c[0] == CommandProxy.default_qualifier
     ] + sorted([
-        c for c in classes if c[0] != 'CoreProxy'
+        c for c in classes if c[0] != CommandProxy.default_qualifier
     ])
 
     # for each proxy class
@@ -100,39 +95,6 @@ def document_commands():
     final += commands_body
 
     return final
-
-
-def get_module_from_string(string):
-    parts = string.split('.')
-    remainder = []
-
-    while len(parts):
-        try:
-            return importlib.import_module('.'.join(parts)), remainder
-        except ImportError:
-            remainder = [parts.pop()] + remainder
-
-    return None, string.split('.')
-
-
-def resolve_object(parts, parent=None):
-    if not parent:
-        parent = globals()
-
-    while len(parts):
-        proceed = False
-
-        for member in inspect.getmembers(parent):
-            if member[0] == parts[0]:
-                parent = member[1]
-                parts = parts[1:]
-                proceed = True
-                break
-
-        if not proceed:
-            return None
-
-    return parent
 
 
 def get_docstring(obj):

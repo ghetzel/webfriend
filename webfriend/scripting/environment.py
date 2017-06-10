@@ -1,6 +1,7 @@
 from __future__ import absolute_import
-from .scope import Scope
-from . import parser, commands
+from webfriend.scripting.scope import Scope
+from webfriend.scripting import parser
+from webfriend.scripting.commands.base import CommandProxy
 import logging
 import traceback
 
@@ -67,11 +68,11 @@ class Environment(object):
         return names
 
     def register_defaults(self):
-        for name, cls in commands.ALL_PROXIES:
+        for name, cls in CommandProxy.get_all_proxies():
             self.register(cls, qualifier=name)
 
     def register(self, proxy_cls, qualifier=None):
-        if not issubclass(proxy_cls, commands.CommandProxy):
+        if not issubclass(proxy_cls, CommandProxy):
             raise ValueError("Proxy class must be a subclass of CommandProxy")
 
         if qualifier is None:
@@ -83,7 +84,7 @@ class Environment(object):
         q_command = command.name.split('::', 1)
 
         if len(q_command) == 1:
-            proxy_name = commands.CommandProxy.default_qualifier
+            proxy_name = CommandProxy.default_qualifier
             command_name = q_command[0]
         else:
             proxy_name = q_command[0]

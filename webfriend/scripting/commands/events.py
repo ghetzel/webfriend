@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from . import CommandProxy
+from webfriend.scripting.commands.base import CommandProxy
 
 
 class EventsProxy(CommandProxy):

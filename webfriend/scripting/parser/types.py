@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from collections import OrderedDict
-from . import MetaModel
+from webfriend.scripting.parser import MetaModel
 import re
 import os
 

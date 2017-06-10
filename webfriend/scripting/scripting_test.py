@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from unittest import TestCase
-from . import execute_script
-from . import parser
+from webfriend.scripting import parser
+from webfriend.scripting.execute import execute_script
 
 
 class ScriptingTest(TestCase):
