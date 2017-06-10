@@ -81,19 +81,22 @@ class Environment(object):
         self[qualifier] = proxy_cls(self.browser, environment=self)
 
     def get_proxy_for_command(self, command):
-        q_command = command.name.split('::', 1)
-
-        if len(q_command) == 1:
-            proxy_name = CommandProxy.default_qualifier
-            command_name = q_command[0]
-        else:
-            proxy_name = q_command[0]
-            command_name = q_command[1]
+        q_command = command.name.split('::')
+        proxy = self
 
         try:
-            return self[proxy_name], command_name
+            if len(q_command) == 1:
+                proxy = proxy[CommandProxy.default_qualifier]
+                command_name = q_command[0]
+            else:
+                for subproxy in q_command[:-2]:
+                    proxy = proxy[subproxy]
+
+                command_name = q_command[-1]
+
+            return proxy, command_name
         except KeyError:
-            raise parser.exceptions.ScriptError("Unregistered qualifier '{}'".format(proxy_name))
+            raise parser.exceptions.ScriptError("Unknown command '{}'".format(command.name))
 
     def has_execution_option(self, key):
         return key in self._exec_options
