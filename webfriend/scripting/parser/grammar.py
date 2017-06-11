@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+
+FRIENDSCRIPT_GRAMMAR = r'''
 Friendscript:
     Shebang?
     blocks *= Block
@@ -261,3 +264,4 @@ Array:
 CommandName:
     !ReservedWord ID+['::']
 ;
+'''

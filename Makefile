@@ -22,6 +22,31 @@ test:
 docs:
 	./env/bin/webfriend --generate-docs > docs/commands.md
 
-clean:
-	-rm -rf env *.egg-info build dist
-	find . -type f -name "*.pyc" -delete
+clean-cache:
+	-rm -rf build dist
+	-find . -type f -name "*.pyc" -delete
+	-find . -type d -name "__pycache__" -delete
+
+clean-build:
+	-rm -rf *.egg-info build dist
+
+clean: clean-cache clean-build
+	-rm -rf env
+
+package-build: clean-build
+	python setup.py sdist bdist_wheel
+
+package-sign:
+	cd dist && gpg \
+		--local-user 6A116E6B0F678FA5 \
+		--detach-sign \
+		--armor \
+		--batch \
+		--yes *.tar.gz
+
+package-push:
+	./env/bin/twine upload \
+		--repository-url https://pypi.python.org \
+		--skip-existing dist/*
+
+package: package-build package-sign package-push clean-cache

@@ -1,8 +1,8 @@
 from __future__ import absolute_import
-from textx.metamodel import metamodel_from_file
+from textx.metamodel import metamodel_from_str
 import textx.exceptions
 import textx
-import os
+from webfriend.scripting.parser.grammar import FRIENDSCRIPT_GRAMMAR
 
 
 def to_value(value, scope, preserve_strings=False):
@@ -52,11 +52,8 @@ class Friendscript(object):
         self.environment = environment
 
         try:
-            self.metamodel = metamodel_from_file(
-                os.path.join(
-                    os.path.dirname(__file__),
-                    'grammar.tx'
-                ),
+            self.metamodel = metamodel_from_str(
+                FRIENDSCRIPT_GRAMMAR,
                 classes=[
                     commands.CommandSequence,
                     commands.CommandStanza,
