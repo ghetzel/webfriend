@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import inspect
 import logging
 import re
+import webfriend.scripting.commands
 from webfriend.scripting.commands.base import CommandProxy
 from webfriend.utils import get_module_from_string, resolve_object
 
@@ -13,9 +14,8 @@ def document_commands():
     toc = []
     subtoc = {}
     commands_body = []
-    classes = CommandProxy.get_all_proxies()
-    final = []
 
+    classes = CommandProxy.get_all_proxies()
     classes = [
         c for c in classes if c[0] == CommandProxy.default_qualifier
     ] + sorted([
@@ -30,7 +30,12 @@ def document_commands():
         commands_body.append('')
 
         # add top-level TOC item for this command set
-        tocentry = (proxy.as_qualifier().title(), proxy.as_qualifier())
+        if proxy.doc_name:
+            toc_title = proxy.doc_name
+        else:
+            toc_title = proxy.as_qualifier().title()
+
+        tocentry = (toc_title, proxy.as_qualifier())
 
         if tocentry not in toc:
             toc.append(tocentry)
@@ -75,7 +80,14 @@ def document_commands():
 
         commands_body.append('')
 
-    final.append('## Command Reference')
+    final = ['# Command Reference']
+
+    header_docs = inspect.getdoc(webfriend.scripting.commands)
+
+    if header_docs:
+        final.append('')
+        final += header_docs.split('\n')
+        final.append('')
 
     # include TOC tree
     for title, qualifier in toc:

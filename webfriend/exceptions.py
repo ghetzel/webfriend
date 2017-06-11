@@ -20,3 +20,7 @@ class TooManyResults(Exception):
 
 class NotImplemented(Exception):
     pass
+
+
+class UserError(Exception):
+    pass

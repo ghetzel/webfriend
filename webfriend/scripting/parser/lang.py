@@ -25,39 +25,6 @@ class EventHandlerBlock(MetaModel):
     pass
 
 
-# Expression:
-#     lhs=Variable operator=Operator rhs=VariableOrType
-# ;
-# NumericOperator:
-#     (
-#         add='+' |
-#         subtract='-' |
-#         multiply='*' |
-#         divide='/' |
-#         modulus='%' |
-#         power='**'
-#     )
-# ;
-
-# LogicOperator:
-#     (
-#         bitwise_and='&' |
-#         bitwise_or='|' |
-#         bitwise_not='~'
-#     )
-# ;
-
-# AssignmentOperator:
-#     (
-#         plus_eq='+=' |
-#         minus_eq='-=' |
-#         multi_eq='*=' |
-#         div_eq='/=' |
-#         and_eq='&=' |
-#         or_eq='|=' |
-#         append='<<'
-#     )
-# ;
 class Expression(MetaModel):
     def process(self, scope, preserve_types=False):
         lhs = to_value(self.lhs, scope)

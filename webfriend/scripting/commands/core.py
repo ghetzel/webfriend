@@ -3,8 +3,8 @@ import logging
 import time
 import json
 import urlnorm
-import inspect
 from urlparse import urlparse
+from webfriend import exceptions
 from webfriend.scripting.commands.base import CommandProxy
 from webfriend import rpc, utils
 from uuid import uuid4
@@ -96,13 +96,7 @@ class CoreProxy(CommandProxy):
 
         if isinstance(plugins, list):
             for plugin in plugins:
-                module, _ = utils.get_module_from_string(
-                    'webfriend.scripting.commands.{}'.format(plugin)
-                )
-
-                for name, obj in inspect.getmembers(module, inspect.isclass):
-                    if issubclass(CommandProxy, obj) and obj is not CommandProxy:
-                        self.environment.register(obj)
+                self.environment.register_by_module_name(plugin)
 
     def go(self, uri, referrer='random', wait_for_load=True, timeout=30000, clear_requests=True):
         """
@@ -347,6 +341,21 @@ class CoreProxy(CommandProxy):
             return None
         else:
             raise AttributeError("Unknown log level '{}'".format(level))
+
+    def fail(self, message):
+        """
+        Immediately exit the script in an error-like fashion with a specific message.
+
+        #### Arguments
+
+        - **message** (`str`):
+
+            The message to display whilst exiting immediately.
+
+        #### Raises
+        - `webfriend.exceptions.UserError`
+        """
+        raise exceptions.UserError(message)
 
     def rpc(self, method, **kwargs):
         """

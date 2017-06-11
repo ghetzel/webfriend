@@ -317,8 +317,8 @@ class ScriptingTest(TestCase):
             'cc': 20,
             'dd': 5,
             # 'f': u'This 2 is {b} and done',
-            'put_a': 'this is some stuff',
-            'put_b': 'buncha\nmuncha\ncruncha\nlines',
+            'put_a': '    this is some stuff',
+            'put_b': '    buncha\n    muncha\n    cruncha\n    lines',
         }, self._eval("""
             $a = 1 + 1
             $b = 9 - 3

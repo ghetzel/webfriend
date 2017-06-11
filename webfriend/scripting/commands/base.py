@@ -5,12 +5,14 @@ import importlib
 
 class CommandProxy(object):
     qualifier = None
+    doc_name = None
     default_qualifier = 'core'
     enabled_proxies = [
-        'core',
         'cookies',
+        'core',
         'events',
         'file',
+        'fmt',
         'page',
         'state',
     ]
@@ -46,7 +48,10 @@ class CommandProxy(object):
     def get_all_proxies(cls):
         proxies = []
         for proxy_module in cls.enabled_proxies:
-            module = importlib.import_module('webfriend.scripting.commands.{}'.format(proxy_module))
+            module = importlib.import_module('webfriend.scripting.commands.{}'.format(
+                proxy_module
+            ))
+
             members = inspect.getmembers(module, inspect.isclass)
 
             for subcls in members:

@@ -674,12 +674,26 @@ class DOM(Base):
         if request_id:
             return self.resources.get(request_id)
         elif url:
+            matching_requests = []
+
             for _, request in self.resources.items():
                 try:
                     if url == request['request']['url']:
                         return request
+                    elif url in request['request']['url']:
+                        matching_requests.append(request)
                 except KeyError:
                     continue
+
+            if len(matching_requests) == 1:
+                return matching_requests[0]
+            elif len(matching_requests) > 1:
+                raise exceptions.TooManyResults(
+                    'The URL pattern "{}" matched {} requests, need at most 1'.format(
+                        url,
+                        len(matching_requests)
+                    )
+                )
 
         return False
 
@@ -708,6 +722,11 @@ class DOM(Base):
 
     @classmethod
     def ensure_unique_element(cls, selector, elements):
+        if elements is False:
+            raise exceptions.EmptyResult("No elements matched the selector: {}".format(
+                selector
+            ))
+
         if isinstance(elements, dict):
             nodes = elements.get('nodes', [])
         else:
@@ -725,7 +744,7 @@ class DOM(Base):
                 )
             )
 
-        return True
+        return nodes[0]
 
     def perform_search(self, query, shadow=True):
         params = {

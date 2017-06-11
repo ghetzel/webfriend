@@ -73,20 +73,28 @@ class ConditionalExpression(MetaModel):
                 return (lhs >= rhs)
 
             elif operator == '=~':
-                if not isinstance(rhs, types.RegularExpression):
+                if isinstance(rhs, types.RegularExpression):
+                    return rhs.is_match('{}'.format(lhs))
+
+                elif hasattr(rhs, 'match'):
+                    return (rhs.match('{}'.format(lhs)) is not None)
+
+                else:
                     raise ValueError(
                         "Match operator must specify a regular expression on the right-hand side"
                     )
 
-                return rhs.is_match('{}'.format(lhs))
-
             elif operator == '!~':
-                if not isinstance(rhs, types.RegularExpression):
+                if isinstance(rhs, types.RegularExpression):
+                    return not rhs.is_match('{}'.format(lhs))
+
+                elif hasattr(rhs, 'match'):
+                    return (rhs.match('{}'.format(lhs)) is None)
+
+                else:
                     raise ValueError(
                         "Unmatch operator must specify a regular expression on the right-hand side"
                     )
-
-                return not rhs.is_match('{}'.format(lhs))
 
             elif operator == 'in':
                 return (lhs in rhs)

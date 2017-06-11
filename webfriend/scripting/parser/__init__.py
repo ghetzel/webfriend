@@ -6,8 +6,6 @@ import os
 
 
 def to_value(value, scope, preserve_strings=False):
-    original_value = value
-
     # expand variables into values first
     if isinstance(value, variables.Variable):
         value = value.resolve(scope)
@@ -17,11 +15,8 @@ def to_value(value, scope, preserve_strings=False):
         value, _ = value.process(scope)
 
     # if we're told to, return string classes directly (for interpolation)
-    if preserve_strings and isinstance(original_value, types.String):
-        return original_value
-
-    if isinstance(value, (types.String, types.Heredoc)):
-        value = value.value
+    if preserve_strings and isinstance(value, (types.StringLiteral, types.Heredoc)):
+        return value
 
     # do type detection and extraction
     elif isinstance(value, types.Array):
@@ -74,14 +69,17 @@ class Friendscript(object):
                     loops.FlowControlWord,
                     loops.LoopBlock,
                     types.Array,
-                    types.Heredoc,
                     types.Object,
                     types.RegularExpression,
-                    types.String,
                     variables.Assignment,
                     variables.CommandID,
                     variables.Variable,
-                ]
+                ],
+                match_filters={
+                    'StringLiteral':      types.StringLiteral,
+                    'StringInterpolated': types.StringInterpolated,
+                    'Heredoc':            types.Heredoc,
+                },
             )
         except textx.exceptions.TextXSyntaxError as e:
             raise

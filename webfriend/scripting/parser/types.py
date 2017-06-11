@@ -1,30 +1,63 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from collections import OrderedDict
 from webfriend.scripting.parser import MetaModel
 import re
-import os
 
 
 class Array(MetaModel):
     pass
 
 
-class String(MetaModel):
-    pass
+class String(unicode):
+    def __new__(cls, value, *args, **kwargs):
+        if not isinstance(value, unicode):
+            value = value.encode('UTF-8')
+
+        value = cls.preprocess(value)
+
+        return unicode.__new__(cls, value, *args, **kwargs)
+
+    @classmethod
+    def preprocess(cls, value):
+        return value
 
 
-class Heredoc(MetaModel):
-    @property
-    def value(self):
-        lines = self.body.split('\n')
+class StringLiteral(String):
+    rx_start = re.compile('^\'')
+    rx_end   = re.compile('\'$')
 
-        if len(lines) > 1:
-            common = os.path.commonprefix(lines[1:])
-        else:
-            common = ''
+    @classmethod
+    def preprocess(cls, value):
+        value = cls.rx_start.sub('', value)
+        value = cls.rx_end.sub('', value)
+        return value
 
+
+class StringInterpolated(String):
+    rx_start = re.compile('^\"')
+    rx_end   = re.compile('\"$')
+
+    @classmethod
+    def preprocess(cls, value):
+        value = cls.rx_start.sub('', value)
+        value = cls.rx_end.sub('', value)
+        return value
+
+
+class Heredoc(String):
+    rx_start = re.compile('^begin(\s*\n)?')
+    rx_end   = re.compile('\s+end$')
+
+    @classmethod
+    def preprocess(cls, value):
+        value = cls.rx_start.sub('', value)
+        value = cls.rx_end.sub('', value)
+        return value
+
+    def deindent(self, n):
         return '\n'.join([
-            line.lstrip(common) for line in lines
+            line.replace(' ' * n, '', 1) for line in self.split('\n')
         ])
 
 

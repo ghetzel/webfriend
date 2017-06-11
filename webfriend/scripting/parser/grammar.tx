@@ -211,7 +211,7 @@ KeyValuePair:
 ;
 
 KeyType:
-    ( !ReservedWord | ID | Heredoc | String )
+    ( !ReservedWord | ID | String )
 ;
 
 Type:
@@ -223,23 +223,23 @@ Null:
 ;
 
 ScalarType:
-    ( NUMBER | BOOL | String | Heredoc )
+    ( NUMBER | BOOL | String )
 ;
 
 String[noskipws]:
-    ( exact="'" value=/[^']*/ "'" | '"' value=/[^"]*/ '"' )
+    ( StringLiteral | StringInterpolated | Heredoc )
+;
+
+StringLiteral:
+    /'[^\']*'/
+;
+
+StringInterpolated:
+    /"[^\"]*"/
 ;
 
 Heredoc:
-    ( HeredocStart body=/\s*(.|\n)*?(?=\n\s*end\s+)/ HeredocEnd )
-;
-
-HeredocStart:
-    'begin'
-;
-
-HeredocEnd:
-    'end'
+    /begin(.|\n)*?(?!\n\s*end\s+)end/
 ;
 
 RegularExpression:

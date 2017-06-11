@@ -4,6 +4,8 @@ from webfriend.scripting import parser
 from webfriend.scripting.commands.base import CommandProxy
 import logging
 import traceback
+import inspect
+import importlib
 
 
 class CommandSetNotReady(Exception):
@@ -71,6 +73,15 @@ class Environment(object):
         for name, cls in CommandProxy.get_all_proxies():
             self.register(cls, qualifier=name)
 
+    def register_by_module_name(self, proxy_module_name):
+        module = importlib.import_module(
+            'webfriend.scripting.commands.{}'.format(proxy_module_name)
+        )
+
+        for name, obj in inspect.getmembers(module, inspect.isclass):
+            if issubclass(obj, CommandProxy) and obj is not CommandProxy:
+                self.register(obj)
+
     def register(self, proxy_cls, qualifier=None):
         if not issubclass(proxy_cls, CommandProxy):
             raise ValueError("Proxy class must be a subclass of CommandProxy")
@@ -78,6 +89,7 @@ class Environment(object):
         if qualifier is None:
             qualifier = proxy_cls.as_qualifier()
 
+        logging.debug('Registering {} as command proxy with qualifier "{}"'.format(proxy_cls, qualifier))
         self[qualifier] = proxy_cls(self.browser, environment=self)
 
     def get_proxy_for_command(self, command):
@@ -89,7 +101,7 @@ class Environment(object):
                 proxy = proxy[CommandProxy.default_qualifier]
                 command_name = q_command[0]
             else:
-                for subproxy in q_command[:-2]:
+                for subproxy in q_command[:-1]:
                     proxy = proxy[subproxy]
 
                 command_name = q_command[-1]
@@ -133,7 +145,7 @@ class Environment(object):
 
         return values
 
-    def interpolate(self, value, scope=None, **kwargs):
+    def interpolate(self, value, scope=None, deindent_heredocs=True, **kwargs):
         if scope is None:
             scope = self._scope
 
@@ -144,14 +156,17 @@ class Environment(object):
             value, _ = value.process(scope, preserve_types=True)
 
         # if this is an exact-match string, then interpolate is a no-op
-        if isinstance(value, parser.types.String) and value.exact or \
-           isinstance(value, parser.types.Heredoc):
-            value = value.value
-
-            if isinstance(value, str):
-                value = value.decode('UTF-8')
-
+        if isinstance(value, parser.types.StringLiteral):
             return value
+
+        # for heredocs, we're going to return the literal as-is, but we trim off the indentation
+        # whitespace of the calling command, that way heredocs can be written to match the indentation
+        # level of the surrounding script, but when evaluated they are indented to the "intended" level
+        if isinstance(value, parser.types.Heredoc):
+            if deindent_heredocs:
+                return value.deindent(self.col - 1)
+            else:
+                return value
 
         actual = parser.to_value(value, scope)
 
@@ -232,7 +247,7 @@ class Environment(object):
             except KeyError as e:
                 raise parser.exceptions.ScriptError(
                     "Use of undefined variable '{}' in string pattern".format(
-                        str(e).lstrip("u'").rstrip("'")
+                        str(e).replace("u'", '', 1).rstrip("'")
                     ),
                     model=command
                 )
