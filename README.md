@@ -24,8 +24,6 @@ make
 
 ## Documentation
 
-* [Getting Started](docs/getting-started.md)
-
 * Friendscript (Web Automation Scripting Language)
 
     - [Beginner's Guide](docs/intro.md)
