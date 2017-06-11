@@ -41,12 +41,11 @@ package-sign:
 		--local-user 6A116E6B0F678FA5 \
 		--detach-sign \
 		--armor \
-		--batch \
 		--yes *.tar.gz
 
 package-push:
 	./env/bin/twine upload \
-		--repository-url https://pypi.python.org \
+		--repository pypi \
 		--skip-existing dist/*
 
 package: package-build package-sign package-push clean-cache

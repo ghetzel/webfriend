@@ -20,7 +20,6 @@ class Event(object):
         return self.payload.get(key, fallback)
 
     def __getitem__(self, key):
-        print('get: {}'.format(key))
         if key == '__payload__':
             return self.payload
         else:
