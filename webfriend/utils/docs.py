@@ -3,28 +3,42 @@ import inspect
 import logging
 import re
 import webfriend.scripting.commands
+from webfriend.scripting.environment import Environment
+from webfriend.scripting.scope import Scope
 from webfriend.scripting.commands.base import CommandProxy
 from webfriend.utils import get_module_from_string, resolve_object
 
 RX_DOCSTRING_SEEOTHER = re.compile('(?P<head>.*)\s*see:\s*`(?P<module>.*)`\s*(?P<tail>.*)', re.IGNORECASE)
 
 
-def document_commands():
+def document_commands(plugins=None, only_plugins=False, omit_header=False):
     base = CommandProxy
+    environment = Environment(Scope())
     toc = []
     subtoc = {}
     commands_body = []
 
-    classes = CommandProxy.get_all_proxies()
+    if isinstance(plugins, list):
+        for plugin in plugins:
+            environment.register_by_module_name(plugin)
+
+    classes = environment.proxies
+
     classes = [
-        c for c in classes if c[0] == CommandProxy.default_qualifier
+        i for q, i in classes.items() if q == CommandProxy.default_qualifier
     ] + sorted([
-        c for c in classes if c[0] != CommandProxy.default_qualifier
+        i for q, i in classes.items() if q != CommandProxy.default_qualifier
     ])
 
     # for each proxy class
-    for cls in classes:
-        proxy = cls[1]
+    for proxy in classes:
+        if only_plugins:
+            if plugins is None:
+                continue
+
+            if isinstance(plugins, list) and proxy.as_qualifier() not in plugins:
+                continue
+
         proxy_docs = inspect.getdoc(proxy)
         commands_body.append("## `{}` Command Set".format(proxy.as_qualifier()))
         commands_body.append('')
@@ -82,12 +96,13 @@ def document_commands():
 
     final = ['# Command Reference']
 
-    header_docs = inspect.getdoc(webfriend.scripting.commands)
+    if not omit_header:
+        header_docs = inspect.getdoc(webfriend.scripting.commands)
 
-    if header_docs:
-        final.append('')
-        final += header_docs.split('\n')
-        final.append('')
+        if header_docs:
+            final.append('')
+            final += header_docs.split('\n')
+            final.append('')
 
     # include TOC tree
     for title, qualifier in toc:
