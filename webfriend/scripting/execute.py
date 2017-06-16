@@ -1,5 +1,7 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from webfriend.scripting import parser
-from webfriend.scripting.environment import Environment
+from webfriend.scripting.environment import Environment, IgnoreResults
 from webfriend.scripting.scope import Scope
 from webfriend.scripting.commands import *  # noqa
 import logging
@@ -45,7 +47,8 @@ def execute_script(browser, script, scope=None, environment=None, preserve_state
                 raise
             except Exception as e:
                 logging.debug('Exception')
-                raise parser.exceptions.ScriptError(str(e), model=block)
+                raise
+                raise parser.exceptions.ScriptError('{}'.format(e), model=block)
 
     finally:
         if not preserve_state:
@@ -92,10 +95,12 @@ def evaluate_block(scriptmgr, block, scope):
         # for each command in the pipeline...
         for command in block.commands:
             key, value = environment.execute(command, scope)
-            value = parser.to_value(value, scope)
 
-            if key is not None:
-                scope.set(key, value, force=True)
+            if not isinstance(value, IgnoreResults):
+                value = parser.to_value(value, scope)
+
+                if key is not None:
+                    scope.set(key, value, force=True)
 
             # perform delay if we have one
             if environment.has_execution_option('demo.post_command_delay'):

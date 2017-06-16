@@ -11,9 +11,12 @@ from webfriend.utils import get_module_from_string, resolve_object
 RX_DOCSTRING_SEEOTHER = re.compile('(?P<head>.*)\s*see:\s*`(?P<module>.*)`\s*(?P<tail>.*)', re.IGNORECASE)
 
 
-def document_commands(plugins=None, only_plugins=False, omit_header=False):
+def document_commands(plugins=None, only_plugins=False, omit_header=False, environment=None):
     base = CommandProxy
-    environment = Environment(Scope())
+
+    if not environment:
+        environment = Environment(Scope())
+
     toc = []
     subtoc = {}
     commands_body = []

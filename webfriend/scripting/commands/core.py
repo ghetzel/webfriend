@@ -1,13 +1,20 @@
 from __future__ import absolute_import
-import logging
-import time
-import json
-import urlnorm
+from __future__ import unicode_literals
 from urlparse import urlparse
-from webfriend import exceptions
-from webfriend.scripting.commands.base import CommandProxy
-from webfriend import rpc, utils
 from uuid import uuid4
+from webfriend import exceptions
+from webfriend import rpc, utils
+from webfriend.scripting.commands.base import CommandProxy
+from webfriend.scripting.execute import execute_script
+from webfriend.scripting.environment import Environment
+from webfriend.scripting.scope import Scope
+from webfriend.utils import autotype
+import json
+import logging
+import os
+import re
+import time
+import urlnorm
 
 
 class CoreProxy(CommandProxy):
@@ -376,6 +383,79 @@ class CoreProxy(CommandProxy):
         """
         return self.tab.rpc(method, **kwargs).as_dict()
 
+    def wait_for(self, event_name, timeout=30000):
+        """
+        Block until a specific event is received, or until **timeout** elapses (whichever comes
+        first).
+
+        #### Arguments
+
+        - **event_name** (`str`):
+
+            The name of the event to wait for.
+
+        - **timeout** (`int`):
+
+            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
+
+        #### Returns
+        `webfriend.rpc.Event`
+
+        #### Raises
+        `webfriend.exceptions.TimeoutError`
+        """
+        return self.tab.wait_for(event_name, timeout=timeout)
+
+    def wait_for_idle(self, idle, events=[], timeout=30000, poll_interval=250):
+        """
+        Blocks for a specified amount of time _after_ an event has been received, or until
+        **timeout** elapses (whichever comes first).
+
+        This is useful for waiting for events to occur after performing an action, then giving some
+        amount of time for those events to "settle" (e.g.: allowing the page time to react to those
+        events without knowing ahead of time what, if any, listeners will be responding.)  A common
+        use case for this would be to wait a few seconds _after_ a resize has occurred for anything
+        that just loaded to finish doing so.
+
+
+        #### Arguments
+
+        - **idle** (`int`):
+
+            The amount of time, in milliseconds, that the event stream should be idle before
+            returning.
+
+        - **events** (`list`, optional):
+
+            If not empty, the **idle** time will be interpreted as the amount of time since _any
+            of these specific events_ have occurred.  The default is to wait for the browser to be
+            idle with respect to _any_ events.
+
+        - **timeout** (`int`):
+
+            The maximum amount of time to wait before raising a
+            `webfriend.exceptions.TimeoutError`.
+
+        - **poll_interval** (`int`):
+
+            How often to check the event timings to see if the idle time has elapsed.
+
+        #### Returns
+        An `int` representing the number of milliseconds we waited for.
+
+        #### Raises
+        `webfriend.exceptions.TimeoutError`
+        """
+        if hasattr(events, 'values'):
+            events = events.values
+
+        return self.tab.wait_for_idle(
+            idle,
+            events=events,
+            timeout=timeout,
+            poll_interval=poll_interval
+        )
+
     def wait_for_load(self, timeout=30000, idle_time=500):
         """
         Blocks until the "Page.loadEventFired" event has fired, or until timeout elapses (whichever
@@ -475,7 +555,7 @@ class CoreProxy(CommandProxy):
         - `webfriend.exceptions.TooManyResults` if more than one elements were matched.
         """
         if selector:
-            elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
+            elements = self.tab.dom.select_nodes(selector)
             results = []
 
             if unique_match:
@@ -518,9 +598,8 @@ class CoreProxy(CommandProxy):
         if not isinstance(value, basestring):
             raise ValueError("'value' must be specified")
 
-        elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
-        self.tab.dom.ensure_unique_element(selector, elements)
-        field = elements['nodes'][0]
+        elements = self.tab.dom.select_nodes(selector)
+        field = self.tab.dom.ensure_unique_element(selector, elements)
 
         if autoclear:
             field['value'] = ''
@@ -548,7 +627,7 @@ class CoreProxy(CommandProxy):
         The result of the scroll operation.
         """
         if selector:
-            elements = self.tab.dom.select_nodes(selector, wait_for_match=True)
+            elements = self.tab.dom.select_nodes(selector)
             self.tab.dom.ensure_unique_element(selector, elements)
 
             return elements['nodes'][0].scroll_to()
@@ -568,6 +647,15 @@ class CoreProxy(CommandProxy):
         See: `webfriend.rpc.DOM.xpath`
         """
         return self.tab.dom.xpath(*args, **kwargs)
+
+    def switch_root(self, selector=None):
+        """
+        Change the current selector scope to be rooted at the given element.
+        """
+        if selector is None:
+            return self.tab.dom.root_to_top()
+        else:
+            return self.tab.dom.root_to(selector)
 
     def tabs(self, sync=True):
         """
@@ -663,5 +751,250 @@ class CoreProxy(CommandProxy):
 
         return self.browser.close_tab(tab_id)
 
-    def javascript(self, body):
-        return self.tab.evaluate(body, data=self.scope.as_dict(), calling_context=self.environment)
+    def javascript(self, body=None, file=None, expose_variables=True):
+        """
+        Inject Javascript into the current page, evaluate it, and return the results.  The script
+        is wrapped in an anonymous function whose return value will be returned from this command
+        as a native data type.
+
+        By default, scripts will have access to all local variables in the calling script that are
+        defined at the time of invocation.  They are available to injected scripts as a plain
+        object accessible using the `this` variable.
+
+        #### Arguments
+
+        - **body** (`str`, optional):
+
+            A string value that represents the script to be injected and executed.
+
+        - **file** (`str`, optional):
+
+            A filename that will loaded and injected into the browser.
+
+        - **expose_variables** (`bool`):
+
+            Whether to expose all local variables to the injected script or not.
+
+        #### Returns
+        Whatever data was returned from the injected script using a `return` statement,
+        automatically parsed into native data types.  Objects, arrays, and all scalar types are
+        supported as return values.
+        """
+        if not body and not file:
+            raise ValueError("Must specify either body or file")
+
+        if file:
+            body = open(file, 'r').read()
+
+        if expose_variables:
+            data = self.scope.as_dict()
+        else:
+            data = {}
+
+        return self.tab.evaluate(body, data=data, calling_context=self.environment)
+
+    def env(self, name, fallback=None, ignore_empty=True, detect_type=True, joiner=None):
+        """
+        Retrieves a system environment variable and returns the value of it, or a fallback value if
+        the variable does not exist or (optionally) is empty.
+
+        #### Arguments
+
+        - **name** (`str`):
+
+            The name of the environment variable.  Matches are case-insensitive, and the last
+            variable to be defined for a given key is the value that will be returned.
+
+        - **fallback** (any):
+
+            The value to return if the environment variable does not exist, or (optionally) is
+            empty.
+
+        - **ignore_empty** (`bool`):
+
+            Whether empty values should be ignored or not.
+
+        - **detect_type** (`bool`):
+
+            Whether automatic type detection should be performed or not.
+
+        - **joiner** (`str`, optional):
+
+            If specified, this string will be used to split matching values into a list of values.
+            This is useful for environment variables that contain multiple values joined by a
+            separator (e.g: the `PATH` variable.)
+
+        #### Returns
+        The value of the environment variable **name**, or a list of values if **joiner** was
+        specified. If **name** is non-existent or was empty, **fallback** will be returned instead.
+        """
+        value = None
+
+        # perform case-insensitive search of all environment variables
+        for k, v in os.environ.items():
+            if k.upper() == name.upper():
+                value = v
+                break
+
+        if value is None:
+            return fallback
+
+        # trim whitespace
+        value = value.strip()
+
+        if isinstance(joiner, basestring):
+            value = value.split(joiner)
+
+        # handle empty values AND empty lists post-split
+        if ignore_empty and not len(value):
+            return fallback
+
+        # perform type detection (if specified)
+        if detect_type:
+            if isinstance(value, list):
+                value = [autotype(v) for v in value]
+            else:
+                value = autotype(value)
+
+        return value
+
+    def require(self, plugin_name, package_format='webfriend.scripting.commands.{}'):
+        """
+        Loads a named plugin into the current environment.
+
+        #### Arguments
+
+        - **plugin_name** (`str`):
+
+            The name of the plugin to load.  This corresponds to the name of a Python module that
+            contains subclasses of `webfriend.scripting.commands.base.CommandProxy`.
+
+        - **package_format** (`str`):
+
+            Specifies which Python package contains the module named in **plugin_name**.  The
+            default is to assume plugins are built as namespaced modules that overlay the core
+            import tree at `webfriend.scripting.commands.<plugin_name>`.
+
+        #### Returns
+        The value of **plugin_name** if the load was successful.
+        """
+        self.environment.register_by_module_name(plugin_name)
+        return plugin_name
+
+    def run(
+        self,
+        script_name,
+        data=None,
+        isolated=True,
+        preserve_state=True,
+        merge_scopes=False,
+        result_key=Environment.default_result_key
+    ):
+        """
+        Evaluates another Friendscript loaded from another file.
+
+        #### Arguments
+
+        - **script_name** (`str`):
+
+            The filename or basename of the file to search for in the `WEBFRIEND_PATH` environment
+            variable to load and evaluate.  The `WEBFRIEND_PATH` variable behaves like the the
+            traditional *nix `PATH` variable, wherein multiple paths can be specified as a
+            colon-separated (`:`) list.  The current working directory will always be checked
+            first.
+
+        - **data** (`dict`, optional):
+
+            If specified, these values will be made available to the evaluated script before it
+            begins execution.
+
+        - **isolated** (`bool`):
+
+            Whether the script should have access to the calling script's variables or not.
+
+        - **preserve_state** (`bool`):
+
+            Whether event handlers created in the evaluated script should remain defined after the
+            script has completed.
+
+        - **merge_scopes** (`bool`):
+
+            Whether the scope state at the end of the script's evaluation should be merged into the
+            current execution scope.  Setting this to true allows variables defined inside of the
+            evaluated script to stay defined after the script has completed.  Otherwise, only the
+            value of the **result_key** variable is returned as the result of this command.
+
+        - **result_key** (`str`):
+
+            Defines the name of the variable that will be read from the evaluated script's scope
+            and returned from this command.  Defaults to "result", which is the same behavior as
+            all other commands.
+
+        #### Returns
+        The value of the variable named by **result_key** at the end of the evaluated script's
+        execution.
+
+        #### Raises
+        Any exception that can be raised from Friendscript.
+        """
+        script = None
+        final_script_name = None
+        path_prefixes = ['.']
+
+        # makes the ".fs" optional when passing scripts as arguments
+        script_name = re.sub(r'\.fs$', '', script_name) + '.fs'
+
+        # setup scopes
+        if isolated:
+            scope = Scope()
+        else:
+            scope = Scope(parent=self.scope)
+
+        # if data is specified, set these values in the evaluated script's scope
+        if isinstance(isolated, dict):
+            scope.update(isolated)
+
+        # process WEBFRIEND_PATH envvar
+        for prefix in os.environ.get('WEBFRIEND_PATH', '').split(':'):
+            path_prefixes.append(prefix)
+
+        # search for file in all prefixes
+        for prefix in path_prefixes:
+            s = os.path.join(prefix, script_name)
+
+            if os.path.isfile(s):
+                final_script_name = s
+                script = open(final_script_name, 'r').read()
+                break
+
+        # validate the script was read
+        if script is None:
+            raise exceptions.NotFound('Unable to locate script "{}" in any path'.format(
+                script_name
+            ))
+
+        elif isinstance(script, str):
+            script = script.decode('UTF-8')
+
+        # evaluate the script
+        logging.debug('Evaluating script {}'.format(final_script_name))
+        scope = execute_script(
+            self.browser,
+            script,
+            scope=scope,
+            preserve_state=preserve_state
+        )
+
+        # if not using an isolated scope, then the top-level keys that were modified in this script
+        # are set in our current scope (as if the included code ran inline)
+        if merge_scopes:
+            logging.debug(
+                'Updating {} variables in calling scope with result scope (iso={})'.format(
+                    len(scope),
+                    isolated
+                )
+            )
+
+            self.scope.update(scope)
+
+        return scope.get('result')

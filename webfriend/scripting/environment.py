@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from webfriend.scripting.scope import Scope
 from webfriend.scripting import parser
 from webfriend.scripting.commands.base import CommandProxy
@@ -8,7 +9,11 @@ import inspect
 import importlib
 
 
-class CommandSetNotReady(Exception):
+class EnvironmentNotReady(Exception):
+    pass
+
+
+class IgnoreResults(object):
     pass
 
 
@@ -19,6 +24,7 @@ class Environment(object):
         self._scope = (scope or Scope())
         self.proxies = (proxies or {})
         self.script = None
+        self.registered_names = set()
         self.browser = browser
         self._is_ready = False
         self._exec_options = {}
@@ -39,6 +45,13 @@ class Environment(object):
     @property
     def col(self):
         return self._col
+
+    def isolated(self, scope=None):
+        return Environment(
+            scope=scope,
+            proxies=self.proxies,
+            browser=self.browser
+        )
 
     def ready(self):
         if self._is_ready:
@@ -73,14 +86,22 @@ class Environment(object):
         for name, cls in CommandProxy.get_all_proxies():
             self.register(cls, qualifier=name)
 
-    def register_by_module_name(self, proxy_module_name):
-        module = importlib.import_module(
-            'webfriend.scripting.commands.{}'.format(proxy_module_name)
-        )
+    def register_by_module_name(
+        self,
+        proxy_module_name,
+        package_format='webfriend.scripting.commands.{}'
+    ):
+        plugin_module_name = package_format.format(proxy_module_name)
 
-        for name, obj in inspect.getmembers(module, inspect.isclass):
-            if issubclass(obj, CommandProxy) and obj is not CommandProxy:
-                self.register(obj)
+        # only register this module if we haven't already, making this call idempotent for
+        # modules named the same thing
+        if plugin_module_name not in self.registered_names:
+            module = importlib.import_module(plugin_module_name)
+
+            for name, obj in inspect.getmembers(module, inspect.isclass):
+                if issubclass(obj, CommandProxy) and obj is not CommandProxy:
+                    self.register(obj)
+                    self.registered_names.add(plugin_module_name)
 
     def register(self, proxy_cls, qualifier=None):
         if not issubclass(proxy_cls, CommandProxy):
@@ -98,7 +119,11 @@ class Environment(object):
 
         try:
             if len(q_command) == 1:
-                proxy = proxy[CommandProxy.default_qualifier]
+                if q_command[0] in proxy and proxy[q_command[0]].has_default():
+                    proxy = proxy[q_command[0]]
+                else:
+                    proxy = proxy[CommandProxy.default_qualifier]
+
                 command_name = q_command[0]
             else:
                 for subproxy in q_command[:-1]:
@@ -157,6 +182,9 @@ class Environment(object):
 
         # if this is an exact-match string, then interpolate is a no-op
         if isinstance(value, parser.types.StringLiteral):
+            if isinstance(value, str):
+                value = value.decode('UTF-8')
+
             return value
 
         # for heredocs, we're going to return the literal as-is, but we trim off the indentation
@@ -169,6 +197,9 @@ class Environment(object):
                 return value
 
         actual = parser.to_value(value, scope)
+
+        if isinstance(actual, str):
+            actual = actual.decode('UTF-8')
 
         # lists get recursed into
         if isinstance(actual, list):
@@ -242,7 +273,10 @@ class Environment(object):
                 else:
                     resultkey = self.default_result_key
 
-                keyname = (keyname or str(resultkey))
+                if resultkey is not None:
+                    keyname = '$' + (keyname or str(resultkey))
+                else:
+                    keyname = '[discarded]'
 
             except KeyError as e:
                 raise parser.exceptions.ScriptError(
@@ -252,7 +286,7 @@ class Environment(object):
                     model=command
                 )
 
-            logging.debug(' ========= Execute: {} -> ${}'.format(
+            logging.debug(' ========= Execute: {} -> {}'.format(
                 proxy.qualify(command_name),
                 keyname
             ))
@@ -298,7 +332,7 @@ class Environment(object):
 
     def __getitem__(self, proxy_name):
         if not self._is_ready:
-            raise CommandSetNotReady("Cannot work with CommandSet until ready() is called.")
+            raise EnvironmentNotReady("Cannot work with environment until ready() is called.")
 
         return self.proxies[proxy_name]
 

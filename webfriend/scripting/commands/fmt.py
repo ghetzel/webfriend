@@ -1,6 +1,6 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from webfriend.scripting.commands.base import CommandProxy
-# from webfriend import exceptions
 from webfriend.utils import autotype
 from webfriend.scripting.parser import types
 

@@ -13,24 +13,31 @@ shown with the value `<REQUIRED>`.
    - **[click](#click)**
    - **[close_tab](#close_tab)**
    - **[configure](#configure)**
+   - **[env](#env)**
    - **[fail](#fail)**
    - **[field](#field)**
    - **[focus](#focus)**
    - **[go](#go)**
-   - [javascript](#javascript)
+   - **[javascript](#javascript)**
    - **[log](#log)**
    - **[new_tab](#new_tab)**
    - **[put](#put)**
    - [reload](#reload)
+   - **[require](#require)**
    - **[resize](#resize)**
    - **[rpc](#rpc)**
+   - **[run](#run)**
    - **[scroll_to](#scroll_to)**
    - **[select](#select)**
    - [stop](#stop)
+   - **[switch_root](#switch_root)**
    - **[switch_tab](#switch_tab)**
    - **[tabs](#tabs)**
    - **[type](#type)**
    - **[wait](#wait)**
+   - **[wait_for](#wait_for)**
+   - [wait_for_element](#wait_for_element)
+   - **[wait_for_idle](#wait_for_idle)**
    - **[wait_for_load](#wait_for_load)**
    - [xpath](#xpath)
 - [Cookies](#cookies-command-set)
@@ -39,9 +46,6 @@ shown with the value `<REQUIRED>`.
    - **[cookies::get](#cookiesget)**
    - **[cookies::query](#cookiesquery)**
    - **[cookies::set](#cookiesset)**
-- [Events](#events-command-set)
-   - **[events::wait_for](#eventswait_for)**
-   - **[events::wait_for_idle](#eventswait_for_idle)**
 - [File](#file-command-set)
    - [file::append](#fileappend)
    - [file::basename](#filebasename)
@@ -81,13 +85,15 @@ shown with the value `<REQUIRED>`.
    - [page::wait_for_capture](#pagewait_for_capture)
 - [Vars](#vars-command-set)
    - [vars::clear](#varsclear)
+   - **[vars::default](#varsdefault)**
    - [vars::ensure](#varsensure)
-   - [vars::get](#varsget)
-   - [vars::interpolate](#varsinterpolate)
+   - **[vars::get](#varsget)**
+   - **[vars::interpolate](#varsinterpolate)**
    - [vars::pop](#varspop)
    - [vars::push](#varspush)
-   - [vars::scope_at_level](#varsscope_at_level)
    - [vars::set](#varsset)
+- [Utilities](#utils-command-set)
+   - **[utils::netrc](#utilsnetrc)**
 
 ## `core` Command Set
 
@@ -213,6 +219,52 @@ setup.
 
 ---
 
+### `env`
+
+```
+env <NAME> {
+    fallback:     null,
+    ignore_empty: true,
+    detect_type:  true,
+    joiner:       null
+}
+```
+
+Retrieves a system environment variable and returns the value of it, or a fallback value if
+the variable does not exist or (optionally) is empty.
+
+#### Arguments
+
+- **name** (`str`):
+
+    The name of the environment variable.  Matches are case-insensitive, and the last
+    variable to be defined for a given key is the value that will be returned.
+
+- **fallback** (any):
+
+    The value to return if the environment variable does not exist, or (optionally) is
+    empty.
+
+- **ignore_empty** (`bool`):
+
+    Whether empty values should be ignored or not.
+
+- **detect_type** (`bool`):
+
+    Whether automatic type detection should be performed or not.
+
+- **joiner** (`str`, optional):
+
+    If specified, this string will be used to split matching values into a list of values.
+    This is useful for environment variables that contain multiple values joined by a
+    separator (e.g: the `PATH` variable.)
+
+#### Returns
+The value of the environment variable **name**, or a list of values if **joiner** was
+specified. If **name** is non-existent or was empty, **fallback** will be returned instead.
+
+---
+
 ### `fail`
 
 ```
@@ -335,8 +387,38 @@ The URL that was loaded (`str`)
 ### `javascript`
 
 ```
-javascript <BODY>
+javascript <BODY> {
+    file:             null,
+    expose_variables: true
+}
 ```
+
+Inject Javascript into the current page, evaluate it, and return the results.  The script
+is wrapped in an anonymous function whose return value will be returned from this command
+as a native data type.
+
+By default, scripts will have access to all local variables in the calling script that are
+defined at the time of invocation.  They are available to injected scripts as a plain
+object accessible using the `this` variable.
+
+#### Arguments
+
+- **body** (`str`, optional):
+
+    A string value that represents the script to be injected and executed.
+
+- **file** (`str`, optional):
+
+    A filename that will loaded and injected into the browser.
+
+- **expose_variables** (`bool`):
+
+    Whether to expose all local variables to the injected script or not.
+
+#### Returns
+Whatever data was returned from the injected script using a `return` statement,
+automatically parsed into native data types.  Objects, arrays, and all scalar types are
+supported as return values.
 
 ---
 
@@ -440,6 +522,34 @@ reload
 
 ---
 
+### `require`
+
+```
+require <PLUGIN_NAME> {
+    package_format: 'webfriend.scripting.commands.{}'
+}
+```
+
+Loads a named plugin into the current environment.
+
+#### Arguments
+
+- **plugin_name** (`str`):
+
+    The name of the plugin to load.  This corresponds to the name of a Python module that
+    contains subclasses of `webfriend.scripting.commands.base.CommandProxy`.
+
+- **package_format** (`str`):
+
+    Specifies which Python package contains the module named in **plugin_name**.  The
+    default is to assume plugins are built as namespaced modules that overlay the core
+    import tree at `webfriend.scripting.commands.<plugin_name>`.
+
+#### Returns
+The value of **plugin_name** if the load was successful.
+
+---
+
 ### `resize`
 
 ```
@@ -525,6 +635,66 @@ A `dict` representation of the `webfriend.rpc.Reply` class.
 
 ---
 
+### `run`
+
+```
+run <SCRIPT_NAME> {
+    data:           null,
+    isolated:       true,
+    preserve_state: true,
+    merge_scopes:   false,
+    result_key:     'result'
+}
+```
+
+Evaluates another Friendscript loaded from another file.
+
+#### Arguments
+
+- **script_name** (`str`):
+
+    The filename or basename of the file to search for in the `WEBFRIEND_PATH` environment
+    variable to load and evaluate.  The `WEBFRIEND_PATH` variable behaves like the the
+    traditional *nix `PATH` variable, wherein multiple paths can be specified as a
+    colon-separated (`:`) list.  The current working directory will always be checked
+    first.
+
+- **data** (`dict`, optional):
+
+    If specified, these values will be made available to the evaluated script before it
+    begins execution.
+
+- **isolated** (`bool`):
+
+    Whether the script should have access to the calling script's variables or not.
+
+- **preserve_state** (`bool`):
+
+    Whether event handlers created in the evaluated script should remain defined after the
+    script has completed.
+
+- **merge_scopes** (`bool`):
+
+    Whether the scope state at the end of the script's evaluation should be merged into the
+    current execution scope.  Setting this to true allows variables defined inside of the
+    evaluated script to stay defined after the script has completed.  Otherwise, only the
+    value of the **result_key** variable is returned as the result of this command.
+
+- **result_key** (`str`):
+
+    Defines the name of the variable that will be read from the evaluated script's scope
+    and returned from this command.  Defaults to "result", which is the same behavior as
+    all other commands.
+
+#### Returns
+The value of the variable named by **result_key** at the end of the evaluated script's
+execution.
+
+#### Raises
+Any exception that can be raised from Friendscript.
+
+---
+
 ### `scroll_to`
 
 ```
@@ -589,6 +759,16 @@ found and returned within the given timeout, or a TimeoutError will be raised.
 ```
 stop
 ```
+
+---
+
+### `switch_root`
+
+```
+switch_root <SELECTOR>
+```
+
+Change the current selector scope to be rooted at the given element.
 
 ---
 
@@ -736,6 +916,97 @@ Pauses execution of the current script for the given number of milliseconds.
 
 #### Returns
 The number of milliseconds.
+
+---
+
+### `wait_for`
+
+```
+wait_for <EVENT_NAME> {
+    timeout:    30000
+}
+```
+
+Block until a specific event is received, or until **timeout** elapses (whichever comes
+first).
+
+#### Arguments
+
+- **event_name** (`str`):
+
+    The name of the event to wait for.
+
+- **timeout** (`int`):
+
+    The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
+
+#### Returns
+`webfriend.rpc.Event`
+
+#### Raises
+`webfriend.exceptions.TimeoutError`
+
+---
+
+### `wait_for_element`
+
+```
+wait_for_element <SELECTOR> {
+    action:   'inserted',
+    timeout:  30000,
+    interval: 250
+}
+```
+
+---
+
+### `wait_for_idle`
+
+```
+wait_for_idle <IDLE> {
+    events:        [],
+    timeout:       30000,
+    poll_interval: 250
+}
+```
+
+Blocks for a specified amount of time _after_ an event has been received, or until
+**timeout** elapses (whichever comes first).
+
+This is useful for waiting for events to occur after performing an action, then giving some
+amount of time for those events to "settle" (e.g.: allowing the page time to react to those
+events without knowing ahead of time what, if any, listeners will be responding.)  A common
+use case for this would be to wait a few seconds _after_ a resize has occurred for anything
+that just loaded to finish doing so.
+
+
+#### Arguments
+
+- **idle** (`int`):
+
+    The amount of time, in milliseconds, that the event stream should be idle before
+    returning.
+
+- **events** (`list`, optional):
+
+    If not empty, the **idle** time will be interpreted as the amount of time since _any
+    of these specific events_ have occurred.  The default is to wait for the browser to be
+    idle with respect to _any_ events.
+
+- **timeout** (`int`):
+
+    The maximum amount of time to wait before raising a
+    `webfriend.exceptions.TimeoutError`.
+
+- **poll_interval** (`int`):
+
+    How often to check the event timings to see if the idle time has elapsed.
+
+#### Returns
+An `int` representing the number of milliseconds we waited for.
+
+#### Raises
+`webfriend.exceptions.TimeoutError`
 
 ---
 
@@ -949,88 +1220,6 @@ Create or update a cookie based on the given values.
 
     Specifies when the cookie expires in epoch seconds (number of seconds
     since 1970-01-01 00:00:00 UTC).
-
----
-
-
-## `events` Command Set
-
-### `events::wait_for`
-
-```
-events::wait_for <EVENT_NAME> {
-    timeout:    30000
-}
-```
-
-Block until a specific event is received, or until **timeout** elapses (whichever comes
-first).
-
-#### Arguments
-
-- **event_name** (`str`):
-
-    The name of the event to wait for.
-
-- **timeout** (`int`):
-
-    The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
-
-#### Returns
-`webfriend.rpc.Event`
-
-#### Raises
-`webfriend.exceptions.TimeoutError`
-
----
-
-### `events::wait_for_idle`
-
-```
-events::wait_for_idle <IDLE> {
-    events:        [],
-    timeout:       30000,
-    poll_interval: 250
-}
-```
-
-Blocks for a specified amount of time _after_ an event has been received, or until
-**timeout** elapses (whichever comes first).
-
-This is useful for waiting for events to occur after performing an action, then giving some
-amount of time for those events to "settle" (e.g.: allowing the page time to react to those
-events without knowing ahead of time what, if any, listeners will be responding.)  A common
-use case for this would be to wait a few seconds _after_ a resize has occurred for anything
-that just loaded to finish doing so.
-
-
-#### Arguments
-
-- **idle** (`int`):
-
-    The amount of time, in milliseconds, that the event stream should be idle before
-    returning.
-
-- **events** (`list`, optional):
-
-    If not empty, the **idle** time will be interpreted as the amount of time since _any
-    of these specific events_ have occurred.  The default is to wait for the browser to be
-    idle with respect to _any_ events.
-
-- **timeout** (`int`):
-
-    The maximum amount of time to wait before raising a
-    `webfriend.exceptions.TimeoutError`.
-
-- **poll_interval** (`int`):
-
-    How often to check the event timings to see if the idle time has elapsed.
-
-#### Returns
-An `int` representing the number of milliseconds we waited for.
-
-#### Raises
-`webfriend.exceptions.TimeoutError`
 
 ---
 
@@ -1723,6 +1912,26 @@ vars::clear <KEY> {
 
 ---
 
+### `vars::default`
+
+```
+vars::default <PARENT>
+```
+
+Return a list of variable names that are defined in a scope.
+
+#### Arguments
+
+- **parent** (`int`, optional):
+
+    If non-zero, specifies how many levels up to insepect relative to the current scope.
+    This is used to query and manipulate scopes above our own.
+
+#### Returns
+A list of zero of more strings, one for each variable name.
+
+---
+
 ### `vars::ensure`
 
 ```
@@ -1743,13 +1952,56 @@ vars::get <KEY> {
 }
 ```
 
+Return the value of a specific variable defined in a scope.
+
+#### Arguments
+
+- **key** (`str`):
+
+    The name of the variable to retrieve.
+
+- **fallback** (`bool`, optional):
+
+    A value to return if the variable was not found.
+
+- **parent** (`int`, optional):
+
+    If non-zero, specifies how many levels up to insepect relative to the current scope.
+    This is used to query and manipulate scopes above our own.
+
+#### Returns
+The value of the named variable, or **fallback** if the value was not found.
+
 ---
 
 ### `vars::interpolate`
 
 ```
-vars::interpolate <VALUE>
+vars::interpolate <FORMAT> {
+    isolated: false,
+    values:   null
+}
 ```
+
+Return a value interpolated with values from a scope or ones that are explicitly provided.
+
+#### Arguments
+
+- **format** (`str`):
+
+    The format string to interpolate.
+
+- **isolated** (`bool`):
+
+    If true, the calling scope will not be used to interpolate values.
+
+- **values** (`dict`, optional):
+
+    If specified, these values will override the scope's values (if any) and be available
+    to **format** during interpolation.
+
+#### Returns
+An autotyped value resulting from interpolating the given **format**.
 
 ---
 
@@ -1775,14 +2027,6 @@ vars::push <KEY> {
 
 ---
 
-### `vars::scope_at_level`
-
-```
-vars::scope_at_level <LEVEL>
-```
-
----
-
 ### `vars::set`
 
 ```
@@ -1792,6 +2036,30 @@ vars::set <KEY> {
     parent:      0
 }
 ```
+
+---
+
+
+## `utils` Command Set
+
+### `utils::netrc`
+
+```
+utils::netrc <HOSTNAME> {
+    filename: '~/.netrc'
+}
+```
+
+Retrieves a username and password stored in a `.netrc`-formatted file.
+
+#### Arguments
+
+- **value** (`str`):
+
+    The value to apply the operation to.
+
+#### Returns
+A 3-element tuple representing the hostname, username, and password of the matching record.
 
 ---
 

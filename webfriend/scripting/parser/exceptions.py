@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from textx.model import model_root
 from termcolor import colored
 import re
@@ -68,9 +69,14 @@ class ScriptError(Exception):
         except:
             pass
 
-        if message.startswith('Expected ') and offending_char:
-            message = "Unexpected character '{}'".format(offending_char)
+        # handles textx error messages that are not particularly friendly for end users
+        if message.startswith('Expected '):
+            if offending_char:
+                message = "Unexpected character '{}'".format(offending_char)
+            else:
+                message = "Unexpected character"
 
+        # script-aware traceback
         if self.lines and self.line and self.col:
             out = "{} on line {}, char {}\n".format(self.error_type, self.line, self.col)
 

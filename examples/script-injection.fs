@@ -16,15 +16,15 @@ $terms = [
 # Everything between the 'begin' and 'end' keywords will be passed to the browser.
 #
 javascript begin
-    if(webfriend.terms) {
+    if(this.terms) {
         // we're going to start walking from the <body> tag down
         var bodyTag = document.getElementsByTagName('body')[0];
         var walker = document.createTreeWalker(bodyTag, NodeFilter.SHOW_TEXT, null, false);
         var patterns = [];
 
         // parse incoming terms into patterns or exact string matches
-        for(var i = 0; i < webfriend.terms.length; i++) {
-            var term = webfriend.terms[i];
+        for(var i = 0; i < this.terms.length; i++) {
+            var term = this.terms[i];
 
             if(term.length > 2 && term.indexOf('/') == 0 && term.lastIndexOf('/') > 0) {
                 var rx = term.slice(1, term.lastIndexOf('/'));

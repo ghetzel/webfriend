@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 setup(
     name='webfriend',
     description='An API binding and automation control language for the Chrome Remote Debugging API',
-    version='0.1.0',
+    version='0.1.1',
     author='Gary Hetzel',
     author_email='garyhetzel@gmail.com',
     url='https://github.com/ghetzel/webfriend',
@@ -14,6 +14,7 @@ setup(
         'click-log',
         'ephemeral_port_reserve',
         'gevent',
+        'prompt_toolkit',
         'pygments',
         'termcolor',
         'textx',

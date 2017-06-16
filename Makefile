@@ -15,6 +15,9 @@ shell:
 build:
 	./env/bin/pip install -e .
 
+install:
+	pip install -U --user -e .
+
 test:
 	./env/bin/flake8
 	./env/bin/py.test -v

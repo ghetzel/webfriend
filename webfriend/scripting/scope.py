@@ -26,6 +26,7 @@ class Scope(object):
             The parent scope, if any, to inherit values from.
     """
     SCALAR_TYPES = (basestring, int, float, bool)
+    nested_joiner = '.'
 
     def __init__(self, data=None, parent=None):
         if parent and not isinstance(parent, Scope):
@@ -33,6 +34,7 @@ class Scope(object):
 
         self.parent = parent
         self.data   = (data or {})
+        self.modified_keys = set()
 
     @property
     def level(self):
@@ -51,13 +53,19 @@ class Scope(object):
 
             return key[0], key
         else:
-            parts = key.split('.')
+            parts = key.split(cls.nested_joiner)
 
             for i, part in enumerate(parts):
                 if isinstance(part, str):
                     parts[i] = part.decode('UTF-8')
 
             return parts[0], parts
+
+    @classmethod
+    def join_key(cls, key):
+        if isinstance(key, (list, tuple)):
+            return cls.nested_joiner.join(['{}'.format(k) for k in key])
+        return '{}'.format(key)
 
     def ancestors(self):
         out = []
@@ -144,8 +152,26 @@ class Scope(object):
         else:
             base[parts[-1]] = value
 
+        if owner is self:
+            self.modified_keys.add(self.join_key(key))
+
     def unset(self, key, force=False):
         self.set(key, None, force=force, unset=True)
+
+    def update(self, other, force=False):
+        if isinstance(other, Scope):
+            other = other.as_dict()
+
+        if not isinstance(other, dict):
+            raise ValueError("update() value must be a Scope or dict")
+
+        for k, v in other.items():
+            self.set(k, v, force=force)
+
+        return None
+
+    def __len__(self):
+        return len(self.as_dict())
 
     def __getitem__(self, key):
         top_key, parts = self.split_key(key)

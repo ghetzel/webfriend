@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from textx.metamodel import metamodel_from_str
 import textx.exceptions
 import textx
@@ -78,10 +79,7 @@ class Friendscript(object):
                     'Heredoc':            types.Heredoc,
                 },
             )
-        except textx.exceptions.TextXSyntaxError as e:
-            raise
 
-        try:
             if isinstance(data, basestring):
                 self.loads(data)
 

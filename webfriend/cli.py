@@ -7,8 +7,8 @@ import os
 import sys
 import traceback
 from webfriend.browser import Chrome
+from webfriend.scripting.environment import Environment
 from webfriend.scripting.execute import execute_script
-from webfriend.scripting.execute import Scope
 from webfriend.repl import REPL
 from webfriend.utils.docs import document_commands
 
@@ -61,21 +61,20 @@ def main(
 ):
     log.setLevel(logging.getLevelName(log_level.upper()))
 
-    if generate_docs:
-        if plugins:
-            plugins = plugins.split(',')
+    if plugins:
+        plugins = plugins.split(',')
 
+    if generate_docs:
         click.echo('\n'.join(document_commands(
             plugins=plugins,
             only_plugins=only_document_plugins,
             omit_header=omit_header
         )))
     else:
-
         if debug:
             os.environ['WEBFRIEND_DEBUG'] = 'true'
 
-        if not interactive and script is None:
+        if not interactive and script is None and sys.stdin.isatty():
             raise IOError("Must provide the path to script to execute.")
 
         # using the with-syntax launches an instance of chrome in the background before proceeding
@@ -83,18 +82,30 @@ def main(
             debug_url=debugger_url,
             use_temp_profile=(not no_temp_profile)
         ) as chrome:
-            scope = Scope()
+            environment = Environment(browser=chrome)
+
+            if isinstance(plugins, list):
+                for plugin in plugins:
+                    environment.register_by_module_name(plugin)
 
             # interactive REPL
             if interactive:
-                repl = REPL(chrome, scope)
+                repl = REPL(chrome, environment=environment)
                 repl.run()
             else:
+                # by now we've validated that there is not a TTY waiting at stdin, so there
+                # must be some data to read.  In that case, read the script from stdin.
+                #
+                # This let's users call `webfriend` by piping commands to it or by passing in heredocs
+                #
+                if script is None:
+                    script = sys.stdin
+
                 # execute script as file (or via shebang invocation)
                 scope = execute_script(
                     chrome,
                     script.read(),
-                    scope=Scope(parent=scope)
+                    environment=environment
                 ).as_dict()
 
             if not suppress_output:

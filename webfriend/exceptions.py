@@ -6,6 +6,10 @@ class TimeoutError(Exception):
     pass
 
 
+class NotFound(Exception):
+    pass
+
+
 class HttpError(Exception):
     pass
 

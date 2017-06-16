@@ -37,14 +37,20 @@ class Runtime(Base):
         calling_context=None
     ):
         if isinstance(data, dict):
-            preamble = 'var webfriend = {};'.format(json.dumps(data))
-            expression = preamble + expression
+            data_serialized = json.dumps(data)
+        else:
+            data_serialized = '{}'  # empty javascript object literal
 
         if wrapper_fn:
-            fn_name = 'eval_{}_fn'.format(str(uuid4()).replace('-', '_'))
-            expression = 'var {} = function(){{ {} }}; {}()'.format(
+            fn_name = 'webfriend_{}_fn'.format(str(uuid4()).replace('-', '_'))
+
+            # declare variable to hold the anonymous function, bound to the data that was passed in
+            # and call the function
+            expression = 'var {} = function(){{ {} }}.bind({}); {}();'.format(
                 fn_name,
                 expression,
+                data_serialized,
+                fn_name,
                 fn_name
             )
 

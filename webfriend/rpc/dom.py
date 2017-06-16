@@ -1,13 +1,21 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from webfriend.rpc import Base
 import logging
 import math
 import copy
+import re
 import time
 from webfriend import exceptions
 
+RX_ID_EXPANSION = re.compile('#(?P<id>[^\s]+)')
+
 
 class NoSuchElement(Exception):
+    pass
+
+
+class InvalidElement(Exception):
     pass
 
 
@@ -38,7 +46,7 @@ class DOMElement(object):
         self._name       = definition.get('nodeName')
         self._value      = definition.get('nodeValue')
         self.child_nodes = []
-        self._text       = u''
+        self._text       = ''
         self.child_ids   = set()
         self._bounding_rect = None
 
@@ -51,7 +59,7 @@ class DOMElement(object):
                     self.child_ids.add(child['nodeId'])
 
                 elif child_type == 3:
-                    self._text = child.get('nodeValue', u'')
+                    self._text = child.get('nodeValue', '')
 
                 else:
                     self.child_nodes.append(DOMElement(self.dom, child))
@@ -137,6 +145,14 @@ class DOMElement(object):
     # def name(self, v):
     #     response = self.dom.call('setNodeName', nodeId=self.id, name='{}'.format(v))
     #     return response.get('params', {})['nodeId']
+
+    @property
+    def content_document(self):
+        if isinstance(self.definition.get('contentDocument'), dict):
+            if 'nodeId' in self.definition['contentDocument']:
+                return DOMElement(self.dom, self.definition['contentDocument'])
+
+        return None
 
     @property
     def text(self):
@@ -266,54 +282,59 @@ class DOMElement(object):
                 attrs = []
 
                 for k, v in self.attributes.items():
-                    attrs.append(u'{}="{}"'.format(k, v))
+                    attrs.append('{}="{}"'.format(k, v))
 
                 if len(attrs):
-                    attrs = u' ' + u' '.join(attrs)
+                    attrs = ' ' + ' '.join(attrs)
                 else:
-                    attrs = u''
+                    attrs = ''
 
-                return u'<{}{}>{}</{}>'.format(
+                return '<{}{}>{}</{}>'.format(
                     element_name,
                     attrs,
                     self.text,
                     element_name
                 )
             else:
-                return u'{} id={}'.format(self.name, self.id)
+                return '{} id={}'.format(self.name, self.id)
         else:
-            parts = [u'node={}'.format(self.id)]
+            parts = ['node={}'.format(self.id)]
 
             if self.name:
-                parts.append(u'name={}'.format(self.name))
+                parts.append('name={}'.format(self.name))
 
-            return u'DOMElement<{}>'.format(','.join(parts))
+            return 'DOMElement<{}>'.format(','.join(parts))
 
     def __str__(self):
         return self.__repr__()
 
 
 class DOM(Base):
-    domain = u'DOM'
+    domain = 'DOM'
+    _you_never_forget_your_first_root_element = None
     _root_element = None
     _elements = {}
     _network_requests = {}
 
     def initialize(self):
-        self.on(u'setChildNodes', self.on_child_nodes)
-        self.on(u'childNodeRemoved', self.on_child_removed)
-        self.tab.page.on(u'frameStartedLoading', self.reset)
-        self.tab.network.on(u'requestWillBeSent', self.on_network_request)
-        self.tab.network.on(u'responseReceived', self.on_network_response)
-        self.tab.network.on(u'requestServedFromCache', self.on_network_response)
+        self.on('setChildNodes', self.on_child_nodes)
+        self.on('childNodeInserted', self.on_child_inserted)
+        self.on('childNodeRemoved', self.on_child_removed)
+        self.tab.page.on('frameClearedScheduledNavigation', self.reset)
+        self.tab.network.on('requestWillBeSent', self.on_network_request)
+        self.tab.network.on('responseReceived', self.on_network_response)
+        self.tab.network.on('requestServedFromCache', self.on_network_response)
 
     def reset(self, *args, **kwargs):
         """
         Clears out any existing local definitions in the DOM tree. This is used when navigating
         between pages so that the new remote DOM can be stored.
         """
+        logging.debug('RESET')
         self._root_element = None
-        self._elements = {}
+
+        if kwargs.get('clear_initial_root', True):
+            self._you_never_forget_your_first_root_element = None
 
     def clear_requests(self, *args, **kwargs):
         self._network_requests = {}
@@ -397,7 +418,7 @@ class DOM(Base):
         node = self.element(node_id)
 
         if node is not None:
-            logging.debug(u'TREE: {}{}'.format((u' ' * indent * level), node))
+            logging.debug('TREE: {}{}'.format((' ' * indent * level), node))
 
             for child in node.children:
                 self.print_node(child.id, level=level + 1)
@@ -415,12 +436,48 @@ class DOM(Base):
 
             self._root_element = DOMElement(
                 self,
-                self.call('getDocument', depth=1).get('root')
+                self.call('getDocument', depth=1, pierce=True).get('root')
             )
+
+            # keep track of the VERY first root element encountered, so that if we switch roots
+            # for traversing frames, we can always come back to this one
+            if self._you_never_forget_your_first_root_element is None:
+                self._you_never_forget_your_first_root_element = self._root_element
 
             self._elements[self._root_element.id] = self._root_element
 
         return self._root_element
+
+    @property
+    def frames(self):
+        return self.query_all('frame')
+
+    def root_to(self, selector):
+        elements = self.select_nodes(selector, wait_for_match=True)
+
+        if elements:
+            element = self.ensure_unique_element(selector, elements['nodes'])
+
+            subdoc = element.content_document
+
+            if subdoc is not None:
+                # reset, we've got a document, but leave the top-level document in place
+                # so we can go back to it
+                self.reset(clear_initial_root=False)
+
+                self.call('requestChildNodes', nodeId=subdoc.id)
+                self._root_element = subdoc
+                return self.root
+            else:
+                raise InvalidElement("Element does not contain a nested document")
+
+        raise NoSuchElement("No elements matched the query selector '{}'".format(selector))
+
+    def root_to_top(self):
+        if self._you_never_forget_your_first_root_element:
+            self._root_element = self._you_never_forget_your_first_root_element
+
+        return self.root
 
     def remove_node(self, node_id):
         """
@@ -561,7 +618,7 @@ class DOM(Base):
         #
         raise exceptions.NotImplemented("find()")
 
-    def select_nodes(self, selector, wait_for_match=False, timeout=10000, interval=250):
+    def select_nodes(self, selector, wait_for_match=True, timeout=10000, interval=250):
         """
         Polls the DOM for an element that matches the given selector.  Either the element will be
         found and returned within the given timeout, or a TimeoutError will be raised.
@@ -622,17 +679,33 @@ class DOM(Base):
         for node in event.get('nodes', []):
             element = DOMElement(self, node)
 
-            # logging.debug('Adding node {} (type={} name={} parent={})'.format(
-            #     element.id,
-            #     element.type,
-            #     element.name,
-            #     element.parent_id
-            # ))
+            logging.debug('Adding node {} {}'.format(
+                element.id,
+                element
+            ))
 
             self._elements[node['nodeId']] = element
 
             if self.has_element(element.parent_id):
                 self.element(element.parent_id).child_ids.add(element.id)
+
+    def on_child_inserted(self, event):
+        definition = event.get('node')
+        parent_id = event.get('parentNodeId')
+
+        element = DOMElement(self, definition)
+        self._elements[element.id] = element
+
+        logging.debug('Inserting node {} {}'.format(
+            element.id,
+            element
+        ))
+
+        if self.has_element(parent_id):
+            try:
+                self.element(parent_id).child_ids.add(element.id)
+            except KeyError:
+                pass
 
     def on_child_removed(self, event):
         node_id = event.get('nodeId')
@@ -645,7 +718,14 @@ class DOM(Base):
                 pass
 
         if self.has_element(node_id):
+            logging.debug('Removing node {} {}'.format(
+                self._elements[node_id].id,
+                self._elements[node_id]
+            ))
+
             del self._elements[node_id]
+
+    # def on_set_attribute_value()
 
     @property
     def resources(self):
@@ -713,10 +793,7 @@ class DOM(Base):
 
     @classmethod
     def prepare_selector(cls, selector):
-        if selector.startswith('#'):
-            selector = '*[id="{}"]'.format(selector[1:])
-
-        selector = selector.replace("'", '"')
+        selector = RX_ID_EXPANSION.sub('*[id*="\g<id>"]', selector)
 
         return selector
 
