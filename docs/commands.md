@@ -36,7 +36,6 @@ shown with the value `<REQUIRED>`.
    - **[type](#type)**
    - **[wait](#wait)**
    - **[wait_for](#wait_for)**
-   - [wait_for_element](#wait_for_element)
    - **[wait_for_idle](#wait_for_idle)**
    - **[wait_for_load](#wait_for_load)**
    - [xpath](#xpath)
@@ -945,18 +944,6 @@ first).
 
 #### Raises
 `webfriend.exceptions.TimeoutError`
-
----
-
-### `wait_for_element`
-
-```
-wait_for_element <SELECTOR> {
-    action:   'inserted',
-    timeout:  30000,
-    interval: 250
-}
-```
 
 ---
 
