@@ -3,10 +3,12 @@ from __future__ import unicode_literals
 from webfriend.scripting.scope import Scope
 from webfriend.scripting import parser
 from webfriend.scripting.commands.base import CommandProxy
+import sys
 import logging
 import traceback
 import inspect
 import importlib
+import colorlog
 
 
 class EnvironmentNotReady(Exception):
@@ -20,7 +22,7 @@ class IgnoreResults(object):
 class Environment(object):
     default_result_key = 'result'
 
-    def __init__(self, scope=None, proxies=None, browser=None):
+    def __init__(self, scope=None, proxies=None, browser=None, log_level='DEBUG'):
         self._scope = (scope or Scope())
         self.proxies = (proxies or {})
         self.script = None
@@ -33,6 +35,12 @@ class Environment(object):
         self.ready()
         self._line = 0
         self._col  = 0
+        self._log_handler = colorlog.StreamHandler(stream=sys.stderr)
+        self._log_handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s%(message)s'))
+        self.log = colorlog.getLogger('friendscript')
+        self.log.propagate = False
+        self.log.setLevel(logging.getLevelName(log_level.upper()))
+        self.log.addHandler(self._log_handler)
 
     @property
     def scope(self):

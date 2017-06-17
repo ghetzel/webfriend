@@ -7,6 +7,7 @@ import os
 import sys
 import traceback
 from webfriend.browser import Chrome
+from webfriend.scripting.parser.exceptions import UserError
 from webfriend.scripting.environment import Environment
 from webfriend.scripting.execute import execute_script
 from webfriend.repl import REPL
@@ -37,6 +38,11 @@ log.addHandler(err)
     default='WARNING'
 )
 @click.option(
+    '--script-log-level',
+    '-S',
+    default='DEBUG'
+)
+@click.option(
     '--plugins', '-p',
     metavar='PLUGIN[,PLUGIN ..]',
     help='A comma-separated list of additional plugins to load'
@@ -55,6 +61,7 @@ def main(
     debug,
     debugger_url,
     log_level,
+    script_log_level,
     plugins,
     script,
     remainder
@@ -82,7 +89,7 @@ def main(
             debug_url=debugger_url,
             use_temp_profile=(not no_temp_profile)
         ) as chrome:
-            environment = Environment(browser=chrome)
+            environment = Environment(browser=chrome, log_level=script_log_level)
 
             if isinstance(plugins, list):
                 for plugin in plugins:
@@ -114,6 +121,8 @@ def main(
 
 try:
     main()
+except UserError as e:
+    exit(e.exit_code)
 except Exception as e:
     log.debug(traceback.format_exc())
     log.error(str(e))

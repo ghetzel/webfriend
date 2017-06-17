@@ -93,6 +93,9 @@ class RegularExpression(MetaModel):
 
         return False
 
+    def match(self, value):
+        return self.rx.match(value)
+
     def sub(self, repl, value):
         return self.rx.sub(repl, value)
 

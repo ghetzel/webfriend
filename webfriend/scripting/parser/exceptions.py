@@ -135,3 +135,11 @@ class SyntaxError(ScriptError):
 
 class CommandExecutionError(ScriptError):
     error_type = 'Runtime error'
+
+
+class UserError(Exception):
+    error_type = 'User error'
+
+    def __init__(self, message, exit_code=1, **kwargs):
+        self.exit_code = exit_code
+        super(UserError, self).__init__(message, **kwargs)

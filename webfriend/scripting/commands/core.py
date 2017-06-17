@@ -8,6 +8,7 @@ from webfriend.scripting.commands.base import CommandProxy
 from webfriend.scripting.execute import execute_script
 from webfriend.scripting.environment import Environment
 from webfriend.scripting.scope import Scope
+from webfriend.scripting.parser.exceptions import UserError
 from webfriend.utils import autotype
 import json
 import logging
@@ -34,7 +35,7 @@ class CoreProxy(CommandProxy):
         user_agent=None,
         extra_headers=None,
         cache=None,
-        plugins=None
+        console=None
     ):
         """
         Configures various features of the Remote Debugging protocol and provides environment
@@ -71,6 +72,10 @@ class CoreProxy(CommandProxy):
         - **cache** (`bool`, optional):
 
             Whether caching is enabled or not for this session.
+
+        - **console** (`bool`, optional):
+
+            Whether console messages emitted from pages are logged to standard error.
         """
         if events and hasattr(events, 'values') and isinstance(events.values, list):
             for domain in events.values:
@@ -101,9 +106,10 @@ class CoreProxy(CommandProxy):
         elif cache is False:
             self.tab.network.disable_cache()
 
-        if isinstance(plugins, list):
-            for plugin in plugins:
-                self.environment.register_by_module_name(plugin)
+        if console is True:
+            self.tab.enable_console_messages()
+        else:
+            self.tab.disable_console_messages()
 
     def go(self, uri, referrer='random', wait_for_load=True, timeout=30000, clear_requests=True):
         """
@@ -336,7 +342,7 @@ class CoreProxy(CommandProxy):
         if line is None:
             line = kwargs
 
-        if hasattr(logging, level):
+        if hasattr(self.environment.log, level):
             if isinstance(line, (dict, list, tuple)) and indent >= 0:
                 try:
                     line = json.dumps(line, indent=4)
@@ -344,7 +350,7 @@ class CoreProxy(CommandProxy):
                     pass
 
             # actually log the line
-            getattr(logging, level)(line)
+            getattr(self.environment.log, level)(line)
             return None
         else:
             raise AttributeError("Unknown log level '{}'".format(level))
@@ -362,7 +368,8 @@ class CoreProxy(CommandProxy):
         #### Raises
         - `webfriend.exceptions.UserError`
         """
-        raise exceptions.UserError(message)
+        self.environment.log.error(message)
+        raise UserError(message)
 
     def rpc(self, method, **kwargs):
         """
@@ -383,7 +390,7 @@ class CoreProxy(CommandProxy):
         """
         return self.tab.rpc(method, **kwargs).as_dict()
 
-    def wait_for(self, event_name, timeout=30000):
+    def wait_for(self, event_name, timeout=30000, match=None):
         """
         Block until a specific event is received, or until **timeout** elapses (whichever comes
         first).
@@ -398,13 +405,37 @@ class CoreProxy(CommandProxy):
 
             The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
 
+        - **match** (`dict`, optional):
+
+            If specified, all keys in the given object must correspond to keys in the received
+            event payload, and the values must match.  Regular expressions must match the
+            corresponding payload value, and all other types must match exactly.
+
         #### Returns
         `webfriend.rpc.Event`
 
         #### Raises
         `webfriend.exceptions.TimeoutError`
         """
-        return self.tab.wait_for(event_name, timeout=timeout)
+        if isinstance(match, dict):
+            started_at = time.time()
+            eventstream = self.tab.wait_for_caller_response(event_name, timeout=timeout)
+
+            for event in eventstream:
+                print('evt: {}'.format(event))
+
+                if event.matches_criteria(match):
+                    try:
+                        eventstream.send(True)
+                    except StopIteration:
+                        pass
+
+                    return {
+                        'sequence': [event],
+                        'duration': (time.time() - started_at),
+                    }
+        else:
+            return self.tab.wait_for(event_name, timeout=timeout)
 
     def wait_for_idle(self, idle, events=[], timeout=30000, poll_interval=250):
         """

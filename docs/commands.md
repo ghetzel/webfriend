@@ -177,7 +177,7 @@ configure <EVENTS> {
     user_agent:    null,
     extra_headers: null,
     cache:         null,
-    plugins:       null
+    console:       null
 }
 ```
 
@@ -215,6 +215,10 @@ setup.
 - **cache** (`bool`, optional):
 
     Whether caching is enabled or not for this session.
+
+- **console** (`bool`, optional):
+
+    Whether console messages emitted from pages are logged to standard error.
 
 ---
 
@@ -922,7 +926,8 @@ The number of milliseconds.
 
 ```
 wait_for <EVENT_NAME> {
-    timeout:    30000
+    timeout:    30000,
+    match:      null
 }
 ```
 
@@ -938,6 +943,12 @@ first).
 - **timeout** (`int`):
 
     The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
+
+- **match** (`dict`, optional):
+
+    If specified, all keys in the given object must correspond to keys in the received
+    event payload, and the values must match.  Regular expressions must match the
+    corresponding payload value, and all other types must match exactly.
 
 #### Returns
 `webfriend.rpc.Event`

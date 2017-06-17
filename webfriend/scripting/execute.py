@@ -100,7 +100,7 @@ def evaluate_block(scriptmgr, block, scope):
                 value = parser.to_value(value, scope)
 
                 if key is not None:
-                    scope.set(key, value, force=True)
+                    scope.set(key, value)
 
             # perform delay if we have one
             if environment.has_execution_option('demo.post_command_delay'):

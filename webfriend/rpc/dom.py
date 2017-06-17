@@ -330,7 +330,6 @@ class DOM(Base):
         Clears out any existing local definitions in the DOM tree. This is used when navigating
         between pages so that the new remote DOM can be stored.
         """
-        logging.debug('RESET')
         self._root_element = None
 
         if kwargs.get('clear_initial_root', True):
@@ -467,6 +466,7 @@ class DOM(Base):
 
                 self.call('requestChildNodes', nodeId=subdoc.id)
                 self._root_element = subdoc
+                logging.debug('DOM root is now {}'.format(self.root))
                 return self.root
             else:
                 raise InvalidElement("Element does not contain a nested document")
@@ -477,6 +477,7 @@ class DOM(Base):
         if self._you_never_forget_your_first_root_element:
             self._root_element = self._you_never_forget_your_first_root_element
 
+        logging.debug('DOM root is now {}'.format(self.root))
         return self.root
 
     def remove_node(self, node_id):
@@ -671,9 +672,7 @@ class DOM(Base):
 
             time.sleep(interval / 1e3)
 
-        raise exceptions.TimeoutError(
-            "Timed out waiting for element '{}' to appear".format(selector)
-        )
+        return False
 
     def on_child_nodes(self, event):
         for node in event.get('nodes', []):

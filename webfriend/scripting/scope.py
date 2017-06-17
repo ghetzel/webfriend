@@ -186,6 +186,7 @@ class Scope(object):
                 if isinstance(base, (list, tuple)):
                     try:
                         base = base[int(k)]
+                        continue
                     except ValueError as e:
                         if str(e).startswith('invalid literal for int'):
                             raise ValueError(
@@ -194,16 +195,21 @@ class Scope(object):
                         else:
                             raise
 
-                elif hasattr(base, '__getitem__') and not isinstance(base, self.SCALAR_TYPES):
-                    base = base[k]
+                # try to access key via the [] operator
+                if hasattr(base, '__getitem__') and not isinstance(base, self.SCALAR_TYPES):
+                    try:
+                        base = base[k]
+                        continue
+                    except KeyError:
+                        pass
 
-                elif isinstance(base, object) and hasattr(base, str(k)):
+                if isinstance(base, object) and hasattr(base, str(k)):
                     base = getattr(base, str(k))
+                    continue
 
-                else:
-                    raise KeyError(
-                        "Cannot access key '{}' on {} value".format(k, base.__class__.__name__)
-                    )
+                raise KeyError(
+                    "Cannot access key '{}' on {} value".format(k, base.__class__.__name__)
+                )
 
             return base
         except KeyError:

@@ -25,7 +25,6 @@ class Chrome(object):
     browser_arguments = [
         '--headless',
         '--disable-gpu',
-        '--verbose',
         '--hide-scrollbars',
     ]
 
@@ -65,7 +64,7 @@ class Chrome(object):
             'suppress_first_run_bubble': True,
             'suppress_first_run_default_browser_prompt': True,
             'system_level': False,
-            'verbose_logging': True,
+            'verbose_logging': False,
         },
     }
 
@@ -152,6 +151,9 @@ class Chrome(object):
 
         finally:
             self.destroy_temp_profile()
+            self._devnull.close()
+            self._devnull = None
+            self._process = None
 
     def __enter__(self):
         return self.start()
@@ -223,8 +225,11 @@ class Chrome(object):
             ' '.join(arguments)
         ))
 
+        self._devnull = open(os.devnull, 'w')
         self._process = subprocess.Popen(
-            [process_path] + arguments
+            [process_path] + arguments,
+            stdout=self._devnull,
+            stderr=self._devnull
         )
 
     def postlaunch(self):

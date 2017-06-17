@@ -24,6 +24,9 @@ import logging
 from gevent.queue import Queue, Channel, Empty, Full
 
 
+ANY_KEY = 'ANY'
+
+
 class Tab(object):
     default_width  = 0
     default_height = 0
@@ -64,6 +67,7 @@ class Tab(object):
         self.replies      = {}
         self.initial_w    = width
         self.initial_h    = height
+        self.msg_enable   = False
 
         self._trigger_worker = None
 
@@ -128,6 +132,12 @@ class Tab(object):
     def enable_events(self):
         for domain in self.rpc_domains:
             domain.enable()
+
+    def enable_console_messages(self):
+        self.msg_enable = True
+
+    def disable_console_messages(self):
+        self.msg_enable = False
 
     def stop(self):
         if self.g_recv:
@@ -230,6 +240,12 @@ class Tab(object):
                     except Full:
                         pass
 
+                if ANY_KEY in self.waiters:
+                    try:
+                        self.waiters[ANY_KEY].put(event)
+                    except Full:
+                        pass
+
     def dispatch_reply(self, request_id, message, events):
         if request_id in self.replies:
             self.replies[request_id]['reply'].put((message, events))
@@ -291,8 +307,9 @@ class Tab(object):
         else:
             return None
 
-    def wait_for(self, event_name, timeout=30000):
+    def wait_for_caller_response(self, event_name, timeout=30000):
         """
+        Yields events of
         Block until a specific event is received, or until **timeout** elapses (whichever comes first).
 
         #### Arguments
@@ -312,8 +329,6 @@ class Tab(object):
         `webfriend.exceptions.TimeoutError`
         """
 
-        started_at = time.time()
-
         # get or create the async result for this event
         if event_name not in self.waiters:
             result = Channel()
@@ -323,17 +338,51 @@ class Tab(object):
 
         try:
             event = result.get(timeout=(timeout / 1e3))
+            accepted = yield event
+
+            # generator received a response from the caller
+            if accepted is not None:
+                return
+
+        except Empty:
+            raise exceptions.TimeoutError("Timed out waiting for events")
+
+        finally:
+            del self.waiters[event_name]
+
+    def wait_for(self, event_name, **kwargs):
+        """
+        Block until a specific event is received, or until **timeout** elapses (whichever comes first).
+
+        #### Arguments
+
+        - **event_name** (`str`):
+
+            The name of the event to wait for.
+
+        - **timeout** (`int`):
+
+            The timeout, in milliseconds, before raising a `webfriend.exceptions.TimeoutError`.
+
+        #### Returns
+        `webfriend.rpc.event.Event`
+
+        #### Raises
+        `webfriend.exceptions.TimeoutError`
+        """
+        wfc = self.wait_for_caller_response(event_name, **kwargs)
+        started_at = time.time()
+
+        for event in wfc:
+            try:
+                wfc.send(True)
+            except StopIteration:
+                pass
 
             return {
                 'sequence': [event],
                 'duration': (time.time() - started_at),
             }
-
-        except Empty:
-            raise exceptions.TimeoutError("Timed out waiting for event {}".format(event_name))
-
-        finally:
-            del self.waiters[event_name]
 
     def wait_for_idle(self, idle, events=[], timeout=30000, poll_interval=250):
         """
@@ -467,4 +516,5 @@ class Tab(object):
 
                 logging.info('[{}] {}'.format(l, body))
 
-        self.console.on('messageAdded', on_message)
+        if self.msg_enable:
+            self.console.on('messageAdded', on_message)
