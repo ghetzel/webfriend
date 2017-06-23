@@ -9,7 +9,7 @@ with Chrome() as browser:
     commands = Environment(browser=browser)
 
     # navigate to Hacker News
-    www = commands.core.go('https://nytimes.com')
+    www = commands.core.go('https://news.ycombinator.com')
 
     # log the result of loading the page
     logging.info("Page loaded in {www[timing][requestTime]}ns".format(www=www))
