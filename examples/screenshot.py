@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 import logging
-from webfriend import Chrome, scripting
+from webfriend.browser import Chrome
+from webfriend.scripting.environment import Environment
 
 logging.basicConfig(level=logging.DEBUG)
 
 with Chrome() as browser:
-    commands = scripting.Environment(browser=browser)
+    commands = Environment(browser=browser)
 
     # navigate to Hacker News
     www = commands.core.go('https://nytimes.com')
