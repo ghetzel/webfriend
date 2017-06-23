@@ -1754,6 +1754,8 @@ A `list` of `dict` containing details about the network requests that were perfo
 page::screenshot <DESTINATION> {
     width:          0,
     height:         0,
+    x:              -1,
+    y:              -1,
     format:         'png',
     jpeg_quality:   null,
     selector:       'html',
@@ -1776,17 +1778,17 @@ as a file-like object.
     and returned.  If `None`, an `io.BytesIO` buffer will be allocated, written to, and
     returned.
 
-- **width** (`int`, optional):
+- **width**, **height** (`int`, optional):
 
-    If given, this is the width viewport will be resized to before capturing the image. If
-    not specified, the dimensions of the element specified by 'selector' will be queried
-    and that element's outerWidth will be used.
+    If given, this is the width and/or height the viewport will be resized to before
+    capturing the image. If not specified, the dimensions of the element specified by
+    'selector' will be queried and that element's outerWidth/outerHeight will be used.
 
-- **height** (`int`, optional):
+- **x**, **y** (`int`, optional):
 
-    If given, this is the height viewport will be resized to before capturing the image. If
-    not specified, the dimensions of the element specified by **selector** will be queried
-    and that element's _outerHeight_ will be used.
+    If given, this is the x/y position the viewport will be moved to.  If a negative number
+    is specified, then the x/y coordinates of the element matched by **selector** will be
+    used.
 
 - **format** (`str`):
 
@@ -1799,7 +1801,9 @@ as a file-like object.
 - **selector** (`str`):
 
     When detecting the width and/or height of the page area to render, this is the HTML
-    element that will be measured.
+    element that will be measured.  Changing this to a selector that matches a specific
+    element (using the default settings for **width**, **height**, **x**, and **y**) will
+    result in taking a screenshot of _just_ that element.
 
 - **settle** (`int`, optional):
 
@@ -1834,6 +1838,12 @@ as a file-like object.
 
 - _height_ (`int`):
     The final height of the viewport that was captured.
+
+- _x_ (`int`):
+    The final X-position of the viewport that was captured.
+
+- _y_ (`int`):
+    The final Y-position of the viewport that was captured.
 
 - _destination_ (`object`, optional):
     The destination file-like object data was written to, if specified.

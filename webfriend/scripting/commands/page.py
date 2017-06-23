@@ -13,6 +13,8 @@ class PageProxy(CommandProxy):
         destination=None,
         width=0,
         height=0,
+        x=-1,
+        y=-1,
         format='png',
         jpeg_quality=None,
         selector='html',
@@ -34,17 +36,17 @@ class PageProxy(CommandProxy):
             and returned.  If `None`, an `io.BytesIO` buffer will be allocated, written to, and
             returned.
 
-        - **width** (`int`, optional):
+        - **width**, **height** (`int`, optional):
 
-            If given, this is the width viewport will be resized to before capturing the image. If
-            not specified, the dimensions of the element specified by 'selector' will be queried
-            and that element's outerWidth will be used.
+            If given, this is the width and/or height the viewport will be resized to before
+            capturing the image. If not specified, the dimensions of the element specified by
+            'selector' will be queried and that element's outerWidth/outerHeight will be used.
 
-        - **height** (`int`, optional):
+        - **x**, **y** (`int`, optional):
 
-            If given, this is the height viewport will be resized to before capturing the image. If
-            not specified, the dimensions of the element specified by **selector** will be queried
-            and that element's _outerHeight_ will be used.
+            If given, this is the x/y position the viewport will be moved to.  If a negative number
+            is specified, then the x/y coordinates of the element matched by **selector** will be
+            used.
 
         - **format** (`str`):
 
@@ -57,7 +59,9 @@ class PageProxy(CommandProxy):
         - **selector** (`str`):
 
             When detecting the width and/or height of the page area to render, this is the HTML
-            element that will be measured.
+            element that will be measured.  Changing this to a selector that matches a specific
+            element (using the default settings for **width**, **height**, **x**, and **y**) will
+            result in taking a screenshot of _just_ that element.
 
         - **settle** (`int`, optional):
 
@@ -93,13 +97,20 @@ class PageProxy(CommandProxy):
         - _height_ (`int`):
             The final height of the viewport that was captured.
 
+        - _x_ (`int`):
+            The final X-position of the viewport that was captured.
+
+        - _y_ (`int`):
+            The final Y-position of the viewport that was captured.
+
         - _destination_ (`object`, optional):
             The destination file-like object data was written to, if specified.
 
         - _path_ (`str`, optional):
             The filesystem path of the file data was written to, if specified.
         """
-        element = self.tab.dom.query(selector)
+        elements = self.tab.dom.query_all(selector)
+        element = self.tab.dom.ensure_unique_element(selector, elements)
         return_flo = True
 
         if not width:
@@ -108,9 +119,19 @@ class PageProxy(CommandProxy):
         if not height:
             height = element.height
 
+        if x < 0:
+            x = element.left
+        else:
+            x = 0
+
+        if y < 0:
+            y = element.top
+        else:
+            y = 0
+
         # resize and force redraw
         self.tab.emulation.set_visible_size(width, height)
-        self.tab.emulation.force_viewport()
+        self.tab.emulation.force_viewport(x=x, y=y)
 
         # wait for a spell for the page to adjust to its new world
         if settle:
@@ -144,6 +165,8 @@ class PageProxy(CommandProxy):
             'element': element,
             'width':   width,
             'height':  height,
+            'x':       x,
+            'y':       y,
         }
 
         if return_flo:
