@@ -17,6 +17,7 @@ setup(
         'gevent',
         'prompt_toolkit',
         'pygments',
+        'requests',
         'termcolor',
         'textx',
         'urlnorm',
