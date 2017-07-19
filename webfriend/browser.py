@@ -8,6 +8,7 @@ import requests
 import shutil
 import tempfile
 import time
+import socket
 from webfriend.tab import Tab
 from webfriend.scripting.execute import execute_script
 from webfriend.utils.commands import locate_browser_process
@@ -15,8 +16,6 @@ from ephemeral_port_reserve import reserve, LOCALHOST
 from gevent import monkey, subprocess
 from urlparse import urlparse
 from collections import OrderedDict
-
-monkey.patch_all()
 
 DEFAULT_DEBUGGER_URL = 'http://localhost:9222'
 
@@ -90,6 +89,7 @@ class Chrome(object):
     def start(self):
         retries = 0
         self.started_at = time.time()
+        monkey.patch_all()
 
         if self.debug_url is None:
             port = reserve()
@@ -154,6 +154,7 @@ class Chrome(object):
             self._devnull.close()
             self._devnull = None
             self._process = None
+            reload(socket)
 
     def __enter__(self):
         return self.start()
