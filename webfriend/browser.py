@@ -67,8 +67,16 @@ class Chrome(object):
         },
     }
 
-    def __init__(self, debug_url=None, ping_retries=40, ping_delay=125, use_temp_profile=True):
+    def __init__(
+        self,
+        debug_url=None,
+        ping_retries=40,
+        ping_delay=125,
+        use_temp_profile=True,
+        patch_socket=True
+    ):
         self.temp_profile_path = None
+        self.patch_socket = patch_socket
         self.args = copy.copy(self.browser_arguments)
 
         if os.getenv('WEBFRIEND_DEBUG', '').lower() in ['1', 'true']:
@@ -89,7 +97,9 @@ class Chrome(object):
     def start(self):
         retries = 0
         self.started_at = time.time()
-        monkey.patch_all()
+
+        if self.patch_socket:
+            monkey.patch_all()
 
         if self.debug_url is None:
             port = reserve()
@@ -154,7 +164,9 @@ class Chrome(object):
             self._devnull.close()
             self._devnull = None
             self._process = None
-            reload(socket)
+
+            if self.patch_socket:
+                reload(socket)
 
     def __enter__(self):
         return self.start()
