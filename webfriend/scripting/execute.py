@@ -4,8 +4,8 @@ from webfriend.scripting import parser
 from webfriend.scripting.environment import Environment, IgnoreResults
 from webfriend.scripting.scope import Scope
 from webfriend.scripting.commands import *  # noqa
+from threading import Thread
 import logging
-import gevent
 import time
 
 
@@ -174,6 +174,6 @@ def _handle_event(scriptmgr, handler, scope):
 
             return local_scope
 
-        gevent.spawn(actual, e)
+        Thread(target=actual, args=(e,)).start()
 
     return handle

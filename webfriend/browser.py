@@ -8,12 +8,11 @@ import requests
 import shutil
 import tempfile
 import time
-import socket
 from webfriend.tab import Tab
 from webfriend.scripting.execute import execute_script
 from webfriend.utils.commands import locate_browser_process
 from ephemeral_port_reserve import reserve, LOCALHOST
-from gevent import monkey, subprocess
+import subprocess
 from urlparse import urlparse
 from collections import OrderedDict
 
@@ -72,11 +71,9 @@ class Chrome(object):
         debug_url=None,
         ping_retries=40,
         ping_delay=125,
-        use_temp_profile=True,
-        patch_socket=True
+        use_temp_profile=True
     ):
         self.temp_profile_path = None
-        self.patch_socket = patch_socket
         self.args = copy.copy(self.browser_arguments)
 
         if os.getenv('WEBFRIEND_DEBUG', '').lower() in ['1', 'true']:
@@ -97,9 +94,6 @@ class Chrome(object):
     def start(self):
         retries = 0
         self.started_at = time.time()
-
-        if self.patch_socket:
-            monkey.patch_all()
 
         if self.debug_url is None:
             port = reserve()
@@ -164,9 +158,6 @@ class Chrome(object):
             self._devnull.close()
             self._devnull = None
             self._process = None
-
-            if self.patch_socket:
-                reload(socket)
 
     def __enter__(self):
         return self.start()

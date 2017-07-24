@@ -666,7 +666,7 @@ class DOM(Base):
                     return results
             except (
                 exceptions.TimeoutError,
-                exceptions.ChromeProtocolError
+                exceptions.ProtocolError
             ):
                 pass
 

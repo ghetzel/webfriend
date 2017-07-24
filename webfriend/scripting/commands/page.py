@@ -131,7 +131,11 @@ class PageProxy(CommandProxy):
 
         # resize and force redraw
         self.tab.emulation.set_visible_size(width, height)
-        self.tab.emulation.force_viewport(x=x, y=y)
+
+        try:
+            self.tab.emulation.force_viewport(x=x, y=y)
+        except exceptions.ProtocolError as e:
+            logging.warning('Error resizing viewport: {}'.format(e))
 
         # wait for a spell for the page to adjust to its new world
         if settle:

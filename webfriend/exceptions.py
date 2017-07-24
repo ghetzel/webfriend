@@ -1,4 +1,4 @@
-class ChromeProtocolError(Exception):
+class ProtocolError(Exception):
     pass
 
 

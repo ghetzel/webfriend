@@ -18,11 +18,10 @@ import json
 import time
 from webfriend import exceptions
 from webfriend.utils import patch_json  # noqa
-import gevent
 import websocket
 import logging
-from gevent.queue import Queue, Channel, Empty, Full
-
+from Queue import Queue, Empty, Full
+from threading import Thread
 
 ANY_KEY = 'ANY'
 
@@ -63,7 +62,8 @@ class Tab(object):
         self.triggerqueue = Queue()
         self.last_event_m = {}
         self.last_event_t = {}
-        self.g_recv       = gevent.spawn(self.receive_messages)
+        self.g_recv_ctl   = Queue(1)
+        self.g_recv       = Thread(target=self.receive_messages, args=(self.g_recv_ctl,))
         self.replies      = {}
         self.initial_w    = width
         self.initial_h    = height
@@ -82,6 +82,9 @@ class Tab(object):
         self.window       = Browser(self)
         self.overlay      = Overlay(self)
         self.target       = Target(self)
+
+        # start the receive thread
+        self.g_recv.start()
 
         for domain in self.rpc_domains:
             domain.initialize()
@@ -140,11 +143,14 @@ class Tab(object):
         self.msg_enable = False
 
     def stop(self):
-        if self.g_recv:
-            self.g_recv.kill()
+        if self.g_recv.is_alive():
+            logging.debug('Sending stop to receive thread')
+            self.g_recv_ctl.put(StopIteration)
+            self.socket.close()
 
-        if self._trigger_worker:
-            self._trigger_worker.kill()
+        while self.g_recv.is_alive():
+            logging.debug('Waiting for receive thread...')
+            time.sleep(1)
 
     def send(self, data, expect_reply=True, reply_timeout=None, context=None):
         if not isinstance(data, dict):
@@ -162,7 +168,7 @@ class Tab(object):
         try:
             request_handle = {
                 'id':    data['id'],
-                'reply': Channel(),
+                'reply': Queue(1),
             }
 
             self.replies[data['id']] = request_handle
@@ -197,7 +203,7 @@ class Tab(object):
                 if reply['id'] == data['id']:
                     return Reply(reply, request=data, events=events)
                 else:
-                    raise exceptions.ChromeProtocolError("Reply Message ID does not match Request Message ID")
+                    raise exceptions.ProtocolError("Reply Message ID does not match Request Message ID")
 
             else:
                 return None
@@ -206,20 +212,29 @@ class Tab(object):
             del self.replies[data['id']]
 
     def dispatch_event(self, message):
-        domain, method = message.get('method').split('.', 1)
-        payload = message.get('params', {})
+        if message is StopIteration:
+            logging.info('Sending stop to trigger thread')
+            self.triggerqueue.put((None, None, StopIteration))
+        else:
+            domain, method = message.get('method').split('.', 1)
+            payload = message.get('params', {})
 
-        try:
-            proxy = self.get_domain_instance(domain)
-        except ValueError:
-            logging.exception('Unhandled Event Type')
-            return
+            try:
+                proxy = self.get_domain_instance(domain)
+            except ValueError:
+                logging.exception('Unhandled Event Type')
+                return
 
-        self.triggerqueue.put((proxy, method, payload))
+            self.triggerqueue.put((proxy, method, payload))
 
     def trigger_worker(self):
         while True:
             proxy, method, payload = self.triggerqueue.get()
+
+            if payload is StopIteration:
+                logging.debug('Stopping trigger thread')
+                return
+
             event = proxy.trigger(method, payload)
             event_name = str(event)
 
@@ -252,11 +267,18 @@ class Tab(object):
         else:
             logging.warning('Received message without a sender (id={})'.format(request_id))
 
-    def receive_messages(self):
-        self._trigger_worker = gevent.spawn(self.trigger_worker)
+    def receive_messages(self, controlq):
+        self._trigger_worker = Thread(target=self.trigger_worker)
+        self._trigger_worker.start()
 
         while True:
             try:
+                try:
+                    if controlq.get_nowait() is StopIteration:
+                        raise
+                except Empty:
+                    pass
+
                 message = self.receive()
 
                 if message is None:
@@ -273,8 +295,12 @@ class Tab(object):
                 else:
                     self.dispatch_event(message)
 
-            except KeyboardInterrupt:
+            except (KeyboardInterrupt, StopIteration, websocket.WebSocketException) as e:
+                logging.debug('Fatal receive message: {}'.format(e))
                 break
+
+        self.dispatch_event(StopIteration)
+        logging.info('Stopping receive thread')
 
     def receive(self, timeout=10):
         message = self.socket.recv()
@@ -292,11 +318,11 @@ class Tab(object):
                     if 'data' in error:
                         message += ' - {}'.format(error['data'])
 
-                    exc = exceptions.ChromeProtocolError(
+                    exc = exceptions.ProtocolError(
                         'Protocol Error {}: {}'.format(error.get('code', -1), message)
                     )
                 else:
-                    exc = exceptions.ChromeProtocolError('Malformed Error Response')
+                    exc = exceptions.ProtocolError('Malformed Error Response')
 
             if exc is not None:
                 exc.id = body.get('id')
@@ -331,7 +357,7 @@ class Tab(object):
 
         # get or create the async result for this event
         if event_name not in self.waiters:
-            result = Channel()
+            result = Queue(1)
             self.waiters[event_name] = result
         else:
             result = self.waiters[event_name]
