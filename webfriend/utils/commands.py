@@ -7,16 +7,16 @@ def locate_browser_process():
     names = []
 
     if os.getenv('WEBFRIEND_BROWSER'):
-        names.append(os.getenv('WEBFRIEND_BROWSER').split(':'))
+        names += os.getenv('WEBFRIEND_BROWSER').split(':')
 
     if platform.startswith('linux'):
-        names = [
+        names += [
             'chromium-browser',
             'google-chrome',
         ]
 
     elif platform == 'darwin':
-        names = [
+        names += [
             '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
             '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
             '/Applications/Chromium.app/Contents/MacOS/Chromium',

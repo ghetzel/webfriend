@@ -1759,10 +1759,11 @@ page::screenshot <DESTINATION> {
     y:              -1,
     format:         'png',
     jpeg_quality:   null,
-    selector:       'body',
+    selector:       [u'html', u'body'],
     settle:         250,
     after_events:   null,
     settle_timeout: null,
+    reply_timeout:  30000,
     autoclose:      true
 }
 ```
@@ -1822,6 +1823,10 @@ as a file-like object.
 
     The maximum amount of time to wait for events to stop coming in as described in by
     **after_events**.
+
+- **reply_timeout** (`int`, optional):
+
+    The maximum amount of time to wait for the screenshot call to complete.
 
 - **autoclose** (`bool`):
 

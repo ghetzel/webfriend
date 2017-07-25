@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import traceback
+import webfriend.info
 from webfriend.browser import Chrome
 from webfriend.scripting.parser.exceptions import UserError
 from webfriend.scripting.environment import Environment
@@ -27,6 +28,7 @@ log.addHandler(err)
 @click.option('--only-document-plugins', is_flag=True, default=False)
 @click.option('--omit-header', is_flag=True, default=False)
 @click.option('--debug', '-D', is_flag=True, default=False)
+@click.option('--version', '-v', is_flag=True, default=False)
 @click.option(
     '--debugger-url', '-u',
     metavar='URL',
@@ -59,6 +61,7 @@ def main(
     only_document_plugins,
     omit_header,
     debug,
+    version,
     debugger_url,
     log_level,
     script_log_level,
@@ -66,6 +69,10 @@ def main(
     script,
     remainder
 ):
+    if version is True:
+        print('webfriend {}'.format(webfriend.info.version))
+        sys.exit(0)
+
     log.setLevel(logging.getLevelName(log_level.upper()))
 
     if plugins:

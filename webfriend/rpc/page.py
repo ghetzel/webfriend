@@ -62,7 +62,7 @@ class Page(Base):
 
         self.call('handleJavaScriptDialog', **params)
 
-    def capture_screenshot(self, destination, format=None, quality=None, from_surface=True):
+    def capture_screenshot(self, destination, format=None, quality=None, from_surface=True, reply_timeout=None):
         params = {}
 
         if format is not None:
@@ -79,7 +79,7 @@ class Page(Base):
         if from_surface is False:
             params['fromSurface'] = False
 
-        reply = self.call('captureScreenshot', **params)
+        reply = self.call('captureScreenshot', reply_timeout=reply_timeout, **params)
 
         if isinstance(destination, basestring):
             data = open(destination, 'w')

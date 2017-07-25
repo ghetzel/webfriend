@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 from setuptools import setup, find_packages
-
+from webfriend.info import version
 
 setup(
     name='webfriend',
     description='An API binding and automation control language for the Chrome Remote Debugging API',
-    version='0.2.1',
+    version=version,
     author='Gary Hetzel',
     author_email='garyhetzel@gmail.com',
     url='https://github.com/ghetzel/webfriend',

@@ -17,10 +17,11 @@ class PageProxy(CommandProxy):
         y=-1,
         format='png',
         jpeg_quality=None,
-        selector='body',
+        selector=['html', 'body'],
         settle=250,
         after_events=None,
         settle_timeout=None,
+        reply_timeout=30000,
         autoclose=True
     ):
         """
@@ -80,6 +81,10 @@ class PageProxy(CommandProxy):
             The maximum amount of time to wait for events to stop coming in as described in by
             **after_events**.
 
+        - **reply_timeout** (`int`, optional):
+
+            The maximum amount of time to wait for the screenshot call to complete.
+
         - **autoclose** (`bool`):
 
             If a file handle is given as the **destination**, should it be automatically closed
@@ -109,8 +114,36 @@ class PageProxy(CommandProxy):
         - _path_ (`str`, optional):
             The filesystem path of the file data was written to, if specified.
         """
-        elements = self.tab.dom.query_all(selector)
-        element = self.tab.dom.ensure_unique_element(selector, elements)
+
+        if isinstance(selector, list):
+            max_element = None
+
+            # if selector is a list, then find the tallest element among all of them
+            for s in selector:
+                try:
+                    elements = self.tab.dom.query_all(s)
+                    element = self.tab.dom.ensure_unique_element(s, elements)
+
+                    if max_element:
+                        if element.height > max_element.height:
+                            max_element = element
+                    else:
+                        max_element = element
+
+                except (exceptions.EmptyResult, exceptions.TooManyResults):
+                    continue
+
+            if max_element:
+                element = max_element
+            else:
+                raise exceptions.EmptyResult("No elements matched any selectors: {}".format(
+                    ', '.join(selector)
+                ))
+
+        else:
+            elements = self.tab.dom.query_all(selector)
+            element = self.tab.dom.ensure_unique_element(selector, elements)
+
         return_flo = True
 
         if not width:
@@ -130,12 +163,18 @@ class PageProxy(CommandProxy):
             y = 0
 
         # resize and force redraw
+        self.tab.emulation.set_device_metrics_override(
+            width=width,
+            height=height,
+            device_scale_factor=1.0
+        )
+
         self.tab.emulation.set_visible_size(width, height)
 
         try:
             self.tab.emulation.force_viewport(x=x, y=y)
-        except exceptions.ProtocolError as e:
-            logging.warning('Error resizing viewport: {}'.format(e))
+        except exceptions.ProtocolError:
+            pass
 
         # wait for a spell for the page to adjust to its new world
         if settle:
@@ -163,7 +202,7 @@ class PageProxy(CommandProxy):
         elif isinstance(destination, basestring):
             return_flo = False
 
-        self.tab.page.capture_screenshot(destination, format=format)
+        self.tab.page.capture_screenshot(destination, format=format, reply_timeout=reply_timeout)
 
         out = {
             'element': element,
