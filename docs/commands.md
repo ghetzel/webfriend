@@ -347,10 +347,11 @@ The matching `webfriend.rpc.DOMElement` that was given focus.
 
 ```
 go <URI> {
-    referrer:       'random',
-    wait_for_load:  true,
-    timeout:        30000,
-    clear_requests: true
+    referrer:          'random',
+    wait_for_load:     true,
+    timeout:           30000,
+    clear_requests:    true,
+    continue_on_error: false
 }
 ```
 
@@ -1758,7 +1759,7 @@ page::screenshot <DESTINATION> {
     y:              -1,
     format:         'png',
     jpeg_quality:   null,
-    selector:       'html',
+    selector:       'body',
     settle:         250,
     after_events:   null,
     settle_timeout: null,

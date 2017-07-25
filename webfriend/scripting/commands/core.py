@@ -111,7 +111,15 @@ class CoreProxy(CommandProxy):
         else:
             self.tab.disable_console_messages()
 
-    def go(self, uri, referrer='random', wait_for_load=True, timeout=30000, clear_requests=True):
+    def go(
+        self,
+        uri,
+        referrer='random',
+        wait_for_load=True,
+        timeout=30000,
+        clear_requests=True,
+        continue_on_error=False
+    ):
         """
         Nagivate to a URL.
 
@@ -162,7 +170,13 @@ class CoreProxy(CommandProxy):
         reply = self.tab.page.navigate(uri, referrer=referrer)
 
         if wait_for_load:
-            self.tab.wait_for('Page.loadEventFired', timeout=timeout)
+            try:
+                self.tab.wait_for('Page.loadEventFired', timeout=timeout)
+            except exceptions.TimeoutError:
+                if continue_on_error:
+                    logging.error('Timed out waiting for page load event.')
+                else:
+                    raise
 
         return reply
 
