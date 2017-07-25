@@ -57,12 +57,15 @@ class PageProxy(CommandProxy):
 
             If given, and if **format** is `jpeg`, this is the quality of the JPEG image (0-100).
 
-        - **selector** (`str`):
+        - **selector** (`str`, `list`):
 
             When detecting the width and/or height of the page area to render, this is the HTML
             element that will be measured.  Changing this to a selector that matches a specific
             element (using the default settings for **width**, **height**, **x**, and **y**) will
             result in taking a screenshot of _just_ that element.
+
+            If a `list` is specified, all elements in the list will be retrieved and the one with
+            the largest height will be used.
 
         - **settle** (`int`, optional):
 
