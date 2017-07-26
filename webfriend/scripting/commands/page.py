@@ -17,7 +17,7 @@ class PageProxy(CommandProxy):
         y=-1,
         format='png',
         jpeg_quality=None,
-        selector=['html', 'body'],
+        selector=[],
         settle=250,
         after_events=None,
         settle_timeout=None,
@@ -118,49 +118,49 @@ class PageProxy(CommandProxy):
             The filesystem path of the file data was written to, if specified.
         """
 
-        if isinstance(selector, list):
-            max_element = None
+        element = None
+        max_element = None
+        width = self.tab.dom.scroll_width
+        height = self.tab.dom.scroll_height
 
-            # if selector is a list, then find the tallest element among all of them
-            for s in selector:
-                try:
-                    elements = self.tab.dom.query_all(s)
-                    element = self.tab.dom.ensure_unique_element(s, elements)
+        print('w={}, h={}'.format(width, height))
 
-                    if max_element:
-                        if element.height > max_element.height:
-                            max_element = element
-                    else:
+        if not isinstance(selector, list):
+            selector = [selector]
+
+        # if selector is a list, then find the tallest element among all of them
+        for s in selector:
+            try:
+                elements = self.tab.dom.query_all(s)
+                element = self.tab.dom.ensure_unique_element(s, elements)
+
+                if max_element:
+                    if element.height > max_element.height:
                         max_element = element
 
-                except (exceptions.EmptyResult, exceptions.TooManyResults):
-                    continue
+                else:
+                    max_element = element
 
-            if max_element:
-                element = max_element
-            else:
-                raise exceptions.EmptyResult("No elements matched any selectors: {}".format(
-                    ', '.join(selector)
-                ))
+            except (exceptions.EmptyResult, exceptions.TooManyResults):
+                continue
 
-        else:
-            elements = self.tab.dom.query_all(selector)
-            element = self.tab.dom.ensure_unique_element(selector, elements)
+        if max_element:
+            element = max_element
 
         return_flo = True
 
-        if not width:
-            width = element.width
+        if element and not width:
+            width = element.scroll_height
 
-        if not height:
-            height = element.height
+        if element and not height:
+            height = element.scroll_height
 
-        if x < 0:
+        if element and x < 0:
             x = element.left
         else:
             x = 0
 
-        if y < 0:
+        if element and y < 0:
             y = element.top
         else:
             y = 0

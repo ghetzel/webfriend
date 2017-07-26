@@ -100,6 +100,8 @@ class DOMElement(object):
 
                 # release that object
                 self.dom.tab.runtime.release_object(result_id)
+            else:
+                properties = []
 
             # return the data
             return dict([
@@ -446,6 +448,20 @@ class DOM(Base):
             self._elements[self._root_element.id] = self._root_element
 
         return self._root_element
+
+    @property
+    def scroll_width(self):
+        return self.root.evaluate(
+            "return document.documentElement.scrollWidth",
+            return_by_value=True
+        ).get('value', None)
+
+    @property
+    def scroll_height(self):
+        return self.root.evaluate(
+            "return document.documentElement.scrollHeight",
+            return_by_value=True
+        ).get('value', None)
 
     @property
     def frames(self):

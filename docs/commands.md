@@ -1759,7 +1759,7 @@ page::screenshot <DESTINATION> {
     y:              -1,
     format:         'png',
     jpeg_quality:   null,
-    selector:       [u'html', u'body'],
+    selector:       [],
     settle:         250,
     after_events:   null,
     settle_timeout: null,
