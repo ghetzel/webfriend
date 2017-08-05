@@ -9,7 +9,7 @@ Your friendly friend in modern web automation and testing.
 Webfriend is a Python library and command-line utility that integrates with the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) to control a Google Chrome or Chromium browser instance.  There is also a purpose-built scripting language (called [Friendscript](docs/intro.md)) that is designed to be an easy-to-learn alternative to Python for writing simple or complex browser automation scripts.
 
 
-Some of the things that you can use Webfriend for:
+### Some of the things that you can use Webfriend for:
 
 * Take full-page screenshots of web pages.
 
