@@ -1,4 +1,6 @@
 # WebFriend
+[![PyPI version](https://badge.fury.io/py/webfriend.svg)](https://badge.fury.io/py/webfriend)
+
 
 Your friendly friend in modern web automation and testing.
 
