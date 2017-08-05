@@ -20,7 +20,7 @@ Webfriend is a Python library and command-line utility that integrates with the 
 * Extract (i.e. _scrape_) information from web pages and present it in a structured way that other languages and scripts can use as input.
 
 
-Webfriend by default operates using [Headless Chrome](https://developers.google.com/web/updates/2017/04/headless-chrome) mode, but can also just as easily run Chrome in the foreground in a graphical environment.  Most importantly, however, headless operation allows you to **run Webfriend on servers without running `Xfvb` or `X11`.**  In this sense, it operates as a potentially-faster alternative to _phantomjs_ or _Selenium_ while also providing almost all of the capabilities of the complete Google Chrome/Chromium browser.
+Webfriend by default operates using [Headless Chrome](https://developers.google.com/web/updates/2017/04/headless-chrome) mode, but can also just as easily run Chrome in the foreground in a graphical environment.  Importantly, headless operation allows you to **run Webfriend on servers without running `Xfvb` or `X11`.**  In this sense, it operates as a potentially-faster alternative to _phantomjs_ or _Selenium_ while also providing almost all of the capabilities of the complete Google Chrome/Chromium browser.
 
 ## Installation
 
