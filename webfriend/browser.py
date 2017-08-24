@@ -71,12 +71,13 @@ class Chrome(object):
         debug_url=None,
         ping_retries=40,
         ping_delay=125,
-        use_temp_profile=True
+        use_temp_profile=True,
+        foreground=False
     ):
         self.temp_profile_path = None
         self.args = copy.copy(self.browser_arguments)
 
-        if os.getenv('WEBFRIEND_DEBUG', '').lower() in ['1', 'true']:
+        if foreground is True or os.getenv('WEBFRIEND_DEBUG', '').lower() in ['1', 'true']:
             self.debug_url = (debug_url or DEFAULT_DEBUGGER_URL)
             self.args.remove('--headless')
         else:

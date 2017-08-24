@@ -54,7 +54,7 @@ class StateProxy(CommandProxy):
             for k, v in values.items():
                 scope[k] = v
 
-        return super(self).environment.interpolate(format, scope=scope)
+        return self.environment.interpolate(format, scope=scope)
 
     def get(self, key, fallback=None, parent=0):
         """
