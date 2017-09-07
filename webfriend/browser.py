@@ -69,7 +69,7 @@ class Chrome(object):
     def __init__(
         self,
         debug_url=None,
-        ping_retries=40,
+        ping_retries=160,
         ping_delay=125,
         use_temp_profile=True,
         foreground=False
