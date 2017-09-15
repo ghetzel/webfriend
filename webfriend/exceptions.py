@@ -1,26 +1,30 @@
-class ProtocolError(Exception):
+class WebfriendError(Exception):
     pass
 
 
-class TimeoutError(Exception):
+class ProtocolError(WebfriendError):
     pass
 
 
-class NotFound(Exception):
+class TimeoutError(WebfriendError):
     pass
 
 
-class HttpError(Exception):
+class NotFound(WebfriendError):
     pass
 
 
-class EmptyResult(Exception):
+class HttpError(WebfriendError):
     pass
 
 
-class TooManyResults(Exception):
+class EmptyResult(WebfriendError):
     pass
 
 
-class NotImplemented(Exception):
+class TooManyResults(WebfriendError):
+    pass
+
+
+class NotImplemented(WebfriendError):
     pass
