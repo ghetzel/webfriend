@@ -49,8 +49,6 @@ class Event(object):
         return base
 
     def matches_criteria(self, criteria):
-        print('match: {}'.format(criteria))
-
         for key, criterion in criteria.items():
             # regex matches
             if hasattr(criterion, 'match'):

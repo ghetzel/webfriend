@@ -436,8 +436,6 @@ class CoreProxy(CommandProxy):
             eventstream = self.tab.wait_for_caller_response(event_name, timeout=timeout)
 
             for event in eventstream:
-                print('evt: {}'.format(event))
-
                 if event.matches_criteria(match):
                     try:
                         eventstream.send(True)

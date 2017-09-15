@@ -1,3 +1,3 @@
 from __future__ import absolute_import
 
-version = '0.2.7'
+version = '0.2.8'

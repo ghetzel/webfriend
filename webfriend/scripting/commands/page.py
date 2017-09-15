@@ -123,8 +123,6 @@ class PageProxy(CommandProxy):
         width = self.tab.dom.scroll_width
         height = self.tab.dom.scroll_height
 
-        print('w={}, h={}'.format(width, height))
-
         if not isinstance(selector, list):
             selector = [selector]
 
