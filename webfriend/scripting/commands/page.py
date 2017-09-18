@@ -121,7 +121,18 @@ class PageProxy(CommandProxy):
         element = None
         max_element = None
 
-        if not isinstance(selector, list):
+        # width defaults to document scrollWidth
+        if not width:
+            width = self.tab.dom.scroll_width
+
+        # height defaults to document scrollHeight
+        if not height:
+            height = self.tab.dom.scroll_height
+
+        # listify selector
+        if selector is None:
+            selector = []
+        elif not isinstance(selector, list):
             selector = [selector]
 
         # if selector is a list, then find the tallest element among all of them
@@ -145,6 +156,8 @@ class PageProxy(CommandProxy):
 
         return_flo = True
 
+        # ---
+        # if an element was found and an explicit override was not set...
         if element and not width:
             width = element.scroll_width
 
@@ -160,6 +173,7 @@ class PageProxy(CommandProxy):
             y = element.top
         else:
             y = 0
+        # ---
 
         # resize and force redraw
         self.tab.emulation.set_device_metrics_override(
