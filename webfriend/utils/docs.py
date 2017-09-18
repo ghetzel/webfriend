@@ -11,7 +11,14 @@ from webfriend.utils import get_module_from_string, resolve_object
 RX_DOCSTRING_SEEOTHER = re.compile('(?P<head>.*)\s*see:\s*`(?P<module>.*)`\s*(?P<tail>.*)', re.IGNORECASE)
 
 
-def document_commands(plugins=None, only_plugins=False, omit_header=False, environment=None):
+def document_commands(
+    plugins=None,
+    only_plugins=False,
+    omit_header=False,
+    oneshot=False,
+    environment=None,
+    commands=None
+):
     base = CommandProxy
 
     if not environment:
@@ -43,8 +50,10 @@ def document_commands(plugins=None, only_plugins=False, omit_header=False, envir
                 continue
 
         proxy_docs = inspect.getdoc(proxy)
-        commands_body.append("## `{}` Command Set".format(proxy.as_qualifier()))
-        commands_body.append('')
+
+        if not oneshot:
+            commands_body.append("## `{}` Command Set".format(proxy.as_qualifier()))
+            commands_body.append('')
 
         # add top-level TOC item for this command set
         if proxy.doc_name:
@@ -60,12 +69,16 @@ def document_commands(plugins=None, only_plugins=False, omit_header=False, envir
         subtoc[proxy.as_qualifier()] = set()
 
         # add command set documentation (if any)
-        if proxy_docs:
+        if proxy_docs and not oneshot:
             commands_body.append(proxy_docs)
             commands_body.append('')
 
         # for each direct method of this proxy (omitting private and inherited methods)
         for method in inspect.getmembers(proxy, inspect.ismethod):
+            if isinstance(commands, list) and len(commands):
+                if proxy.qualify(method[0]) not in commands:
+                    continue
+
             if method[0].startswith('_'):
                 continue
 
@@ -97,9 +110,12 @@ def document_commands(plugins=None, only_plugins=False, omit_header=False, envir
 
         commands_body.append('')
 
-    final = ['# Command Reference']
+    if not oneshot:
+        final = ['# Command Reference']
+    else:
+        final = []
 
-    if not omit_header:
+    if not omit_header and not oneshot:
         header_docs = inspect.getdoc(webfriend.scripting.commands)
 
         if header_docs:
@@ -108,17 +124,18 @@ def document_commands(plugins=None, only_plugins=False, omit_header=False, envir
             final.append('')
 
     # include TOC tree
-    for title, qualifier in toc:
-        final.append("- [{}](#{}-command-set)".format(title, qualifier))
+    if not oneshot:
+        for title, qualifier in toc:
+            final.append("- [{}](#{}-command-set)".format(title, qualifier))
 
-        if qualifier in subtoc:
-            for method, has_docs in sorted(list(subtoc[qualifier])):
-                wrap_l = wrap_r = '**'
+            if qualifier in subtoc:
+                for method, has_docs in sorted(list(subtoc[qualifier])):
+                    wrap_l = wrap_r = '**'
 
-                if not has_docs:
-                    wrap_l = wrap_r = ''
+                    if not has_docs:
+                        wrap_l = wrap_r = ''
 
-                final.append("   - {}[{}](#{}){}".format(wrap_l, method, method.replace('::', ''), wrap_r))
+                    final.append("   - {}[{}](#{}){}".format(wrap_l, method, method.replace('::', ''), wrap_r))
 
     # include command documentation lines
     final.append('')

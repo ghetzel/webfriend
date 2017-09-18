@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import sys
+import signal
 import traceback
 import webfriend.info
 from webfriend.browser import Chrome
@@ -127,6 +128,11 @@ def main(
 
 
 try:
+    def signal_handler(signal, frame):
+        log.error('Interrupted')
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
     main()
 except UserError as e:
     exit(e.exit_code)

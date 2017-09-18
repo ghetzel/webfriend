@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import json
 import logging
+import re
 from webfriend.scripting.environment import Environment
 from webfriend.scripting.scope import Scope
 from webfriend.scripting.execute import execute_script
@@ -29,6 +30,10 @@ class FriendscriptCompleter(Completer):
 
 
 class REPL(object):
+    INTERNAL_COMMANDS = [
+        'help',
+    ]
+
     prompt = '(friendscript) '
 
     def __init__(self, browser, environment=None):
@@ -77,10 +82,18 @@ class REPL(object):
 
                 self.environment.set_scope(self.last_result)
 
-                if self.echo_results:
+                if self.echo_results and not self.is_internal_command(line):
                     print(json.dumps(self.last_result.as_dict(), indent=4))
 
             except Exception as e:
                 self.last_result = e
                 logging.exception('FAIL')
                 print(e)
+
+    def is_internal_command(self, line):
+        parts = re.split(r'\s+', line)
+
+        if len(parts) and parts[0] in self.INTERNAL_COMMANDS:
+            return True
+
+        return False

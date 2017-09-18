@@ -10,6 +10,7 @@ from webfriend.scripting.environment import Environment
 from webfriend.scripting.scope import Scope
 from webfriend.scripting.parser.exceptions import UserError
 from webfriend.utils import autotype
+from webfriend.utils.docs import document_commands
 import json
 import logging
 import os
@@ -1041,3 +1042,9 @@ class CoreProxy(CommandProxy):
             self.scope.update(scope)
 
         return scope.get('result')
+
+    def help(self, command):
+        print('\n'.join(document_commands(
+            oneshot=True,
+            commands=[command],
+        )).rstrip('\n'))
