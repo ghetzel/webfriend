@@ -257,6 +257,19 @@ class DOMElement(object):
         return self.dom.query_all(selector, node_id=self.id)
 
     def xpath(self, expression):
+        """
+        Query the DOM for elements matching the given XPath expression, starting
+        from the current element.
+
+        #### Arguments
+
+        - **expression** (`str`):
+
+            An XPath expression to evaluate within the current DOM.
+
+        #### Returns
+        A list of matching elements.
+        """
         return self.dom.xpath(expression, node_id=self.id)
 
     def remove(self):
@@ -625,6 +638,19 @@ class DOM(Base):
         ]
 
     def xpath(self, expression, timeout=10000):
+        """
+        Query the DOM for elements matching the given XPath expression.
+
+        #### Arguments
+
+        - **expression** (`str`):
+
+            An XPath expression to evaluate within the current DOM.
+
+        #### Returns
+        A list of matching elements.
+        """
+
         # call getDocument first so subsequent calls to performSearch work properly
         # (thanks @jamcplusplus for catching this)
         self.root

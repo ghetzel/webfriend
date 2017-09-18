@@ -18,6 +18,7 @@ shown with the value `<REQUIRED>`.
    - **[field](#field)**
    - **[focus](#focus)**
    - **[go](#go)**
+   - [help](#help)
    - **[javascript](#javascript)**
    - **[log](#log)**
    - **[new_tab](#new_tab)**
@@ -38,7 +39,7 @@ shown with the value `<REQUIRED>`.
    - **[wait_for](#wait_for)**
    - **[wait_for_idle](#wait_for_idle)**
    - **[wait_for_load](#wait_for_load)**
-   - [xpath](#xpath)
+   - **[xpath](#xpath)**
 - [Cookies](#cookies-command-set)
    - **[cookies::all](#cookiesall)**
    - **[cookies::delete](#cookiesdelete)**
@@ -385,6 +386,14 @@ Nagivate to a URL.
 
 #### Returns
 The URL that was loaded (`str`)
+
+---
+
+### `help`
+
+```
+help <COMMAND>
+```
 
 ---
 
@@ -1039,6 +1048,17 @@ comes first).
 ```
 xpath
 ```
+
+Query the DOM for elements matching the given XPath expression.
+
+#### Arguments
+
+- **expression** (`str`):
+
+    An XPath expression to evaluate within the current DOM.
+
+#### Returns
+A list of matching elements.
 
 ---
 
