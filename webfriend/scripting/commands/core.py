@@ -266,8 +266,8 @@ class CoreProxy(CommandProxy):
         if hasattr(mobile, 'as_dict'):
             _mobile   = True
             cfg       = mobile.as_dict()
-            mobile_sw = cfg.get('width', 0)
-            mobile_sh = cfg.get('height', 0)
+            mobile_sw = cfg.get('width', width)
+            mobile_sh = cfg.get('height', height)
             mobile_x  = cfg.get('x', 0)
             mobile_y  = cfg.get('y', 0)
         else:

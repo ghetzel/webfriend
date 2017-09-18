@@ -120,8 +120,6 @@ class PageProxy(CommandProxy):
 
         element = None
         max_element = None
-        width = self.tab.dom.scroll_width
-        height = self.tab.dom.scroll_height
 
         if not isinstance(selector, list):
             selector = [selector]
@@ -148,7 +146,7 @@ class PageProxy(CommandProxy):
         return_flo = True
 
         if element and not width:
-            width = element.scroll_height
+            width = element.scroll_width
 
         if element and not height:
             height = element.scroll_height
