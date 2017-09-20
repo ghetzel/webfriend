@@ -14,6 +14,10 @@ class NotFound(WebfriendError):
     pass
 
 
+class NetworkError(WebfriendError):
+    pass
+
+
 class HttpError(WebfriendError):
     pass
 

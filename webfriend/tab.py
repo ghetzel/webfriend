@@ -53,35 +53,36 @@ class Tab(object):
         if height is None:
             height = self.default_height
 
-        self.browser      = browser
-        self.frame_id     = frame_id
-        self.description  = description
-        self.message_id   = 0
-        self.socket       = websocket.create_connection(self.wsurl)
-        self.waiters      = {}
-        self.triggerqueue = Queue()
-        self.last_event_m = {}
-        self.last_event_t = {}
-        self.g_recv_ctl   = Queue(1)
-        self.g_recv       = Thread(target=self.receive_messages, args=(self.g_recv_ctl,))
-        self.replies      = {}
-        self.initial_w    = width
-        self.initial_h    = height
-        self.msg_enable   = False
-
-        self._trigger_worker = None
+        self.browser           = browser
+        self.frame_id          = frame_id
+        self.description       = description
+        self.message_id        = 0
+        self.socket            = websocket.create_connection(self.wsurl)
+        self.waiters           = {}
+        self.triggerqueue      = Queue()
+        self.last_event_m      = {}
+        self.last_event_t      = {}
+        self._network_requests = {}
+        self.g_recv_ctl        = Queue(1)
+        self.g_recv            = Thread(target=self.receive_messages, args=(self.g_recv_ctl,))
+        self.replies           = {}
+        self.initial_w         = width
+        self.initial_h         = height
+        self.msg_enable        = False
+        self.netreq_tracking   = True
+        self._trigger_worker   = None
 
         # setup and enable all the RPC domains we support
-        self.page         = Page(self)
-        self.dom          = DOM(self)
-        self.console      = Console(self)
-        self.emulation    = Emulation(self)
-        self.input        = Input(self)
-        self.network      = Network(self)
-        self.runtime      = Runtime(self)
-        self.window       = Browser(self)
-        self.overlay      = Overlay(self)
-        self.target       = Target(self)
+        self.page              = Page(self)
+        self.dom               = DOM(self)
+        self.console           = Console(self)
+        self.emulation         = Emulation(self)
+        self.input             = Input(self)
+        self.network           = Network(self)
+        self.runtime           = Runtime(self)
+        self.window            = Browser(self)
+        self.overlay           = Overlay(self)
+        self.target            = Target(self)
 
         # start the receive thread
         self.g_recv.start()
@@ -141,6 +142,12 @@ class Tab(object):
 
     def disable_console_messages(self):
         self.msg_enable = False
+
+    def enable_network_request_tracking(self):
+        self.netreq_tracking = True
+
+    def disable_network_request_tracking(self):
+        self.netreq_tracking = False
 
     def stop(self):
         if self.g_recv.is_alive():
@@ -519,7 +526,33 @@ class Tab(object):
         instance = self.get_domain_instance(domain)
         return instance.remove_handler(callback_id)
 
+    def reset_network_request_cache(self):
+        self._network_requests = {}
+
+    def get_network_request(self, request_id):
+        return self._network_requests.get(request_id)
+
     def setup_callbacks(self):
+        def on_net_pre_request(e):
+            self._network_requests[e.get('requestId')] = {
+                'before': e,
+            }
+
+        def on_net_response_received(e):
+            nid = e.get('requestId')
+
+            if isinstance(self._network_requests.get(nid), dict):
+                self._network_requests[nid]['success'] = True
+                self._network_requests[nid]['completed'] = True
+                self._network_requests[nid]['response'] = e
+
+        def on_net_load_failed(e):
+            nid = e.get('requestId')
+
+            if isinstance(self._network_requests.get(nid), dict):
+                self._network_requests[nid]['success'] = False
+                self._network_requests[nid]['response'] = e
+
         def on_message(e):
             message = e.get('message', {})
             level = message.get('level', 'log')
@@ -541,6 +574,14 @@ class Tab(object):
                     l = 'DD'
 
                 logging.info('[{}] {}'.format(l, body))
+
+        if self.netreq_tracking:
+            self.network.on('requestWillBeSent', on_net_pre_request)
+            self.network.on('responseReceived',  on_net_response_received)
+            self.network.on('loadingFailed',     on_net_load_failed)
+            logging.debug('Network request tracking is enabled')
+        else:
+            logging.debug('Network request tracking is disabled')
 
         if self.msg_enable:
             self.console.on('messageAdded', on_message)

@@ -14,7 +14,7 @@ class Page(Base):
     domain = 'Page'
     capture_formats = ['jpeg', 'png']
 
-    def navigate(self, url, referrer=None, transition_type=None):
+    def navigate(self, url, referrer=None, transition_type=None, clear_request_cache=True):
         params = {
             'url': url,
         }
@@ -25,19 +25,38 @@ class Page(Base):
         if transition_type:
             params['transitionType'] = transition_type
 
-        self.call('navigate', **params)
-        events = self.tab.wait_for('Network.responseReceived')
+        # clear the network request cache between explicit page loads
+        if clear_request_cache is True:
+            self.tab.reset_network_request_cache()
 
-        net_event = events['sequence'][0]
-        response = net_event.get('response', {})
-        status = response['status']
+        init_frame_id = self.call('navigate', **params).get('frameId')
 
-        if status < 400:
-            return response
-        else:
-            exc = exceptions.HttpError('HTTP {}'.format(status))
-            exc.response = response
-            raise exc
+        # block until the network first request finished (success or failure)
+        self.tab.wait_for('Network.loadingFinished')
+
+        # get the request corresponding to the frameID (this is the request for the given URL)
+        net_request = self.tab.get_network_request(init_frame_id)
+
+        if net_request:
+            if net_request.get('success') is True:
+                response = net_request.get('response', {})
+                status = response['status']
+
+                if status < 400:
+                    return response
+                else:
+                    exc = exceptions.HttpError('HTTP {}'.format(status))
+                    exc.response = response
+                    raise exc
+
+            else:
+                pre_event = net_request.get('before', {})
+                fail_event = net_request.get('response', {})
+                msg = fail_event.get('errorText', 'UNKNOWN')
+                raise exceptions.NetworkError('{} [url: "{}"]'.format(
+                    msg,
+                    pre_event.get('documentURL')
+                ))
 
     def reload(self, ignore_cache=False, eval_on_load=None):
         params = {

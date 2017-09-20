@@ -175,14 +175,15 @@ class PageProxy(CommandProxy):
             y = 0
         # ---
 
-        # resize and force redraw
-        self.tab.emulation.set_device_metrics_override(
-            width=width,
-            height=height,
-            device_scale_factor=1.0
-        )
+        if width and height:
+            # resize and force redraw
+            self.tab.emulation.set_device_metrics_override(
+                width=width,
+                height=height,
+                device_scale_factor=1.0
+            )
 
-        self.tab.emulation.set_visible_size(width, height)
+            self.tab.emulation.set_visible_size(width, height)
 
         try:
             self.tab.emulation.force_viewport(x=x, y=y)

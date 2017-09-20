@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from webfriend.rpc import Base
 import logging
 import math
-import copy
 import re
 import time
 from webfriend import exceptions
@@ -211,7 +210,10 @@ class DOMElement(object):
     @property
     def bounds(self):
         if self._bounding_rect is None:
-            self._bounding_rect = self.evaluate("return this.getBoundingClientRect();")
+            self._bounding_rect = self.evaluate(
+                "return this.getBoundingClientRect();",
+                return_by_value=True
+            )
 
         return self._bounding_rect
 
@@ -329,16 +331,12 @@ class DOM(Base):
     _you_never_forget_your_first_root_element = None
     _root_element = None
     _elements = {}
-    _network_requests = {}
 
     def initialize(self):
         self.on('setChildNodes', self.on_child_nodes)
         self.on('childNodeInserted', self.on_child_inserted)
         self.on('childNodeRemoved', self.on_child_removed)
         self.tab.page.on('frameClearedScheduledNavigation', self.reset)
-        self.tab.network.on('requestWillBeSent', self.on_network_request)
-        self.tab.network.on('responseReceived', self.on_network_response)
-        self.tab.network.on('requestServedFromCache', self.on_network_response)
 
     def reset(self, *args, **kwargs):
         """
@@ -351,7 +349,7 @@ class DOM(Base):
             self._you_never_forget_your_first_root_element = None
 
     def clear_requests(self, *args, **kwargs):
-        self._network_requests = {}
+        self.tab.reset_network_request_cache()
 
     def has_element(self, id):
         """
@@ -774,7 +772,7 @@ class DOM(Base):
 
     @property
     def resources(self):
-        return self._network_requests
+        return self.tab._network_requests
 
     def get_resource(self, url=None, request_id=None):
         """
@@ -797,7 +795,7 @@ class DOM(Base):
             raise ValueError("Must specify either url or request_id")
 
         if request_id:
-            return self.resources.get(request_id)
+            return self.tab.get_network_request(request_id)
         elif url:
             matching_requests = []
 
@@ -821,20 +819,6 @@ class DOM(Base):
                 )
 
         return False
-
-    def on_network_request(self, event):
-        request_id = event.get('requestId')
-
-        if request_id:
-            self._network_requests[request_id] = copy.copy(event.payload)
-            self._network_requests[request_id]['id'] = request_id
-
-    def on_network_response(self, event):
-        request_id = event.get('requestId')
-
-        if request_id in self._network_requests:
-            self._network_requests[request_id].update(event.payload)
-            self._network_requests[request_id]['completed'] = True
 
     @classmethod
     def prepare_selector(cls, selector):
