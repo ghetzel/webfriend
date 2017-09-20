@@ -53,10 +53,10 @@ class Page(Base):
                 pre_event = net_request.get('before', {})
                 fail_event = net_request.get('response', {})
                 msg = fail_event.get('errorText', 'UNKNOWN')
-                raise exceptions.NetworkError('{} [url: "{}"]'.format(
-                    msg,
-                    pre_event.get('documentURL')
-                ))
+                exc = exceptions.NetworkError(msg)
+                exc.event = fail_event
+                exc.url = pre_event.get('documentURL')
+                raise exc
 
     def reload(self, ignore_cache=False, eval_on_load=None):
         params = {
