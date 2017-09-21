@@ -39,7 +39,8 @@ class Page(Base):
 
         if net_request:
             if net_request.get('success') is True:
-                response = net_request.get('response', {})
+                event = net_request.get('response', {})
+                response = event.get('response', {})
                 status = response['status']
 
                 if status < 400:
