@@ -24,7 +24,7 @@ class CoreProxy(CommandProxy):
     These represent very common tasks that one is likely to perform in a browser, such as
     navigating to URLs, filling in form fields, and performing input with the mouse and keyboard.
     """
-    default_referrer_domain = 'https://github.com/ghetzel/webfriend'
+    default_referrer_prefix = 'https://github.com/ghetzel/webfriend'
 
     @classmethod
     def qualify(cls, name):
@@ -38,7 +38,7 @@ class CoreProxy(CommandProxy):
         extra_headers=None,
         cache=None,
         console=None,
-        referrer_domain=None
+        referrer_prefix=None
     ):
         """
         Configures various features of the Remote Debugging protocol and provides environment
@@ -80,7 +80,7 @@ class CoreProxy(CommandProxy):
 
             Whether console messages emitted from pages are logged to standard error.
 
-        - **referrer_domain** (`str`, optional):
+        - **referrer_prefix** (`str`, optional):
 
             The domain portion of the "Referer" header to send.
         """
@@ -118,10 +118,10 @@ class CoreProxy(CommandProxy):
         else:
             self.tab.disable_console_messages()
 
-        if referrer_domain:
-            self._referrer_domain = referrer_domain
+        if referrer_prefix:
+            self._referrer_prefix = referrer_prefix
         else:
-            self._referrer_domain = self.default_referrer_domain
+            self._referrer_prefix = self.default_referrer_prefix
 
     def go(
         self,
@@ -183,7 +183,7 @@ class CoreProxy(CommandProxy):
 
         if referrer is 'random':
             referrer = '{}/{}'.format(
-                self._referrer_domain.rstrip('/'),
+                self._referrer_prefix.rstrip('/'),
                 uuid4()
             )
 
