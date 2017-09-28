@@ -24,6 +24,7 @@ class CoreProxy(CommandProxy):
     These represent very common tasks that one is likely to perform in a browser, such as
     navigating to URLs, filling in form fields, and performing input with the mouse and keyboard.
     """
+    default_referrer_prefix = 'https://github.com/ghetzel/webfriend'
 
     @classmethod
     def qualify(cls, name):
@@ -36,7 +37,8 @@ class CoreProxy(CommandProxy):
         user_agent=None,
         extra_headers=None,
         cache=None,
-        console=None
+        console=None,
+        referrer_prefix=None
     ):
         """
         Configures various features of the Remote Debugging protocol and provides environment
@@ -77,6 +79,10 @@ class CoreProxy(CommandProxy):
         - **console** (`bool`, optional):
 
             Whether console messages emitted from pages are logged to standard error.
+
+        - **referrer_prefix** (`str`, optional):
+
+            The domain portion of the "Referer" header to send.
         """
         if events and hasattr(events, 'values') and isinstance(events.values, list):
             for domain in events.values:
@@ -112,6 +118,11 @@ class CoreProxy(CommandProxy):
         else:
             self.tab.disable_console_messages()
 
+        if referrer_prefix:
+            self._referrer_prefix = referrer_prefix
+        else:
+            self._referrer_prefix = self.default_referrer_prefix
+
     def go(
         self,
         uri,
@@ -119,7 +130,9 @@ class CoreProxy(CommandProxy):
         wait_for_load=True,
         timeout=30000,
         clear_requests=True,
-        continue_on_error=False
+        continue_on_error=False,
+        continue_on_timeout=True,
+        load_event_name='Page.loadEventFired'
     ):
         """
         Nagivate to a URL.
@@ -150,12 +163,29 @@ class CoreProxy(CommandProxy):
             [page::resource](#pageresource) is cleared before navigating.  Set this to _false_ to
             preserve the ability to retrieve data that was loaded on previous pages.
 
+        - **continue_on_error** (`bool`, optional):
+
+            Whether to continue execution if an error is encountered during page load (e.g.: HTTP
+            4xx/5xx, SSL, TCP connection errors).
+
+        - **continue_on_timeout** (`bool`, optional):
+
+            Whether to continue execution if **load_event_name** is not seen before **timeout**
+            elapses.
+
+        - **load_event_name** (`str`, optional):
+
+            The RPC event to wait for before proceeding to the next command.
+
         #### Returns
         The URL that was loaded (`str`)
         """
 
         if referrer is 'random':
-            referrer = 'http://example.com/{}'.format(uuid4())
+            referrer = '{}/{}'.format(
+                self._referrer_prefix.rstrip('/'),
+                uuid4()
+            )
 
         if clear_requests:
             # since we've explicitly navigating, clear the network requests
@@ -165,17 +195,26 @@ class CoreProxy(CommandProxy):
 
         if not len(uri_p.scheme):
             uri = 'https://{}'.format(uri)
-
-        uri = urlnorm.norm(uri)
+        elif uri_p.scheme != 'file':
+            uri = urlnorm.norm(uri)
 
         reply = self.tab.page.navigate(uri, referrer=referrer)
 
-        if wait_for_load:
+        if wait_for_load and load_event_name:
             try:
-                self.tab.wait_for('Page.loadEventFired', timeout=timeout)
+                self.tab.wait_for(load_event_name, timeout=timeout)
+
             except exceptions.TimeoutError:
+                if continue_on_timeout:
+                    logging.error('Timed out waiting for {} event after {}ms.'.format(
+                        load_event_name,
+                        timeout
+                    ))
+                else:
+                    raise
+            except exceptions.WebfriendError as e:
                 if continue_on_error:
-                    logging.error('Timed out waiting for page load event.')
+                    logging.error('Got exception while navigating, but proceeding: {}'.format(e))
                 else:
                     raise
 

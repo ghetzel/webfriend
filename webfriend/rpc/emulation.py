@@ -24,10 +24,10 @@ class Emulation(Base):
         device_scale_factor=0,
         mobile=False,
         fit_window=False,
-        mobile_screen_width=0,
-        mobile_screen_height=0,
-        mobile_position_x=0,
-        mobile_position_y=0,
+        position_x=0,
+        position_y=0,
+        screen_width=0,
+        screen_height=0,
         screen_orientation_type=None,
         screen_orientation_angle=None
     ):
@@ -39,11 +39,17 @@ class Emulation(Base):
             'fitWindow':         fit_window,
         }
 
-        if mobile is True:
-            params['screenWidth']  = mobile_screen_width
-            params['screenHeight'] = mobile_screen_height
-            params['positionX']    = mobile_position_x
-            params['positionY']    = mobile_position_y
+        if position_x:
+            params['positionX'] = position_x
+
+        if position_y:
+            params['positionY'] = position_y
+
+        if screen_width:
+            params['screenWidth']  = screen_width
+
+        if screen_height:
+            params['screenHeight'] = screen_height
 
         if screen_orientation_type is not None:
             params['screenOrientation'] = {
