@@ -22,7 +22,8 @@ class PageProxy(CommandProxy):
         after_events=None,
         settle_timeout=None,
         reply_timeout=30000,
-        autoclose=True
+        autoclose=True,
+        use="tallest",
     ):
         """
         Capture the current screen contents as an image and write the image to a file or return it
@@ -93,6 +94,16 @@ class PageProxy(CommandProxy):
             If a file handle is given as the **destination**, should it be automatically closed
             when the screenshot is completed.
 
+        - **use** (`str`):
+
+            Determines how to handle multiple elements that are matched by **selector**.
+
+            - "tallest":
+                Use the tallest element as the result for measuring screenshot dimensions.
+
+            - "first":
+                Use the first element matched as the result for measuring screenshot dimensions.
+
         #### Returns
         `dict`, with keys:
 
@@ -119,15 +130,20 @@ class PageProxy(CommandProxy):
         """
 
         element = None
-        max_element = None
+        stored_element = None
+        is_explicitly_set = set()
 
         # width defaults to document scrollWidth
         if not width:
             width = self.tab.dom.scroll_width
+        else:
+            is_explicitly_set.add('width')
 
         # height defaults to document scrollHeight
         if not height:
             height = self.tab.dom.scroll_height
+        else:
+            is_explicitly_set.add('height')
 
         # listify selector
         if selector is None:
@@ -141,74 +157,53 @@ class PageProxy(CommandProxy):
                 elements = self.tab.dom.query_all(s)
                 element = self.tab.dom.ensure_unique_element(s, elements)
 
-                if max_element:
-                    if element.height > max_element.height:
-                        max_element = element
+                if use == "tallest":
+                    if stored_element:
+                        if element.height > stored_element.height:
+                            stored_element = element
+
+                elif use == "first":
+                    stored_element = element
+                    break
 
                 else:
-                    max_element = element
+                    raise exceptions.WebfriendError(
+                        "Unrecognized use '{}'".format(use)
+                    )
 
-            except (exceptions.EmptyResult, exceptions.TooManyResults):
+            except (exceptions.EmptyResult, exceptions.TooManyResults) as e:
+                logging.debug("Screenshot selector error: {}".format(e))
                 continue
 
-        if max_element:
-            element = max_element
+        if stored_element:
+            element = stored_element
 
         return_flo = True
 
         # ---
         # if an element was found and an explicit override was not set...
-        if element and not width:
-            width = element.scroll_width
+        if element:
+            if 'width' not in is_explicitly_set:
+                width = element.width
 
-        if element and not height:
-            height = element.scroll_height
+            if 'height' not in is_explicitly_set:
+                height = element.height
 
-        if element and x < 0:
-            x = element.left
-        else:
-            x = 0
+            if x < 0:
+                x = element.left
+            else:
+                x = 0
 
-        if element and y < 0:
-            y = element.top
-        else:
-            y = 0
+            if y < 0:
+                y = element.top
+            else:
+                y = 0
         # ---
 
-        if width and height:
-            # resize and force redraw
-            self.tab.emulation.set_device_metrics_override(
-                width=width,
-                height=height,
-                device_scale_factor=1.0
-            )
-
-            self.tab.emulation.set_visible_size(width, height)
-
-        try:
-            self.tab.emulation.force_viewport(x=x, y=y)
-        except exceptions.ProtocolError:
-            pass
-
-        # wait for a spell for the page to adjust to its new world
-        if settle:
-            if after_events is None:
-                logging.info('Waiting {}ms for resize to settle'.format(settle))
-                time.sleep(settle / 1e3)
-            else:
-                wfi_params = {}
-
-                if settle_timeout:
-                    wfi_params['timeout'] = settle_timeout
-
-                if after_events != 'any':
-                    wfi_params['event_filter'] = after_events
-
-                try:
-                    logging.info('Waiting {}ms after last events'.format(settle))
-                    self.tab.wait_for_idle(settle, **wfi_params)
-                except exceptions.TimeoutError:
-                    pass
+        capture_screenshot_params = {
+            'format': format,
+            'reply_timeout': reply_timeout,
+        }
 
         # setup a FLO to write data to if we don't have one
         if destination is None:
@@ -216,7 +211,45 @@ class PageProxy(CommandProxy):
         elif isinstance(destination, basestring):
             return_flo = False
 
-        self.tab.page.capture_screenshot(destination, format=format, reply_timeout=reply_timeout)
+        if x > 0 or y > 0:
+            capture_screenshot_params['clip'] = {
+                'width':  width,
+                'height': height,
+                'x':      int(x),
+                'y':      int(y),
+                'scale':  1.0,
+            }
+        else:
+            if width and height:
+                # resize and force redraw
+                self.tab.emulation.set_device_metrics_override(
+                    width=width,
+                    height=height,
+                    device_scale_factor=1.0
+                )
+
+            self.tab.emulation.set_visible_size(width, height)
+            self.tab.page.capture_screenshot(destination, **capture_screenshot_params)
+
+            # wait for a spell for the page to adjust to its new world
+            if settle:
+                if after_events is None:
+                    logging.info('Waiting {}ms for resize to settle'.format(settle))
+                    time.sleep(settle / 1e3)
+                else:
+                    wfi_params = {}
+
+                    if settle_timeout:
+                        wfi_params['timeout'] = settle_timeout
+
+                    if after_events != 'any':
+                        wfi_params['event_filter'] = after_events
+
+                    try:
+                        logging.info('Waiting {}ms after last events'.format(settle))
+                        self.tab.wait_for_idle(settle, **wfi_params)
+                    except exceptions.TimeoutError:
+                        pass
 
         out = {
             'element': element,
@@ -238,6 +271,21 @@ class PageProxy(CommandProxy):
                         close()
         else:
             out['path'] = destination
+
+        try:
+            self.tab.emulation.clear_device_metrics_override()
+        except:
+            pass
+
+        try:
+            self.tab.emulation.reset_viewport()
+        except:
+            pass
+
+        try:
+            self.tab.emulation.reset_page_scale_factor()
+        except:
+            pass
 
         return out
 

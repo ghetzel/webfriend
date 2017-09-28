@@ -210,11 +210,7 @@ class DOMElement(object):
     @property
     def bounds(self):
         if self._bounding_rect is None:
-            self._bounding_rect = self.evaluate(
-                "return this.getBoundingClientRect();",
-                return_by_value=True
-            )
-
+            self._bounding_rect = self.evaluate("return this.getBoundingClientRect()")
         return self._bounding_rect
 
     @property
@@ -822,7 +818,7 @@ class DOM(Base):
 
     @classmethod
     def prepare_selector(cls, selector):
-        selector = RX_ID_EXPANSION.sub('*[id*="\g<id>"]', selector)
+        selector = RX_ID_EXPANSION.sub('*[id="\g<id>"]', selector)
 
         return selector
 
