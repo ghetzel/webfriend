@@ -174,11 +174,12 @@ A `bool` value representing whether the tab was closed successfully or not.
 
 ```
 configure <EVENTS> {
-    demo:          null,
-    user_agent:    null,
-    extra_headers: null,
-    cache:         null,
-    console:       null
+    demo:            null,
+    user_agent:      null,
+    extra_headers:   null,
+    cache:           null,
+    console:         null,
+    referrer_domain: null
 }
 ```
 
@@ -220,6 +221,10 @@ setup.
 - **console** (`bool`, optional):
 
     Whether console messages emitted from pages are logged to standard error.
+
+- **referrer_domain** (`str`, optional):
+
+    The domain portion of the "Referer" header to send.
 
 ---
 
@@ -348,11 +353,13 @@ The matching `webfriend.rpc.DOMElement` that was given focus.
 
 ```
 go <URI> {
-    referrer:          'random',
-    wait_for_load:     true,
-    timeout:           30000,
-    clear_requests:    true,
-    continue_on_error: false
+    referrer:            'random',
+    wait_for_load:       true,
+    timeout:             30000,
+    clear_requests:      true,
+    continue_on_error:   false,
+    continue_on_timeout: true,
+    load_event_name:     'Page.loadEventFired'
 }
 ```
 
@@ -383,6 +390,20 @@ Nagivate to a URL.
     Whether the resources stack that is queried in [page::resources](#pageresources) and
     [page::resource](#pageresource) is cleared before navigating.  Set this to _false_ to
     preserve the ability to retrieve data that was loaded on previous pages.
+
+- **continue_on_error** (`bool`, optional):
+
+    Whether to continue execution if an error is encountered during page load (e.g.: HTTP
+    4xx/5xx, SSL, TCP connection errors).
+
+- **continue_on_timeout** (`bool`, optional):
+
+    Whether to continue execution if **load_event_name** is not seen before **timeout**
+    elapses.
+
+- **load_event_name** (`str`, optional):
+
+    The RPC event to wait for before proceeding to the next command.
 
 #### Returns
 The URL that was loaded (`str`)
@@ -1784,7 +1805,8 @@ page::screenshot <DESTINATION> {
     after_events:   null,
     settle_timeout: null,
     reply_timeout:  30000,
-    autoclose:      true
+    autoclose:      true,
+    use:            'tallest'
 }
 ```
 
@@ -1855,6 +1877,16 @@ as a file-like object.
 
     If a file handle is given as the **destination**, should it be automatically closed
     when the screenshot is completed.
+
+- **use** (`str`):
+
+    Determines how to handle multiple elements that are matched by **selector**.
+
+    - "tallest":
+        Use the tallest element as the result for measuring screenshot dimensions.
+
+    - "first":
+        Use the first element matched as the result for measuring screenshot dimensions.
 
 #### Returns
 `dict`, with keys:
