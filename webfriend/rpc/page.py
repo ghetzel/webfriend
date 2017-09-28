@@ -31,33 +31,36 @@ class Page(Base):
 
         init_frame_id = self.call('navigate', **params).get('frameId')
 
-        # block until the network first request finished (success or failure)
-        self.tab.wait_for('Network.loadingFinished')
+        if url.startswith('http'):
+            # block until the network first request finished (success or failure)
+            self.tab.wait_for('Network.loadingFinished')
 
-        # get the request corresponding to the frameID (this is the request for the given URL)
-        net_request = self.tab.get_network_request(init_frame_id)
+            # get the request corresponding to the frameID (this is the request for the given URL)
+            net_request = self.tab.get_network_request(init_frame_id)
 
-        if net_request:
-            if net_request.get('success') is True:
-                event = net_request.get('response', {})
-                response = event.get('response', {})
-                status = response['status']
+            if net_request:
+                if net_request.get('success') is True:
+                    event = net_request.get('response', {})
+                    response = event.get('response', {})
+                    status = response['status']
 
-                if status < 400:
-                    return response
+                    if status < 400:
+                        return response
+                    else:
+                        exc = exceptions.HttpError('HTTP {}'.format(status))
+                        exc.response = response
+                        raise exc
+
                 else:
-                    exc = exceptions.HttpError('HTTP {}'.format(status))
-                    exc.response = response
+                    pre_event = net_request.get('before', {})
+                    fail_event = net_request.get('response', {})
+                    msg = fail_event.get('errorText', 'UNKNOWN')
+                    exc = exceptions.NetworkError(msg)
+                    exc.event = fail_event
+                    exc.url = pre_event.get('documentURL')
                     raise exc
-
-            else:
-                pre_event = net_request.get('before', {})
-                fail_event = net_request.get('response', {})
-                msg = fail_event.get('errorText', 'UNKNOWN')
-                exc = exceptions.NetworkError(msg)
-                exc.event = fail_event
-                exc.url = pre_event.get('documentURL')
-                raise exc
+        else:
+            return None
 
     def reload(self, ignore_cache=False, eval_on_load=None):
         params = {
@@ -114,6 +117,8 @@ class Page(Base):
 
         if isinstance(destination, basestring):
             data = open(destination, 'w')
+        else:
+            data = destination
 
         body = b64decode(reply.get('data'))
         data.write(body)
