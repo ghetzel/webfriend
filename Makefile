@@ -40,8 +40,8 @@ package-build: clean-build
 	python setup.py sdist bdist_wheel
 
 package-sign:
-	cd dist && gpg \
-		--local-user 6A116E6B0F678FA5 \
+	cd dist && gpg2 \
+		--local-user BCAC96EA7453CBA4 \
 		--detach-sign \
 		--armor \
 		--yes *.tar.gz
