@@ -195,8 +195,8 @@ class CoreProxy(CommandProxy):
 
         if not len(uri_p.scheme):
             uri = 'https://{}'.format(uri)
-
-        uri = urlnorm.norm(uri)
+        elif uri_p.scheme != 'file':
+            uri = urlnorm.norm(uri)
 
         reply = self.tab.page.navigate(uri, referrer=referrer)
 
