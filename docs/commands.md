@@ -179,7 +179,7 @@ configure <EVENTS> {
     extra_headers:   null,
     cache:           null,
     console:         null,
-    referrer_domain: null
+    referrer_prefix: null
 }
 ```
 
@@ -222,7 +222,7 @@ setup.
 
     Whether console messages emitted from pages are logged to standard error.
 
-- **referrer_domain** (`str`, optional):
+- **referrer_prefix** (`str`, optional):
 
     The domain portion of the "Referer" header to send.
 
