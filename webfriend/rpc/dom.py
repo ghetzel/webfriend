@@ -818,8 +818,6 @@ class DOM(Base):
 
     @classmethod
     def prepare_selector(cls, selector):
-        selector = RX_ID_EXPANSION.sub('*[id="\g<id>"]', selector)
-
         return selector
 
     @classmethod

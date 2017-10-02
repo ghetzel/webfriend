@@ -535,6 +535,7 @@ class Tab(object):
     def setup_callbacks(self):
         def on_net_pre_request(e):
             self._network_requests[e.get('requestId')] = {
+                'id': e.get('requestId'),
                 'before': e,
             }
 

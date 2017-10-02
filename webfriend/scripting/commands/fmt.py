@@ -192,7 +192,7 @@ class FormatProxy(CommandProxy):
         else:
             return value.replace(find, replace, count)
 
-    def split(self, value, on, count=None):
+    def split(self, value, on, count=-1):
         """
         Split an input string into a list of strings.
 
@@ -217,7 +217,7 @@ class FormatProxy(CommandProxy):
         """
         return value.split(on, count)
 
-    def rsplit(self, value, on, count=None):
+    def rsplit(self, value, on, count=-1):
         """
         Split an input string into a list of strings, starting from the right-hand side.
 

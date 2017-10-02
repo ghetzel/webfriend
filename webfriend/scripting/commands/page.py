@@ -389,18 +389,15 @@ class PageProxy(CommandProxy):
         """
         return self.tab.dom.resources.values()
 
-    def resource(self, url, **kwargs):
+    def resource(self, **kwargs):
         """
         See: `webfriend.rpc.DOM.get_resource`
         """
-        kwargs.update({
-            'url': url,
-        })
-
         request = self.tab.dom.get_resource(**kwargs)
 
         if request and request.get('completed'):
             out = {
+                'id': request.get('id'),
                 'request': request,
                 'data': None,
             }
@@ -413,6 +410,17 @@ class PageProxy(CommandProxy):
                 pass
 
             return out
+        else:
+            return False
+
+    def save_resource(self, destination, **kwargs):
+        res = self.resource(**kwargs)
+
+        if 'id' in res:
+            with open(destination, 'w') as f:
+                f.write(self.tab.network.get_response_body(res['id']))
+
+            return destination
         else:
             return False
 
