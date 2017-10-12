@@ -78,6 +78,7 @@ shown with the value `<REQUIRED>`.
    - **[page::remove](#pageremove)**
    - **[page::resource](#pageresource)**
    - **[page::resources](#pageresources)**
+   - [page::save_resource](#pagesave_resource)
    - **[page::screenshot](#pagescreenshot)**
    - **[page::source](#pagesource)**
    - [page::start_capture](#pagestart_capture)
@@ -1515,7 +1516,7 @@ The resulting string with all replacements (if any) applied.
 ```
 fmt::rsplit <VALUE> {
     on:    <REQUIRED>,
-    count: null
+    count: -1
 }
 ```
 
@@ -1574,7 +1575,7 @@ The trimmed string.
 ```
 fmt::split <VALUE> {
     on:    <REQUIRED>,
-    count: null
+    count: -1
 }
 ```
 
@@ -1755,7 +1756,7 @@ page.
 ### `page::resource`
 
 ```
-page::resource <URL>
+page::resource
 ```
 
 Return a `dict` describing a specific network resource, or false if none was found.
@@ -1787,6 +1788,14 @@ invocation of `[go](#go)`, since the resource cache was last cleared with
 
 #### Returns
 A `list` of `dict` containing details about the network requests that were performed.
+
+---
+
+### `page::save_resource`
+
+```
+page::save_resource <DESTINATION>
+```
 
 ---
 

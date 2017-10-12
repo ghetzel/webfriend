@@ -72,7 +72,9 @@ class Chrome(object):
         ping_retries=160,
         ping_delay=125,
         use_temp_profile=True,
-        foreground=False
+        foreground=False,
+        proxy=None,
+        proxy_bypass=None
     ):
         self.temp_profile_path = None
         self.args = copy.copy(self.browser_arguments)
@@ -91,6 +93,8 @@ class Chrome(object):
         self.ping_delay = ping_delay
         self.use_temp_profile = use_temp_profile
         self.started_at = time.time()
+        self.proxy_server = proxy
+        self.proxy_server_bypass = proxy_bypass
 
     def start(self):
         retries = 0
@@ -118,6 +122,28 @@ class Chrome(object):
                     ),
                 ]
             )
+
+            # enable proxy server autodetection
+            if self.proxy_server == 'auto':
+                self.args.append('--proxy-auto-detect')
+
+            # specify scheme-specific proxies
+            elif isinstance(self.proxy_server, dict):
+                self.args.append('--proxy-server={}'.format(
+                    ';'.join([
+                        '{}={}'.format(k, v) for k, v in self.proxy_server.items()
+                    ])
+                ))
+
+            # specify a global proxy server for all requests
+            elif isinstance(self.proxy_server, basestring):
+                self.args.append('--proxy-server={}'.format(self.proxy_server))
+
+            # specify a list of domain patterns that should not be proxied
+            if isinstance(self.proxy_server_bypass, list):
+                self.args.append('--proxy-bypass-list={}'.format(
+                    ';'.join(self.proxy_server_bypass)
+                ))
 
             self.launch_browser(self.args)
 
