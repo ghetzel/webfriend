@@ -631,7 +631,7 @@ class DOM(Base):
             })) for i in node_ids
         ]
 
-    def xpath(self, expression, timeout=10000):
+    def xpath(self, expression, wait_for_match=True, timeout=10000, interval=250):
         """
         Query the DOM for elements matching the given XPath expression.
 
@@ -648,16 +648,31 @@ class DOM(Base):
         # call getDocument first so subsequent calls to performSearch work properly
         # (thanks @jamcplusplus for catching this)
         self.root
+        started_at = time.time()
 
-        # perform the call
-        handle = self.perform_search(expression)
-        count = handle.get('resultCount', 0)
+        while time.time() < (started_at + (timeout / 1000.0)):
+            try:
+                # perform the call
+                handle = self.perform_search(expression)
+                count = handle.get('resultCount', 0)
 
-        if count:
-            return self.get_search_results(handle.get('searchId'), to_index=count)
-        else:
-            self.discard_search_results(handle.get('searchId'))
-            return []
+                if count:
+                    return self.get_search_results(handle.get('searchId'), to_index=count)
+                else:
+                    self.discard_search_results(handle.get('searchId'))
+
+            except (
+                exceptions.TimeoutError,
+                exceptions.ProtocolError
+            ):
+                pass
+
+            if not wait_for_match:
+                break
+
+            time.sleep(interval / 1000.0)
+
+        return False
 
     def select_nodes(self, selector, wait_for_match=True, timeout=10000, interval=250):
         """
@@ -686,7 +701,7 @@ class DOM(Base):
         """
         started_at = time.time()
 
-        while time.time() <= (started_at + (timeout / 1e3)):
+        while time.time() <= (started_at + (timeout / 1000.0)):
             try:
                 elements = self.query_all(selector, reply_timeout=interval)
 
@@ -710,7 +725,7 @@ class DOM(Base):
             ):
                 pass
 
-            time.sleep(interval / 1e3)
+            time.sleep(interval / 1000.0)
 
         return False
 
