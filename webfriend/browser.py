@@ -74,10 +74,14 @@ class Chrome(object):
         use_temp_profile=True,
         foreground=False,
         proxy=None,
-        proxy_bypass=None
+        proxy_bypass=None,
+        arguments=None,
     ):
         self.temp_profile_path = None
         self.args = copy.copy(self.browser_arguments)
+
+        if isinstance(arguments, (list, tuple)):
+            self.args += list(arguments)
 
         if foreground is True or os.getenv('WEBFRIEND_DEBUG', '').lower() in ['1', 'true']:
             self.debug_url = (debug_url or DEFAULT_DEBUGGER_URL)
