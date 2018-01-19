@@ -11,10 +11,6 @@ with Chrome() as browser:
     # navigate to Hacker News
     www = commands.core.go('https://news.ycombinator.com')
 
-    # log the result of loading the page
-    logging.info("Page loaded in {www[timing][requestTime]}ns".format(www=www))
-    logging.info("URL {www[url]}: Loaded with HTTP {www[status]}".format(www=www))
-
     # take a screenshot of the current page
     commands.page.screenshot('hackernews.png')
 
