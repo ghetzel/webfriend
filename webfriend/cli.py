@@ -113,14 +113,19 @@ def main(
                 #
                 # This let's users call `webfriend` by piping commands to it or by passing in heredocs
                 #
+                scriptpath = os.getcwd()
+
                 if script is None:
                     script = sys.stdin
+                else:
+                    scriptpath = os.path.abspath(os.path.dirname(script.name))
 
                 # execute script as file (or via shebang invocation)
                 scope = execute_script(
                     chrome,
                     script.read(),
-                    environment=environment
+                    environment=environment,
+                    scriptpath=scriptpath
                 ).as_dict()
 
             if not suppress_output:

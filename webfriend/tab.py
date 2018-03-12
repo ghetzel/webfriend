@@ -563,18 +563,18 @@ class Tab(object):
                 body = body.encode('UTF-8')
 
             if len(body):
-                l = '--'
+                lvlident = '--'
 
                 if level == 'info':
-                    l = 'II'
+                    lvlident = 'II'
                 elif level == 'warning':
-                    l = 'WW'
+                    lvlident = 'WW'
                 elif level == 'error':
-                    l = 'EE'
+                    lvlident = 'EE'
                 elif level == 'debug':
-                    l = 'DD'
+                    lvlident = 'DD'
 
-                logging.info('[{}] {}'.format(l, body))
+                logging.info('[{}] {}'.format(lvlident, body))
 
         if self.netreq_tracking:
             self.network.on('requestWillBeSent', on_net_pre_request)

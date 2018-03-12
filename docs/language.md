@@ -341,6 +341,18 @@ loop count $n {
 ```
 
 
+## Includes
+
+Friendscripts can include other Friendscripts, allowing you to build modular scripts to suit your organizational needs.  Script filenames are relative to the current script's location, and accept standard filename [globbing patterns](https://en.wikipedia.org/wiki/Glob_(programming)).
+
+```
+$test = 'yay'
+
+include "other-friend.fs"
+include "more-friends/*.fs"
+```
+
+
 ## Event Handlers
 
 As your script interacts with the browser, various events are generated for a multitude of actions involved in the process of loading and displaying a web page.  Friendscript is able to receive these events and perform actions when they occur.  Actions can include any valid sequence of commands or statements.

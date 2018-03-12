@@ -52,7 +52,8 @@ Assignment:
 
 Directive:
     (
-        is_unset?='unset' variables+=Variable[',']
+        is_unset?='unset' variables+=Variable[','] |
+        is_include?='include' fileglob=String
     )
 ;
 

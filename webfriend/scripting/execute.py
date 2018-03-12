@@ -7,15 +7,20 @@ from webfriend.scripting.commands import *  # noqa
 from threading import Thread
 import logging
 import time
+import glob
+import os
 
 
-def execute_script(browser, script, scope=None, environment=None, preserve_state=False):
+def execute_script(browser, script, scope=None, environment=None, preserve_state=False, scriptpath=None):
     # setup the environment
     if not environment:
         environment = Environment(scope, browser=browser)
 
     if not scope:
         scope = environment.scope
+
+    if not scriptpath:
+        scriptpath = os.path.abspath(os.getcwd())
 
     callbacks = set()
 
@@ -42,7 +47,7 @@ def execute_script(browser, script, scope=None, environment=None, preserve_state
         # recursively evaluate all blocks and nested blocks starting from the top level
         for block in friendscript.blocks:
             try:
-                evaluate_block(friendscript, block, scope)
+                evaluate_block(friendscript, block, scope, scriptpath=scriptpath)
             except parser.exceptions.ScriptError:
                 raise
             except Exception as e:
@@ -64,7 +69,7 @@ def execute_script(browser, script, scope=None, environment=None, preserve_state
     return scope
 
 
-def evaluate_block(scriptmgr, block, scope):
+def evaluate_block(scriptmgr, block, scope, scriptpath=None):
     environment = scriptmgr.environment
     # line, column = scriptmgr.get_item_position(block)
     # print('{} = line {}, column: {}'.format(block.__class__, line, column))
@@ -80,6 +85,30 @@ def evaluate_block(scriptmgr, block, scope):
         if block.is_unset:
             for var in block.variables:
                 scope.unset(var.as_key(scope))
+        elif block.is_include:
+            if scriptpath is None:
+                raise parser.exceptions.ScriptError('Cannot include; no scriptpath set')
+
+            fileset = environment.interpolate(block.fileglob)
+
+            if not fileset.startswith('/'):
+                fileset = os.path.join(scriptpath, fileset)
+
+            # expand the globs, becomes a list here
+            fileset = glob.glob(fileset)
+
+            for include in fileset:
+                if include.endswith('.fs'):
+                    logging.debug('Including script {}'.format(include))
+
+                    with open(include, 'r+b') as subscript:
+                        execute_script(
+                            environment.browser,
+                            subscript.read(),
+                            environment.scope,
+                            environment,
+                            scriptpath=os.path.dirname(include)
+                        )
 
     # Expressions
     # ---------------------------------------------------------------------------------------------
