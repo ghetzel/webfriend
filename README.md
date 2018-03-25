@@ -1,8 +1,7 @@
-[![PyPI version](https://badge.fury.io/py/webfriend.svg)](https://badge.fury.io/py/webfriend)
-
-<img align="center" src ="https://raw.githubusercontent.com/ghetzel/webfriend/golang-port/contrib/webfriend-arms.png" />
-
-Your friendly friend in modern web automation and testing.
+<p align="center">
+    <img src="https://raw.githubusercontent.com/ghetzel/webfriend/golang-port/contrib/webfriend-arms.png" />
+    <h2>Your friendly friend in modern web automation and testing.</h2>
+</p>
 
 ## Overview
 
