@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/ghetzel/webfriend/golang-port/contrib/webfriend-arms.png" />
+    <img width="240" height="240" src="https://raw.githubusercontent.com/ghetzel/webfriend/golang-port/contrib/webfriend-arms.png" />
 </p>
 <p align="center">
     &ldquo;Your friendly friend in modern web automation and testing.&rdquo;
