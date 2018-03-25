@@ -1,8 +1,11 @@
 # WebFriend
 [![PyPI version](https://badge.fury.io/py/webfriend.svg)](https://badge.fury.io/py/webfriend)
 
-
 Your friendly friend in modern web automation and testing.
+
+<div style="text-align: center; width: 100%;">
+       <img src ="https://raw.githubusercontent.com/ghetzel/webfriend/golang-port/contrib/webfriend-arms.png" />
+</div>
 
 ## Overview
 
