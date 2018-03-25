@@ -1,6 +1,8 @@
 <p align="center">
     <img src="https://raw.githubusercontent.com/ghetzel/webfriend/golang-port/contrib/webfriend-arms.png" />
-    <h2>Your friendly friend in modern web automation and testing.</h2>
+</p>
+<p align="center">
+    &ldquo;Your friendly friend in modern web automation and testing.&rdquo;
 </p>
 
 ## Overview
