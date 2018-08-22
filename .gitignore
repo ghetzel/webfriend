@@ -8,3 +8,4 @@
 /*.png
 /.cache
 /*.fs
+.pytest_cache
