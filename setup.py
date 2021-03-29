@@ -15,7 +15,7 @@ setup(
         'colorlog',
         'ephemeral_port_reserve',
         'prompt_toolkit',
-        'pygments==2.2.0',
+        'pygments==2.7.4',
         'requests',
         'termcolor',
         'textx<1.6',
